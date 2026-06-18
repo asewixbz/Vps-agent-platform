@@ -5,7 +5,7 @@ from typing import Any
 from fastapi import HTTPException
 
 from .policy import evaluate
-from .runner import run_browser_task, run_python_script, run_shell_command, run_unimplemented
+from .runner import run_browser_task, run_model_task, run_python_script, run_shell_command, run_unimplemented
 from .settings import Settings
 from .store import get_task, get_tool, update_task, utc_now
 
@@ -69,6 +69,13 @@ def execute_task(settings: Settings, task_id: str, timeout_seconds: int | None =
                 url=payload.get("url", ""),
                 timeout_seconds=timeout_seconds,
                 wait_until=payload.get("wait_until", "domcontentloaded"),
+            )
+        elif kind == "model":
+            result = run_model_task(
+                settings,
+                task_id=task_id,
+                payload=payload,
+                timeout_seconds=timeout_seconds,
             )
         else:
             result = run_unimplemented(kind)
