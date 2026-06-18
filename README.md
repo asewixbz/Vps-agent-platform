@@ -142,6 +142,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - local Python/shell execution
 - tool registry
 - approval flow
+- CLI client
 
 ### Phase 2
 - Redis queue
