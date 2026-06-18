@@ -61,7 +61,8 @@ def evaluate(tool: dict[str, Any], payload: dict[str, Any], settings: Settings, 
             return PolicyDecision(False, False, "browser runner is not enabled in phase 1")
 
     if kind == "model":
-        if not settings.model_runner_enabled:
-            return PolicyDecision(False, False, "model runner is not enabled in phase 1")
+        adapter_configured = settings.model_adapter_name not in {"", "unconfigured", None}
+        if not settings.model_runner_enabled and not adapter_configured:
+            return PolicyDecision(False, False, "model adapter is not configured")
 
     return PolicyDecision(True, False, "policy passed")
