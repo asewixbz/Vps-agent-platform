@@ -28,6 +28,8 @@ The project should be treated as an execution platform first, and a UI product s
 - shell runner
 - browser runner scaffold
 - CLI client for terminal-first usage
+- provider-agnostic model adapter contract
+- adapter settings scaffold for future provider swaps
 
 ### What exists but is still early
 
@@ -295,14 +297,15 @@ Acceptance criteria:
 - `backend/app/runner.py` — Python, shell, and browser execution helpers
 - `backend/app/executor.py` — task execution orchestration
 - `backend/app/worker.py` — queue consumer loop
-- `backend/app/settings.py` — configuration
+- `backend/app/settings.py` — configuration and model adapter settings scaffold
 - `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, and tool registration
+- `backend/app/model_adapter.py` — provider-neutral model request/response contract and adapter registry
 
 ## Immediate next work
 
-1. Define the first model adapter interface.
+1. Implement the first concrete provider adapter behind the new contract.
 2. Decide how the CLI will hand off user text to the planner/runtime layer.
-3. Add a lightweight agent runtime loop after the CLI is working.
+3. Add a lightweight agent runtime loop after the CLI and adapter are working.
 4. Introduce persistent memory structures for long-lived work.
 
 ## Working rules for future contributors
