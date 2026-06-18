@@ -27,6 +27,7 @@ The project should be treated as an execution platform first, and a UI product s
 - Python runner
 - shell runner
 - browser runner scaffold
+- CLI client for terminal-first usage
 
 ### What exists but is still early
 
@@ -34,7 +35,6 @@ The project should be treated as an execution platform first, and a UI product s
 - model execution is only a placeholder
 - shell execution is intentionally restricted
 - there is no conversational agent layer yet
-- there is no CLI client yet
 - there is no durable memory layer for long-running work
 - there is no production-grade sandboxing
 
@@ -296,13 +296,14 @@ Acceptance criteria:
 - `backend/app/executor.py` — task execution orchestration
 - `backend/app/worker.py` — queue consumer loop
 - `backend/app/settings.py` — configuration
+- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, and tool registration
 
 ## Immediate next work
 
-1. Add a CLI client that talks to the FastAPI backend.
-2. Make task submission and approval usable from the terminal.
-3. Add a lightweight model adapter interface.
-4. Define the first agent runtime loop after the CLI is working.
+1. Define the first model adapter interface.
+2. Decide how the CLI will hand off user text to the planner/runtime layer.
+3. Add a lightweight agent runtime loop after the CLI is working.
+4. Introduce persistent memory structures for long-lived work.
 
 ## Working rules for future contributors
 
@@ -314,4 +315,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. The next real step is to make it operable from the command line and then connect a provider-agnostic AI orchestration layer on top.
+The repository is already a usable execution backbone. The next real step is to connect a provider-agnostic AI orchestration layer on top of the new terminal client.
