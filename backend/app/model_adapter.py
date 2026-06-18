@@ -154,7 +154,7 @@ def register_model_adapter(name: str, factory: ModelAdapterFactory, *, overwrite
 
 
 def available_model_adapters() -> list[str]:
-    return sorted({"unconfigured", * _ADAPTER_FACTORIES.keys()})
+    return sorted({"unconfigured", *_ADAPTER_FACTORIES.keys()})
 
 
 def resolve_model_adapter(spec: ModelAdapterSpec) -> ModelAdapter:
