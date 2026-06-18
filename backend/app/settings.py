@@ -1,4 +1,7 @@
 from functools import lru_cache
+import json
+from typing import Any
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,10 +21,22 @@ class Settings(BaseSettings):
     require_approval_for_draft: bool = True
     browser_runner_enabled: bool = False
     model_runner_enabled: bool = False
+    model_adapter_name: str = "unconfigured"
+    model_default_alias: str = "general"
+    model_request_timeout_seconds: int = 120
+    model_adapter_options_json: str = "{}"
 
     @property
     def allowed_shell_command_list(self) -> list[str]:
         return [item.strip() for item in self.allowed_shell_commands.split(",") if item.strip()]
+
+    @property
+    def model_adapter_options(self) -> dict[str, Any]:
+        try:
+            parsed = json.loads(self.model_adapter_options_json or "{}")
+        except json.JSONDecodeError:
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
 
 
 @lru_cache(maxsize=1)
