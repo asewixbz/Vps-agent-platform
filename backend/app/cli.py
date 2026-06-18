@@ -26,6 +26,16 @@ def _decode_body(raw: bytes) -> Any:
         return text
 
 
+def _parse_json_object(raw: str, label: str) -> dict[str, Any]:
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{label} is not valid JSON: {exc}") from exc
+    if not isinstance(data, dict):
+        raise ValueError(f"{label} must be a JSON object")
+    return data
+
+
 def request_json(method: str, base_url: str, path: str, payload: dict[str, Any] | None = None) -> Any:
     url = f"{base_url.rstrip('/')}/{path.lstrip('/')}"
     data = json.dumps(payload).encode("utf-8") if payload is not None else None
@@ -55,14 +65,17 @@ def load_payload(payload: str | None, payload_file: str | None) -> dict[str, Any
         raw = payload
     else:
         return {}
+    return _parse_json_object(raw, "payload")
 
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise ValueError(f"payload is not valid JSON: {exc}") from exc
-    if not isinstance(data, dict):
-        raise ValueError("payload must be a JSON object")
-    return data
+
+def load_metadata(metadata: str | None, metadata_file: str | None) -> dict[str, Any]:
+    if metadata_file:
+        raw = sys.stdin.read() if metadata_file == "-" else Path(metadata_file).read_text(encoding="utf-8")
+    elif metadata is not None:
+        raw = metadata
+    else:
+        return {}
+    return _parse_json_object(raw, "metadata")
 
 
 def print_json(data: Any) -> None:
@@ -117,6 +130,28 @@ def cmd_tools(args: argparse.Namespace) -> int:
     else:
         for tool in data:
             print(format_tool_row(tool))
+    return 0
+
+
+def cmd_register_tool(args: argparse.Namespace) -> int:
+    metadata = load_metadata(args.metadata, args.metadata_file)
+    body: dict[str, Any] = {
+        "name": args.name,
+        "kind": args.kind,
+        "description": args.description or "",
+        "entrypoint": args.entrypoint,
+        "status": args.status,
+        "trust_level": args.trust_level,
+        "metadata": metadata,
+    }
+    data = request_json("POST", args.base_url, "/tools/register", body)
+    if args.json:
+        print_json(data)
+    else:
+        print(f"tool registered: {data.get('name')}")
+        print(f"kind: {data.get('kind')}")
+        print(f"status: {data.get('status')}")
+        print(f"trust_level: {data.get('trust_level')}")
     return 0
 
 
@@ -201,6 +236,16 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("tools", help="list tools")
     subparsers.add_parser("tasks", help="list tasks")
 
+    register_tool_parser = subparsers.add_parser("register-tool", help="register a tool")
+    register_tool_parser.add_argument("name", help="tool name")
+    register_tool_parser.add_argument("kind", choices=["python", "shell", "browser", "model", "messaging"], help="tool kind")
+    register_tool_parser.add_argument("--description", default="", help="tool description")
+    register_tool_parser.add_argument("--entrypoint", help="tool entrypoint")
+    register_tool_parser.add_argument("--status", choices=["draft", "tested", "trusted", "blocked"], default="draft", help="tool status")
+    register_tool_parser.add_argument("--trust-level", type=int, default=0, help="tool trust level")
+    register_tool_parser.add_argument("--metadata", help="JSON metadata string")
+    register_tool_parser.add_argument("--metadata-file", help="path to a JSON metadata file, or - for stdin")
+
     task_parser = subparsers.add_parser("task", help="show a single task")
     task_parser.add_argument("task_id", help="task id")
 
@@ -225,6 +270,7 @@ def dispatch(args: argparse.Namespace) -> int:
         "phases": cmd_phases,
         "queue": cmd_queue,
         "tools": cmd_tools,
+        "register-tool": cmd_register_tool,
         "tasks": cmd_tasks,
         "task": cmd_task,
         "submit": cmd_submit,
