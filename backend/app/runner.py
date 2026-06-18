@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+from .model_runtime import chat_model
+from .model_adapter import ModelAdapterError
 from .settings import Settings
 
 
@@ -99,6 +102,65 @@ def run_shell_command(settings: Settings, *, task_id: str, command: str, timeout
             duration_ms=duration_ms,
             artifacts={"workdir": str(workdir)},
         )
+
+
+def run_model_task(
+    settings: Settings,
+    *,
+    task_id: str,
+    payload: dict[str, Any],
+    timeout_seconds: int | None = None,
+) -> RunResult:
+    _ = task_id
+    _ = timeout_seconds
+    started = time.monotonic()
+    try:
+        response = chat_model(settings, payload)
+    except ModelAdapterError as exc:
+        duration_ms = int((time.monotonic() - started) * 1000)
+        return RunResult(
+            ok=False,
+            stdout="",
+            stderr=str(exc),
+            exit_code=1,
+            timed_out=False,
+            duration_ms=duration_ms,
+            artifacts={},
+        )
+
+    duration_ms = int((time.monotonic() - started) * 1000)
+    response_dump = {
+        "text": response.text,
+        "structured_data": response.structured_data,
+        "tool_calls": response.tool_calls,
+        "finish_reason": response.finish_reason,
+        "model": response.model,
+        "provider": response.provider,
+        "usage": asdict(response.usage) if response.usage else None,
+        "raw": response.raw,
+        "metadata": response.metadata,
+    }
+
+    stdout = response.text or ""
+    if response.structured_data is not None:
+        structured_text = json.dumps(response.structured_data, ensure_ascii=False, indent=2)
+        stdout = structured_text if not stdout else f"{stdout}\n\nSTRUCTURED_DATA:\n{structured_text}"
+    if not stdout and response.tool_calls:
+        stdout = json.dumps(response.tool_calls, ensure_ascii=False, indent=2)
+    if not stdout and response.raw is not None:
+        stdout = json.dumps(response.raw, ensure_ascii=False, indent=2)
+
+    status = str(response.metadata.get("status") or response.finish_reason or "completed")
+    ok = status in {"completed", "success", "succeeded"}
+    return RunResult(
+        ok=ok,
+        stdout=stdout,
+        stderr="" if ok else f"model request finished with status {status}",
+        exit_code=0 if ok else 1,
+        timed_out=False,
+        duration_ms=duration_ms,
+        artifacts={"response": response_dump},
+    )
 
 
 def run_browser_task(
