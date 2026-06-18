@@ -43,6 +43,7 @@ vps-agent-platform/
     requirements.txt
     app/
       __main__.py
+      cli.py
       executor.py
       job_queue.py
       main.py
@@ -74,6 +75,22 @@ curl http://localhost:8000/health
 ```
 
 If you want to run browser tasks, set `APP_BROWSER_RUNNER_ENABLED=true` in `.env` before starting the stack.
+
+## CLI quickstart
+
+The backend now exposes a terminal client so the project can be used without a web UI.
+
+From `backend/`:
+
+```bash
+python -m app.cli health
+python -m app.cli tools
+python -m app.cli tasks
+python -m app.cli submit python_local --payload '{"script":"print(\"hello from the runner\")"}'
+python -m app.cli approve <task-id> --note "approved for run"
+```
+
+Use `--base-url` if the API is not running on `http://localhost:8000`.
 
 ## Check the queue
 
