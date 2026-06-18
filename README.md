@@ -24,6 +24,8 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - shell runner
 - browser runner
 - approval flow
+- terminal CLI
+- provider-agnostic model adapter contract
 
 ## What is not included yet
 
@@ -38,6 +40,9 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 vps-agent-platform/
   docker-compose.yml
   .env.example
+  docs/
+    PROJECT_HANDOFF.md
+    MODEL_ADAPTER.md
   backend/
     Dockerfile
     requirements.txt
@@ -47,6 +52,7 @@ vps-agent-platform/
       executor.py
       job_queue.py
       main.py
+      model_adapter.py
       policy.py
       runner.py
       settings.py
@@ -144,6 +150,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - tool registry
 - approval flow
 - CLI client
+- model adapter contract
 
 ### Phase 2
 - Redis queue
