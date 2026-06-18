@@ -86,6 +86,7 @@ From `backend/`:
 python -m app.cli health
 python -m app.cli tools
 python -m app.cli tasks
+python -m app.cli register-tool local_python_test python --description "Run a local Python smoke test" --entrypoint python --status trusted --trust-level 2
 python -m app.cli submit python_local --payload '{"script":"print(\"hello from the runner\")"}'
 python -m app.cli approve <task-id> --note "approved for run"
 ```
