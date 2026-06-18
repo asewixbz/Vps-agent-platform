@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Callable, Literal
 
-Role = Literal["system", "user", "assistant", "tool"]
+Role = Literal["system", "user", "assistant", "tool", "developer"]
 ResponseMode = Literal["text", "json"]
 HealthStatus = Literal["ok", "unconfigured", "degraded", "error"]
 
@@ -170,8 +170,11 @@ def resolve_model_adapter(spec: ModelAdapterSpec) -> ModelAdapter:
 def build_model_adapter_spec(settings: Any) -> ModelAdapterSpec:
     adapter_name = getattr(settings, "model_adapter_name", "unconfigured")
     model_name = getattr(settings, "model_default_alias", None)
-    options = getattr(settings, "model_adapter_options", {}) or {}
-    return ModelAdapterSpec(adapter_name=adapter_name, model_name=model_name, options=dict(options))
+    options = dict(getattr(settings, "model_adapter_options", {}) or {})
+    request_timeout_seconds = getattr(settings, "model_request_timeout_seconds", None)
+    if request_timeout_seconds is not None and "request_timeout_seconds" not in options:
+        options["request_timeout_seconds"] = request_timeout_seconds
+    return ModelAdapterSpec(adapter_name=adapter_name, model_name=model_name, options=options)
 
 
 def build_model_adapter(settings: Any) -> ModelAdapter:
