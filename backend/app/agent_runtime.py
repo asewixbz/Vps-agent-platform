@@ -262,9 +262,15 @@ def run_agent_runtime(
     attempts = int((persisted_run or {}).get("attempts") or 0) + 1
     runtime_started_at = str((persisted_run or {}).get("started_at") or utc_now())
     start_step_index = _resolve_start_step_index(normalized_context, resume_from_step_index)
+    history_completed_step_indices = []
+    raw_history_indices = persisted_checkpoint.get("completed_step_indices") if isinstance(persisted_checkpoint, dict) else []
+    if isinstance(raw_history_indices, list):
+        for item in raw_history_indices:
+            if isinstance(item, int) and item > 0:
+                history_completed_step_indices.append(item)
     initial_checkpoint = persisted_checkpoint or _build_checkpoint(
         plan=plan,
-        completed_step_indices=[],
+        completed_step_indices=history_completed_step_indices,
         next_step_index=start_step_index,
         resume_from_step_index=start_step_index if start_step_index > 1 else None,
     )
@@ -286,11 +292,11 @@ def run_agent_runtime(
     )
 
     results: list[RuntimeStepResult] = []
-    completed_step_indices: list[int] = []
+    completed_step_indices: list[int] = list(history_completed_step_indices)
     total_steps = len(plan.steps)
 
     if max_steps <= 0:
-        checkpoint = _build_checkpoint(plan=plan, completed_step_indices=[], next_step_index=1)
+        checkpoint = _build_checkpoint(plan=plan, completed_step_indices=completed_step_indices, next_step_index=1)
         steps_payload = existing_steps_payload + [asdict(step) for step in results]
         _persist_runtime_run_state(
             settings,
@@ -326,9 +332,10 @@ def run_agent_runtime(
         )
 
     if start_step_index > total_steps:
+        completed_all_indices = sorted(set(history_completed_step_indices).union(range(1, total_steps + 1)))
         checkpoint = _build_checkpoint(
             plan=plan,
-            completed_step_indices=list(range(1, total_steps + 1)),
+            completed_step_indices=completed_all_indices,
             next_step_index=total_steps + 1,
             resume_from_step_index=start_step_index,
         )
