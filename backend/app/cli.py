@@ -91,6 +91,24 @@ def format_task_row(task: dict[str, Any]) -> str:
     return f"{task.get('id', ''):<36} {task.get('status', ''):<16} {task.get('tool_name', ''):<18} approved={approved}  {task.get('created_at', '')}"
 
 
+def _truncate(text: str, limit: int = 72) -> str:
+    cleaned = text.replace("\n", " ").strip()
+    if len(cleaned) <= limit:
+        return cleaned
+    return cleaned[: limit - 1] + "…"
+
+
+def format_runtime_run_row(run: dict[str, Any]) -> str:
+    checkpoint = run.get("checkpoint") if isinstance(run.get("checkpoint"), dict) else {}
+    steps = run.get("steps") if isinstance(run.get("steps"), list) else []
+    goal = _truncate(str(run.get("goal") or ""), 56)
+    return (
+        f"{run.get('id', ''):<36} {run.get('status', ''):<14} "
+        f"attempts={int(run.get('attempts') or 0):<2} steps={len(steps):<3} "
+        f"next={checkpoint.get('next_step_index', '-'):>3}  {goal}"
+    )
+
+
 def cmd_health(args: argparse.Namespace) -> int:
     data = request_json("GET", args.base_url, "/health")
     if args.json:
@@ -182,6 +200,56 @@ def cmd_task(args: argparse.Namespace) -> int:
         if data.get("stderr"):
             print("stderr:")
             print(data.get("stderr"))
+    return 0
+
+
+def cmd_runs(args: argparse.Namespace) -> int:
+    data = request_json("GET", args.base_url, "/agent/runs")
+    if args.json:
+        print_json(data)
+    else:
+        for run in data:
+            print(format_runtime_run_row(run))
+    return 0
+
+
+def cmd_run_show(args: argparse.Namespace) -> int:
+    data = request_json("GET", args.base_url, f"/agent/runs/{args.runtime_run_id}")
+    if args.json:
+        print_json(data)
+    else:
+        print(f"id: {data.get('id')}")
+        print(f"goal: {data.get('goal')}")
+        print(f"status: {data.get('status')}")
+        print(f"attempts: {data.get('attempts')}")
+        if data.get("summary"):
+            print(f"summary: {data.get('summary')}")
+        if data.get("blocked_reason"):
+            print(f"blocked_reason: {data.get('blocked_reason')}")
+        if data.get("resume_hint"):
+            print(f"resume_hint: {data.get('resume_hint')}")
+        checkpoint = data.get("checkpoint") or {}
+        if checkpoint:
+            print("checkpoint:")
+            print(f"  next_step_index: {checkpoint.get('next_step_index')}")
+            print(f"  completed_step_count: {checkpoint.get('completed_step_count')}")
+            print(f"  total_steps: {checkpoint.get('total_steps')}")
+            if checkpoint.get("blocked_step_index") is not None:
+                print(f"  blocked_step_index: {checkpoint.get('blocked_step_index')}")
+            if checkpoint.get("completed_step_indices"):
+                print(f"  completed_step_indices: {checkpoint.get('completed_step_indices')}")
+        steps = data.get("steps") or []
+        if steps:
+            print("steps:")
+            for step in steps:
+                line = f"  [{step.get('status')}] {step.get('title')}"
+                if step.get("tool_name"):
+                    line += f" (tool: {step.get('tool_name')})"
+                print(line)
+                if step.get("task_id"):
+                    print(f"     task_id: {step.get('task_id')}")
+                if step.get("detail"):
+                    print(f"     {step.get('detail')}")
     return 0
 
 
@@ -306,23 +374,22 @@ def cmd_plan(args: argparse.Namespace) -> int:
 
 def cmd_run(args: argparse.Namespace) -> int:
     context = load_metadata(args.context, args.context_file)
-    data = request_json(
-        "POST",
-        args.base_url,
-        "/agent/run",
-        {
-            "goal": args.goal,
-            "context": context,
-            "max_steps": args.max_steps,
-            "resume_from_step_index": args.resume_from_step_index,
-        },
-    )
+    body: dict[str, Any] = {
+        "goal": args.goal,
+        "context": context,
+        "max_steps": args.max_steps,
+        "resume_from_step_index": args.resume_from_step,
+        "runtime_run_id": args.runtime_run_id,
+    }
+    data = request_json("POST", args.base_url, "/agent/run", body)
     if args.json:
         print_json(data)
     else:
+        print(f"runtime_run_id: {data.get('runtime_run_id')}")
         print(f"status: {data.get('status')}")
         print(f"summary: {data.get('summary')}")
         print(f"iterations: {data.get('iterations')}")
+        print(f"attempts: {data.get('attempts')}")
         if data.get("blocked_reason"):
             print(f"blocked_reason: {data.get('blocked_reason')}")
         plan = data.get("plan") or {}
@@ -367,7 +434,14 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("queue", help="show queue size")
     subparsers.add_parser("tools", help="list tools")
     subparsers.add_parser("tasks", help="list tasks")
+    subparsers.add_parser("runs", help="list persisted runtime runs")
     subparsers.add_parser("model-health", help="check model adapter health")
+
+    task_parser = subparsers.add_parser("task", help="show a single task")
+    task_parser.add_argument("task_id", help="task id")
+
+    run_show_parser = subparsers.add_parser("run-show", help="show a persisted runtime run")
+    run_show_parser.add_argument("runtime_run_id", help="runtime run id")
 
     model_chat_parser = subparsers.add_parser("model-chat", help="call the configured model adapter")
     model_chat_parser.add_argument("--payload", help="JSON payload string")
@@ -384,6 +458,7 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--context-file", help="path to a JSON context file, or - for stdin")
     run_parser.add_argument("--max-steps", type=int, default=5, help="maximum number of runtime steps to process")
     run_parser.add_argument("--resume-from-step", type=int, help="resume runtime execution from a 1-based step index")
+    run_parser.add_argument("--runtime-run-id", help="reuse or continue a persisted runtime run")
 
     register_tool_parser = subparsers.add_parser("register-tool", help="register a tool")
     register_tool_parser.add_argument("name", help="tool name")
@@ -394,9 +469,6 @@ def build_parser() -> argparse.ArgumentParser:
     register_tool_parser.add_argument("--trust-level", type=int, default=0, help="tool trust level")
     register_tool_parser.add_argument("--metadata", help="JSON metadata string")
     register_tool_parser.add_argument("--metadata-file", help="path to a JSON metadata file, or - for stdin")
-
-    task_parser = subparsers.add_parser("task", help="show a single task")
-    task_parser.add_argument("task_id", help="task id")
 
     submit_parser = subparsers.add_parser("submit", help="create a task")
     submit_parser.add_argument("tool_name", help="registered tool name")
@@ -419,9 +491,11 @@ def dispatch(args: argparse.Namespace) -> int:
         "phases": cmd_phases,
         "queue": cmd_queue,
         "tools": cmd_tools,
-        "register-tool": cmd_register_tool,
         "tasks": cmd_tasks,
         "task": cmd_task,
+        "runs": cmd_runs,
+        "run-show": cmd_run_show,
+        "register-tool": cmd_register_tool,
         "submit": cmd_submit,
         "approve": cmd_approve,
         "model-health": cmd_model_health,
