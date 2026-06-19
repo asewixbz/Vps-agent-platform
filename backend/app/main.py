@@ -27,6 +27,12 @@ from .memory import (
     touch_memory_record,
     upsert_memory_record,
 )
+from .memory_links import (
+    add_memory_link,
+    init_memory_links_schema,
+    list_memory_links,
+    list_memory_links_for_entity,
+)
 from .model_adapter import ModelAdapterError
 from .model_runtime import chat_model, model_health as runtime_model_health
 from .planner import build_execution_plan
@@ -114,6 +120,16 @@ class MemoryArtifactRequest(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class MemoryLinkRequest(BaseModel):
+    source_type: str
+    source_id: str
+    target_type: str
+    target_id: str
+    relation_type: str
+    note: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class ContactDossierRequest(BaseModel):
     contact_id: str
     title: str
@@ -152,6 +168,7 @@ class ProjectDossierRequest(BaseModel):
 def startup() -> None:
     init_db(settings)
     init_memory_schema(settings)
+    init_memory_links_schema(settings)
     seed_builtin_tools(settings)
 
 
@@ -190,6 +207,7 @@ def phases() -> dict[str, Any]:
         "phase_4": [
             "durable memory records",
             "project/contact dossiers",
+            "memory links",
             "artifact indexing",
             "long-lived workflow context",
         ],
@@ -366,21 +384,22 @@ def agent_run(request: RuntimeRunRequest) -> dict[str, Any]:
         importance=1 if result.status == "completed" else 0,
         pinned=False,
     )
-    if int(runtime_snapshot.get("artifact_count") or 0) == 0:
-        add_memory_record_artifact(
-            settings,
-            memory_record_id=runtime_snapshot["id"],
-            artifact_type="runtime_run_event_log",
-            artifact_ref=f"runtime_run:{result.runtime_run_id}",
-            label="runtime event log",
-            metadata={"runtime_run_id": result.runtime_run_id, "status": result.status},
-        )
+    add_memory_link(
+        settings,
+        source_type="memory_record",
+        source_id=runtime_snapshot["id"],
+        target_type="artifact",
+        target_id=f"runtime_run:{result.runtime_run_id}",
+        relation_type="references",
+        note="runtime event log",
+        metadata={"runtime_run_id": result.runtime_run_id, "status": result.status},
+    )
 
     context = dict(request.context)
     contact_id = context.get("contact_id")
     if isinstance(contact_id, str) and contact_id.strip():
         contact_title = str(context.get("contact_name") or context.get("contact_title") or contact_id)
-        upsert_contact_dossier(
+        contact_dossier = upsert_contact_dossier(
             settings,
             contact_id=contact_id,
             title=contact_title,
@@ -409,11 +428,31 @@ def agent_run(request: RuntimeRunRequest) -> dict[str, Any]:
             source_ref=result.runtime_run_id,
             importance=1 if result.status == "completed" else 0,
         )
+        add_memory_link(
+            settings,
+            source_type="memory_record",
+            source_id=runtime_snapshot["id"],
+            target_type="memory_record",
+            target_id=contact_dossier["id"],
+            relation_type="updates",
+            note="contact dossier updated from runtime snapshot",
+            metadata={"runtime_run_id": result.runtime_run_id, "contact_id": contact_id},
+        )
+        add_memory_link(
+            settings,
+            source_type="memory_record",
+            source_id=contact_dossier["id"],
+            target_type="memory_record",
+            target_id=runtime_snapshot["id"],
+            relation_type="derived_from",
+            note="contact dossier derived from runtime snapshot",
+            metadata={"runtime_run_id": result.runtime_run_id, "contact_id": contact_id},
+        )
 
     project_id = context.get("project_id")
     if isinstance(project_id, str) and project_id.strip():
         project_title = str(context.get("project_name") or context.get("project_title") or result.goal)
-        upsert_project_dossier(
+        project_dossier = upsert_project_dossier(
             settings,
             project_id=project_id,
             title=project_title,
@@ -441,6 +480,26 @@ def agent_run(request: RuntimeRunRequest) -> dict[str, Any]:
             source="agent_runtime",
             source_ref=result.runtime_run_id,
             importance=1 if result.status == "completed" else 0,
+        )
+        add_memory_link(
+            settings,
+            source_type="memory_record",
+            source_id=runtime_snapshot["id"],
+            target_type="memory_record",
+            target_id=project_dossier["id"],
+            relation_type="updates",
+            note="project dossier updated from runtime snapshot",
+            metadata={"runtime_run_id": result.runtime_run_id, "project_id": project_id},
+        )
+        add_memory_link(
+            settings,
+            source_type="memory_record",
+            source_id=project_dossier["id"],
+            target_type="memory_record",
+            target_id=runtime_snapshot["id"],
+            relation_type="derived_from",
+            note="project dossier derived from runtime snapshot",
+            metadata={"runtime_run_id": result.runtime_run_id, "project_id": project_id},
         )
 
     return runtime_execution_to_dict(result)
@@ -523,6 +582,74 @@ def memory_record_artifact_add(memory_record_id: str, request: MemoryArtifactReq
     if record is None:
         raise HTTPException(status_code=404, detail="memory record not found")
     return record
+
+
+@app.get("/memory/links")
+def memory_links(
+    source_type: str | None = None,
+    source_id: str | None = None,
+    target_type: str | None = None,
+    target_id: str | None = None,
+    relation_type: str | None = None,
+    query: str | None = None,
+    limit: int = 100,
+) -> list[dict[str, Any]]:
+    return list_memory_links(
+        settings,
+        source_type=source_type,
+        source_id=source_id,
+        target_type=target_type,
+        target_id=target_id,
+        relation_type=relation_type,
+        query=query,
+        limit=limit,
+    )
+
+
+@app.post("/memory/links")
+def memory_link_create(request: MemoryLinkRequest) -> dict[str, Any]:
+    return add_memory_link(
+        settings,
+        source_type=request.source_type,
+        source_id=request.source_id,
+        target_type=request.target_type,
+        target_id=request.target_id,
+        relation_type=request.relation_type,
+        note=request.note,
+        metadata=request.metadata,
+    )
+
+
+@app.get("/memory/records/{memory_record_id}/links")
+def memory_record_links(
+    memory_record_id: str,
+    direction: Literal["outbound", "inbound", "both"] = "outbound",
+    relation_type: str | None = None,
+    query: str | None = None,
+    limit: int = 100,
+) -> list[dict[str, Any]]:
+    outbound = list_memory_links_for_entity(
+        settings,
+        entity_type="memory_record",
+        entity_id=memory_record_id,
+        relation_type=relation_type,
+        query=query,
+        limit=limit,
+    )
+    if direction == "outbound":
+        return outbound
+    inbound = list_memory_links(
+        settings,
+        target_type="memory_record",
+        target_id=memory_record_id,
+        relation_type=relation_type,
+        query=query,
+        limit=limit,
+    )
+    if direction == "inbound":
+        return inbound
+    combined = {link["id"]: link for link in outbound + inbound}
+    return list(combined.values())
 
 
 @app.get("/dossiers")
