@@ -128,7 +128,7 @@ python -m app.cli memory-touch <memory-record-id>
 python -m app.cli memory-artifacts <memory-record-id>
 python -m app.cli memory-artifact-add <memory-record-id> --payload '{"artifact_type":"file","artifact_ref":"docs/notes.md","label":"project notes"}'
 python -m app.cli memory-links
-python -m app.cli memory-link-add memory_record_a memory_record_a memory_record_b memory_record_b updates --note "runtime snapshot updates dossier"
+python -m app.cli memory-link-add <source-type> <source-id> <target-type> <target-id> updates --note "runtime snapshot updates dossier"
 python -m app.cli memory-record-links <memory-record-id>
 python -m app.cli model-health
 python -m app.cli model-chat --payload '{"messages":[{"role":"user","content":"Say hello"}]}'
