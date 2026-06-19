@@ -38,13 +38,15 @@ The project should be treated as an execution platform first, and a UI product s
 - persistent runtime run history in SQLite
 - explicit runtime event logs in SQLite
 - runtime event replay filters for step-scoped and grouped inspection
+- durable memory records with artifact indexing
+- runtime run snapshots persisted into durable memory
 
 ### What exists but is still early
 
 - browser execution is behind a feature flag
 - model execution is only a placeholder for broader orchestration use
 - shell execution is intentionally restricted
-- there is no durable memory layer for long-running work
+- the durable memory layer is still basic and needs project/contact-specific workflows
 - there is no production-grade sandboxing
 
 ## Technical direction
@@ -297,15 +299,16 @@ Acceptance criteria:
 
 ## Current code map
 
-- `backend/app/main.py` — API endpoints for tools, tasks, approvals, planning, runtime, run history, event logs, and queue status
-- `backend/app/store.py` — SQLite schema and CRUD
+- `backend/app/main.py` — API endpoints for tools, tasks, approvals, planning, runtime, run history, memory, event logs, and queue status
+- `backend/app/memory.py` — durable memory storage, artifact indexing, and runtime snapshot helpers
+- `backend/app/store.py` — SQLite schema and CRUD for core control-plane data
 - `backend/app/policy.py` — trust and safety checks
 - `backend/app/job_queue.py` — Redis queue wrapper
 - `backend/app/runner.py` — Python, shell, and browser execution helpers
 - `backend/app/executor.py` — task execution orchestration
 - `backend/app/worker.py` — queue consumer loop
 - `backend/app/settings.py` — configuration and model adapter settings scaffold
-- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, runtime, run history, event logs, and tool registration
+- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, runtime, run history, event logs, memory records, and tool registration
 - `backend/app/model_adapter.py` — provider-neutral model request/response contract and adapter registry
 - `backend/app/planner.py` — conservative planning bridge that can work with or without the model runner
 - `backend/app/agent_runtime.py` — multi-step runtime loop that executes planned steps conservatively and returns checkpoints for resuming
@@ -313,7 +316,7 @@ Acceptance criteria:
 
 ## Immediate next work
 
-1. Introduce persistent memory structures for long-lived work.
+1. Add project/contact dossier helpers on top of the durable memory records.
 2. Expand browser and artifact handling once the runtime loop is stable.
 3. Add stronger sandboxing and observability before broader tool synthesis.
 
@@ -327,4 +330,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. The next real step is now durable memory, following the event replay layer that was just added.
+The repository is already a usable execution backbone. Durable memory storage is now present; the next useful step is to add higher-level dossier helpers on top of it.
