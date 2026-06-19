@@ -31,15 +31,15 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - conservative execution planner API and CLI
 - conservative multi-step runtime loop API and CLI
 - persistent runtime run history, checkpoint/resume markers, and event logs
+- durable memory records with artifact indexing
 - runtime event replay filters by step or grouped view
 
 ## What is not included yet
 
-- Postgres
 - GPU/model runner
 - automatic code generation for arbitrary tools
 - full sandbox hardening with seccomp/AppArmor profiles
-- durable long-term memory
+- production-grade distributed storage
 
 ## Folder layout
 
@@ -60,6 +60,7 @@ vps-agent-platform/
       executor.py
       job_queue.py
       main.py
+      memory.py
       model_adapter.py
       model_runtime.py
       planner.py
@@ -116,6 +117,12 @@ python -m app.cli run-show <runtime-run-id>
 python -m app.cli run-events <runtime-run-id>
 python -m app.cli run-events <runtime-run-id> --step-index 3
 python -m app.cli run-events <runtime-run-id> --grouped
+python -m app.cli memory-list
+python -m app.cli memory-show <memory-record-id>
+python -m app.cli memory-upsert --payload '{"memory_key":"contact:asewisher@duck.com","kind":"contact_dossier","scope_type":"contact","scope_id":"asewisher@duck.com","title":"Asewisher","summary":"Primary contact dossier","content":"Stable notes and next steps"}'
+python -m app.cli memory-touch <memory-record-id>
+python -m app.cli memory-artifacts <memory-record-id>
+python -m app.cli memory-artifact-add <memory-record-id> --payload '{"artifact_type":"file","artifact_ref":"docs/notes.md","label":"project notes"}'
 python -m app.cli model-health
 python -m app.cli model-chat --payload '{"messages":[{"role":"user","content":"Say hello"}]}'
 python -m app.cli plan "Summarize the latest open tasks"
@@ -138,9 +145,20 @@ Use `--base-url` if the API is not running on `http://localhost:8000`.
 - `GET /agent/runs/{runtime_run_id}`
 - `GET /agent/runs/{runtime_run_id}/events`
 
+## Memory endpoints
+
+- `GET /memory/records`
+- `POST /memory/records`
+- `GET /memory/records/{memory_record_id}`
+- `POST /memory/records/{memory_record_id}/touch`
+- `GET /memory/records/{memory_record_id}/artifacts`
+- `POST /memory/records/{memory_record_id}/artifacts`
+
 The planning endpoint is conservative by design: it can return a heuristic plan even when the model runner is disabled, and it will try to refine that plan through the configured adapter when model execution is enabled.
 
 The runtime endpoint executes the plan step by step and stops when it hits approval, missing input, or a failing step. It also returns checkpoint data so a later call can resume from the next step, stores the cumulative run state in SQLite, and writes step-level runtime events for auditability.
+
+The runtime endpoint also snapshots each run into durable memory so completed or blocked runs can be rediscovered later.
 
 The event endpoint supports replay filters:
 
@@ -217,12 +235,27 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - stronger policy engine
 - trust scoring
 - safer tool promotion
-- durable execution memory
+- persistent runtime history
+- runtime event logs
 
 ### Phase 4
+- durable memory records
+- project/task summaries
+- contact dossiers
+- artifact indexing
+- long-lived workflow context
+
+### Phase 5
+- workflow templates
+- scanning workflows
+- ranking workflows
+- report generation workflows
+
+### Phase 6
 - automatic tool synthesis
 - sandbox-first execution
 - human approval gates for risky actions
+- stronger observability and audit logs
 
 ## Notes on safety
 
