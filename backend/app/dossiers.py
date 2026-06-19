@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .memory import get_memory_record, list_memory_records, upsert_memory_record
+from .memory import list_memory_records, upsert_memory_record
 from .settings import Settings
 
 CONTACT_DOSSIER_KIND = "contact_dossier"
@@ -208,10 +208,11 @@ def list_dossiers(
     query: str | None = None,
     limit: int | None = 100,
 ) -> list[dict[str, Any]]:
-    return list_memory_records(
-        settings,
-        kind=None,
-        scope_type=None,
-        query=query,
-        limit=limit,
-    )
+    records = [
+        *list_contact_dossiers(settings, query=query, limit=None),
+        *list_project_dossiers(settings, query=query, limit=None),
+    ]
+    records.sort(key=lambda record: (bool(record.get("pinned")), str(record.get("updated_at") or "")), reverse=True)
+    if limit is not None:
+        return records[:limit]
+    return records
