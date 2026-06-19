@@ -94,7 +94,7 @@ def _truncate(text: str, limit: int = 72) -> str:
     cleaned = text.replace("\n", " ").strip()
     if len(cleaned) <= limit:
         return cleaned
-    return cleaned[: limit - 1] + "…"
+    return cleaned[: limit - 1] + ""  # placeholder to be replaced
 
 
 def format_tool_row(tool: dict[str, Any]) -> str:
@@ -142,6 +142,13 @@ def format_memory_artifact_row(artifact: dict[str, Any]) -> str:
         f"{artifact.get('id', ''):<6} {artifact.get('artifact_type', ''):<20} "
         f"{_truncate(str(artifact.get('artifact_ref') or ''), 34):<34} {label}"
     )
+
+
+def format_memory_link_row(link: dict[str, Any]) -> str:
+    note = _truncate(str(link.get("note") or ""), 34)
+    source = f"{link.get('source_type', '')}:{link.get('source_id', '')}"
+    target = f"{link.get('target_type', '')}:{link.get('target_id', '')}"
+    return f"{link.get('id', ''):<6} {source:<28} -[{link.get('relation_type', '')}]-> {target:<28} {note}"
 
 
 def cmd_health(args: argparse.Namespace) -> int:
@@ -576,6 +583,67 @@ def cmd_memory_artifact_add(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_memory_links(args: argparse.Namespace) -> int:
+    path = _build_path(
+        "/memory/links",
+        {
+            "source_type": args.source_type,
+            "source_id": args.source_id,
+            "target_type": args.target_type,
+            "target_id": args.target_id,
+            "relation_type": args.relation_type,
+            "query": args.query,
+            "limit": args.limit,
+        },
+    )
+    data = request_json("GET", args.base_url, path)
+    if args.json:
+        print_json(data)
+    else:
+        for link in data:
+            print(format_memory_link_row(link))
+    return 0
+
+
+def cmd_memory_link_add(args: argparse.Namespace) -> int:
+    metadata = load_metadata(args.metadata, args.metadata_file)
+    body: dict[str, Any] = {
+        "source_type": args.source_type,
+        "source_id": args.source_id,
+        "target_type": args.target_type,
+        "target_id": args.target_id,
+        "relation_type": args.relation_type,
+        "note": args.note,
+        "metadata": metadata,
+    }
+    data = request_json("POST", args.base_url, "/memory/links", body)
+    if args.json:
+        print_json(data)
+    else:
+        print(f"memory link saved: {data.get('id')}")
+        print(format_memory_link_row(data))
+    return 0
+
+
+def cmd_memory_record_links(args: argparse.Namespace) -> int:
+    path = _build_path(
+        f"/memory/records/{args.memory_record_id}/links",
+        {
+            "direction": args.direction,
+            "relation_type": args.relation_type,
+            "query": args.query,
+            "limit": args.limit,
+        },
+    )
+    data = request_json("GET", args.base_url, path)
+    if args.json:
+        print_json(data)
+    else:
+        for link in data:
+            print(format_memory_link_row(link))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="vps-agent",
@@ -669,6 +737,32 @@ def build_parser() -> argparse.ArgumentParser:
     memory_artifact_add_parser.add_argument("--payload", help="JSON payload string")
     memory_artifact_add_parser.add_argument("--payload-file", help="path to a JSON payload file, or - for stdin")
 
+    memory_links_parser = subparsers.add_parser("memory-links", help="list durable memory links")
+    memory_links_parser.add_argument("--source-type", help="filter by source type")
+    memory_links_parser.add_argument("--source-id", help="filter by source id")
+    memory_links_parser.add_argument("--target-type", help="filter by target type")
+    memory_links_parser.add_argument("--target-id", help="filter by target id")
+    memory_links_parser.add_argument("--relation-type", help="filter by relation type")
+    memory_links_parser.add_argument("--query", help="search source/target metadata")
+    memory_links_parser.add_argument("--limit", type=int, default=100, help="maximum number of links to return")
+
+    memory_link_add_parser = subparsers.add_parser("memory-link-add", help="create a durable memory link")
+    memory_link_add_parser.add_argument("source_type", help="source entity type")
+    memory_link_add_parser.add_argument("source_id", help="source entity id")
+    memory_link_add_parser.add_argument("target_type", help="target entity type")
+    memory_link_add_parser.add_argument("target_id", help="target entity id")
+    memory_link_add_parser.add_argument("relation_type", help="link relation type")
+    memory_link_add_parser.add_argument("--note", help="link note")
+    memory_link_add_parser.add_argument("--metadata", help="JSON metadata string")
+    memory_link_add_parser.add_argument("--metadata-file", help="path to a JSON metadata file, or - for stdin")
+
+    memory_record_links_parser = subparsers.add_parser("memory-record-links", help="list links attached to a memory record")
+    memory_record_links_parser.add_argument("memory_record_id", help="memory record id")
+    memory_record_links_parser.add_argument("--direction", choices=["outbound", "inbound", "both"], default="outbound", help="link direction to inspect")
+    memory_record_links_parser.add_argument("--relation-type", help="filter by relation type")
+    memory_record_links_parser.add_argument("--query", help="search source/target metadata")
+    memory_record_links_parser.add_argument("--limit", type=int, default=100, help="maximum number of links to return")
+
     return parser
 
 
@@ -697,6 +791,9 @@ def dispatch(args: argparse.Namespace) -> int:
         "memory-touch": cmd_memory_touch,
         "memory-artifacts": cmd_memory_artifacts,
         "memory-artifact-add": cmd_memory_artifact_add,
+        "memory-links": cmd_memory_links,
+        "memory-link-add": cmd_memory_link_add,
+        "memory-record-links": cmd_memory_record_links,
     }
     try:
         return handlers[command](args)
