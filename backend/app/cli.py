@@ -113,7 +113,6 @@ def format_runtime_run_row(run: dict[str, Any]) -> str:
 def format_runtime_event_row(event: dict[str, Any]) -> str:
     step_index = event.get("step_index")
     step_label = f"step={step_index}" if step_index is not None else "step=-"
-    payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
     message = _truncate(str(event.get("message") or ""), 64)
     return f"{event.get('id', ''):<6} {event.get('event_type', ''):<18} {step_label:<10} {message}"
 
@@ -264,12 +263,31 @@ def cmd_run_show(args: argparse.Namespace) -> int:
 
 
 def cmd_run_events(args: argparse.Namespace) -> int:
-    data = request_json("GET", args.base_url, f"/agent/runs/{args.runtime_run_id}/events")
+    path = f"/agent/runs/{args.runtime_run_id}/events"
+    params: list[str] = []
+    if args.step_index is not None:
+        params.append(f"step_index={args.step_index}")
+    if args.grouped:
+        params.append("grouped=true")
+    if params:
+        path = f"{path}?{'&'.join(params)}"
+
+    data = request_json("GET", args.base_url, path)
     if args.json:
         print_json(data)
     else:
-        for event in data:
-            print(format_runtime_event_row(event))
+        if isinstance(data, dict) and "events" in data and "by_step" in data:
+            print(f"event_count: {data.get('event_count')}")
+            print("events:")
+            for event in data.get("events") or []:
+                print(format_runtime_event_row(event))
+            print("by_step:")
+            by_step = data.get("by_step") or {}
+            for step_label, events in by_step.items():
+                print(f"  step {step_label}: {len(events)} event(s)")
+        else:
+            for event in data:
+                print(format_runtime_event_row(event))
     return 0
 
 
@@ -465,6 +483,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     run_events_parser = subparsers.add_parser("run-events", help="show runtime events for a persisted run")
     run_events_parser.add_argument("runtime_run_id", help="runtime run id")
+    run_events_parser.add_argument("--step-index", type=int, help="show only events for a specific runtime step")
+    run_events_parser.add_argument("--grouped", action="store_true", help="group events by step index")
 
     model_chat_parser = subparsers.add_parser("model-chat", help="call the configured model adapter")
     model_chat_parser.add_argument("--payload", help="JSON payload string")
