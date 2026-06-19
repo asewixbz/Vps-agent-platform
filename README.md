@@ -26,6 +26,8 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - approval flow
 - terminal CLI
 - provider-agnostic model adapter contract
+- Kie.ai model adapter wiring
+- model health/chat API endpoints
 
 ## What is not included yet
 
@@ -53,11 +55,13 @@ vps-agent-platform/
       job_queue.py
       main.py
       model_adapter.py
+      model_runtime.py
       policy.py
       runner.py
       settings.py
       store.py
       worker.py
+      kieai_adapter.py
 ```
 
 ## Run locally
@@ -82,9 +86,16 @@ curl http://localhost:8000/health
 
 If you want to run browser tasks, set `APP_BROWSER_RUNNER_ENABLED=true` in `.env` before starting the stack.
 
+To use the Kie.ai adapter, set:
+
+```bash
+APP_MODEL_ADAPTER_NAME=kie_ai
+APP_MODEL_ADAPTER_OPTIONS_JSON='{"api_key":"<your-kie-ai-api-key>"}'
+```
+
 ## CLI quickstart
 
-The backend now exposes a terminal client so the project can be used without a web UI.
+The backend exposes a terminal client so the project can be used without a web UI.
 
 From `backend/`:
 
@@ -92,12 +103,21 @@ From `backend/`:
 python -m app.cli health
 python -m app.cli tools
 python -m app.cli tasks
+python -m app.cli model-health
+python -m app.cli model-chat --payload '{"messages":[{"role":"user","content":"Say hello"}]}'
 python -m app.cli register-tool local_python_test python --description "Run a local Python smoke test" --entrypoint python --status trusted --trust-level 2
 python -m app.cli submit local_python_test --payload '{"script":"print(\"hello from the runner\")"}'
 python -m app.cli approve <task-id> --note "approved for run"
 ```
 
 Use `--base-url` if the API is not running on `http://localhost:8000`.
+
+## Model endpoints
+
+- `GET /model/health`
+- `POST /model/chat`
+
+These route through the configured adapter and let the control plane exercise the provider without changing the runtime.
 
 ## Check the queue
 
@@ -151,6 +171,8 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - approval flow
 - CLI client
 - model adapter contract
+- model API endpoints
+- first provider adapter
 
 ### Phase 2
 - Redis queue
