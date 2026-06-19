@@ -29,6 +29,7 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - Kie.ai model adapter wiring
 - model health/chat API endpoints
 - conservative execution planner API and CLI
+- conservative multi-step runtime loop API and CLI
 
 ## What is not included yet
 
@@ -36,7 +37,7 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - GPU/model runner
 - automatic code generation for arbitrary tools
 - full sandbox hardening with seccomp/AppArmor profiles
-- multi-step agent runtime with persistent memory
+- durable long-term memory
 
 ## Folder layout
 
@@ -52,6 +53,7 @@ vps-agent-platform/
     requirements.txt
     app/
       __main__.py
+      agent_runtime.py
       cli.py
       executor.py
       job_queue.py
@@ -110,6 +112,7 @@ python -m app.cli tasks
 python -m app.cli model-health
 python -m app.cli model-chat --payload '{"messages":[{"role":"user","content":"Say hello"}]}'
 python -m app.cli plan "Summarize the latest open tasks"
+python -m app.cli run "Summarize the latest open tasks"
 python -m app.cli register-tool local_python_test python --description "Run a local Python smoke test" --entrypoint python --status trusted --trust-level 2
 python -m app.cli submit local_python_test --payload '{"script":"print(\"hello from the runner\")"}'
 python -m app.cli approve <task-id> --note "approved for run"
@@ -122,8 +125,11 @@ Use `--base-url` if the API is not running on `http://localhost:8000`.
 - `GET /model/health`
 - `POST /model/chat`
 - `POST /agent/plan`
+- `POST /agent/run`
 
 The planning endpoint is conservative by design: it can return a heuristic plan even when the model runner is disabled, and it will try to refine that plan through the configured adapter when model execution is enabled.
+
+The runtime endpoint executes the plan step by step and stops when it hits approval, missing input, or a failing step.
 
 These route through the configured adapter and let the control plane exercise the provider without changing the runtime. The chat endpoint is enabled only when `APP_MODEL_RUNNER_ENABLED=true`.
 
@@ -188,12 +194,14 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - browser runner
 - artifact store
 - execution planning bridge
+- runtime loop scaffold
 
 ### Phase 3
 - Postgres
 - stronger policy engine
 - trust scoring
 - safer tool promotion
+- durable execution memory
 
 ### Phase 4
 - automatic tool synthesis
