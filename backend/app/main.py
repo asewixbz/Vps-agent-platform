@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from .job_queue import enqueue_task, queue_size
 from .model_adapter import ModelAdapterError
 from .model_runtime import chat_model, model_health as runtime_model_health
+from .planner import build_execution_plan
 from .settings import get_settings
 from .store import (
     approve_task,
@@ -49,6 +50,11 @@ class TaskApprovalRequest(BaseModel):
 
 class ModelChatRequest(BaseModel):
     payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class PlanRequest(BaseModel):
+    goal: str
+    context: dict[str, Any] = Field(default_factory=dict)
 
 
 @app.on_event("startup")
@@ -167,3 +173,9 @@ def model_chat(request: ModelChatRequest) -> dict[str, Any]:
     except ModelAdapterError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     return asdict(response)
+
+
+@app.post("/agent/plan")
+def agent_plan(request: PlanRequest) -> dict[str, Any]:
+    plan = build_execution_plan(settings, goal=request.goal, context=request.context)
+    return asdict(plan)
