@@ -41,13 +41,14 @@ The project should be treated as an execution platform first, and a UI product s
 - durable memory records with artifact indexing
 - runtime run snapshots persisted into durable memory
 - project/contact dossier helpers
+- durable memory links between runtime snapshots, dossiers, and artifact refs
 
 ### What exists but is still early
 
 - browser execution is behind a feature flag
 - model execution is only a placeholder for broader orchestration use
 - shell execution is intentionally restricted
-- the durable memory layer still needs richer dossier workflows and linking
+- the durable memory layer still needs richer dossier workflows and artifact handling
 - there is no production-grade sandboxing
 
 ## Technical direction
@@ -259,6 +260,7 @@ Deliverables:
 - contact dossiers
 - experiment logs
 - artifact indexing
+- memory links between snapshots, dossiers, and artifacts
 - dossier helpers for recurring workflows
 
 Acceptance criteria:
@@ -301,9 +303,10 @@ Acceptance criteria:
 
 ## Current code map
 
-- `backend/app/main.py` — API endpoints for tools, tasks, approvals, planning, runtime, run history, memory, dossiers, event logs, and queue status
+- `backend/app/main.py` — API endpoints for tools, tasks, approvals, planning, runtime, run history, memory, dossiers, event logs, links, and queue status
 - `backend/app/dossiers.py` — project/contact dossier helpers built on top of durable memory
 - `backend/app/memory.py` — durable memory storage, artifact indexing, and runtime snapshot helpers
+- `backend/app/memory_links.py` — durable memory link storage and query helpers
 - `backend/app/store.py` — SQLite schema and CRUD for core control-plane data
 - `backend/app/policy.py` — trust and safety checks
 - `backend/app/job_queue.py` — Redis queue wrapper
@@ -311,7 +314,7 @@ Acceptance criteria:
 - `backend/app/executor.py` — task execution orchestration
 - `backend/app/worker.py` — queue consumer loop
 - `backend/app/settings.py` — configuration and model adapter settings scaffold
-- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, runtime, run history, event logs, memory records, and tool registration
+- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, runtime, run history, event logs, memory records, links, and tool registration
 - `backend/app/model_adapter.py` — provider-neutral model request/response contract and adapter registry
 - `backend/app/planner.py` — conservative planning bridge that can work with or without the model runner
 - `backend/app/agent_runtime.py` — multi-step runtime loop that executes planned steps conservatively and returns checkpoints for resuming
@@ -319,8 +322,8 @@ Acceptance criteria:
 
 ## Immediate next work
 
-1. Add richer linking between dossiers, runtime runs, and artifacts.
-2. Expand browser and artifact handling once the runtime loop is stable.
+1. Expand artifact handling and richer link views on top of durable memory.
+2. Strengthen browser and artifact handling once the runtime loop is stable.
 3. Add stronger sandboxing and observability before broader tool synthesis.
 
 ## Working rules for future contributors
@@ -333,4 +336,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. Durable memory and dossier helpers are now present; the next useful step is richer linking and artifact handling on top of them.
+The repository is already a usable execution backbone. Durable memory, dossier helpers, and memory links are now present; the next useful step is richer artifact handling and link traversal on top of them.
