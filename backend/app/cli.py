@@ -102,11 +102,20 @@ def format_runtime_run_row(run: dict[str, Any]) -> str:
     checkpoint = run.get("checkpoint") if isinstance(run.get("checkpoint"), dict) else {}
     steps = run.get("steps") if isinstance(run.get("steps"), list) else []
     goal = _truncate(str(run.get("goal") or ""), 56)
+    event_count = int(run.get("event_count") or 0)
     return (
         f"{run.get('id', ''):<36} {run.get('status', ''):<14} "
-        f"attempts={int(run.get('attempts') or 0):<2} steps={len(steps):<3} "
+        f"attempts={int(run.get('attempts') or 0):<2} steps={len(steps):<3} events={event_count:<3} "
         f"next={checkpoint.get('next_step_index', '-'):>3}  {goal}"
     )
+
+
+def format_runtime_event_row(event: dict[str, Any]) -> str:
+    step_index = event.get("step_index")
+    step_label = f"step={step_index}" if step_index is not None else "step=-"
+    payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
+    message = _truncate(str(event.get("message") or ""), 64)
+    return f"{event.get('id', ''):<6} {event.get('event_type', ''):<18} {step_label:<10} {message}"
 
 
 def cmd_health(args: argparse.Namespace) -> int:
@@ -222,6 +231,7 @@ def cmd_run_show(args: argparse.Namespace) -> int:
         print(f"goal: {data.get('goal')}")
         print(f"status: {data.get('status')}")
         print(f"attempts: {data.get('attempts')}")
+        print(f"events: {data.get('event_count') or 0}")
         if data.get("summary"):
             print(f"summary: {data.get('summary')}")
         if data.get("blocked_reason"):
@@ -250,6 +260,16 @@ def cmd_run_show(args: argparse.Namespace) -> int:
                     print(f"     task_id: {step.get('task_id')}")
                 if step.get("detail"):
                     print(f"     {step.get('detail')}")
+    return 0
+
+
+def cmd_run_events(args: argparse.Namespace) -> int:
+    data = request_json("GET", args.base_url, f"/agent/runs/{args.runtime_run_id}/events")
+    if args.json:
+        print_json(data)
+    else:
+        for event in data:
+            print(format_runtime_event_row(event))
     return 0
 
 
@@ -443,6 +463,9 @@ def build_parser() -> argparse.ArgumentParser:
     run_show_parser = subparsers.add_parser("run-show", help="show a persisted runtime run")
     run_show_parser.add_argument("runtime_run_id", help="runtime run id")
 
+    run_events_parser = subparsers.add_parser("run-events", help="show runtime events for a persisted run")
+    run_events_parser.add_argument("runtime_run_id", help="runtime run id")
+
     model_chat_parser = subparsers.add_parser("model-chat", help="call the configured model adapter")
     model_chat_parser.add_argument("--payload", help="JSON payload string")
     model_chat_parser.add_argument("--payload-file", help="path to a JSON payload file, or - for stdin")
@@ -495,6 +518,7 @@ def dispatch(args: argparse.Namespace) -> int:
         "task": cmd_task,
         "runs": cmd_runs,
         "run-show": cmd_run_show,
+        "run-events": cmd_run_events,
         "register-tool": cmd_register_tool,
         "submit": cmd_submit,
         "approve": cmd_approve,
