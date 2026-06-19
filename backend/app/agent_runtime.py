@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import uuid
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from .executor import execute_task
 from .planner import AgentPlan, PlanStep, build_execution_plan
 from .settings import Settings
-from .store import create_task, get_tool
+from .store import create_runtime_run, get_runtime_run, update_runtime_run, utc_now
 
 
 @dataclass(frozen=True)
@@ -26,16 +27,50 @@ class RuntimeStepResult:
 
 @dataclass(frozen=True)
 class RuntimeExecutionResult:
+    runtime_run_id: str
     goal: str
     status: str
     summary: str
     plan: AgentPlan
     steps: list[RuntimeStepResult]
     iterations: int
+    attempts: int
     blocked_reason: str | None = None
     resume_hint: str | None = None
     checkpoint: dict[str, Any] = field(default_factory=dict)
     context: dict[str, Any] = field(default_factory=dict)
+
+
+def _plan_from_dict(payload: dict[str, Any]) -> AgentPlan:
+    steps: list[PlanStep] = []
+    raw_steps = payload.get("steps")
+    if isinstance(raw_steps, list):
+        for item in raw_steps:
+            if not isinstance(item, dict):
+                continue
+            steps.append(
+                PlanStep(
+                    title=str(item.get("title") or "Untitled step"),
+                    kind=str(item.get("kind") or "inspect"),
+                    description=str(item.get("description") or ""),
+                    tool_name=item.get("tool_name") if item.get("tool_name") is not None else None,
+                    requires_approval=bool(item.get("requires_approval") or False),
+                )
+            )
+
+    raw_notes = payload.get("notes") if isinstance(payload.get("notes"), list) else []
+    notes = [str(item) for item in raw_notes if item is not None]
+    metadata = payload.get("metadata") if isinstance(payload.get("metadata"), dict) else {}
+    return AgentPlan(
+        goal=str(payload.get("goal") or ""),
+        summary=str(payload.get("summary") or ""),
+        source=str(payload.get("source") or "heuristic"),
+        recommended_tool=payload.get("recommended_tool") if payload.get("recommended_tool") not in {None, ""} else None,
+        requires_approval=bool(payload.get("requires_approval") or False),
+        steps=steps,
+        notes=notes,
+        metadata=dict(metadata),
+    )
 
 
 def _resolve_timeout(context: dict[str, Any]) -> int | None:
@@ -45,10 +80,7 @@ def _resolve_timeout(context: dict[str, Any]) -> int | None:
     return None
 
 
-def _resolve_start_step_index(
-    context: dict[str, Any],
-    resume_from_step_index: int | None = None,
-) -> int:
+def _resolve_start_step_index(context: dict[str, Any], resume_from_step_index: int | None = None) -> int:
     candidates: list[Any] = [resume_from_step_index, context.get("resume_from_step_index")]
     checkpoint = context.get("checkpoint")
     if isinstance(checkpoint, dict):
@@ -139,6 +171,66 @@ def _resume_hint(status: str, checkpoint: dict[str, Any], blocked_reason: str | 
     return f"Resume from step {next_step_index}."
 
 
+def _persist_runtime_run_state(
+    settings: Settings,
+    *,
+    runtime_run_id: str,
+    goal: str,
+    plan: AgentPlan,
+    status: str,
+    summary: str,
+    steps_payload: list[dict[str, Any]],
+    checkpoint: dict[str, Any],
+    context: dict[str, Any],
+    attempts: int,
+    blocked_reason: str | None = None,
+    resume_hint: str | None = None,
+    started_at: str | None = None,
+    finished_at: str | None = None,
+    last_resume_from_step_index: int | None = None,
+    last_max_steps: int | None = None,
+) -> dict[str, Any]:
+    payload = {
+        "goal": goal,
+        "plan": asdict(plan),
+        "context": context,
+        "status": status,
+        "summary": summary,
+        "steps": steps_payload,
+        "checkpoint": checkpoint,
+        "blocked_reason": blocked_reason,
+        "resume_hint": resume_hint,
+        "attempts": attempts,
+        "started_at": started_at,
+        "finished_at": finished_at,
+        "last_run_at": utc_now(),
+        "last_resume_from_step_index": last_resume_from_step_index,
+        "last_max_steps": last_max_steps,
+    }
+    existing = get_runtime_run(settings, runtime_run_id=runtime_run_id)
+    if existing is None:
+        return create_runtime_run(
+            settings,
+            runtime_run_id=runtime_run_id,
+            goal=goal,
+            plan=asdict(plan),
+            context=context,
+            status=status,
+            summary=summary,
+            steps=steps_payload,
+            checkpoint=checkpoint,
+            blocked_reason=blocked_reason,
+            resume_hint=resume_hint,
+            attempts=attempts,
+            started_at=started_at,
+            finished_at=finished_at,
+            last_run_at=utc_now(),
+            last_resume_from_step_index=last_resume_from_step_index,
+            last_max_steps=last_max_steps,
+        )
+    return update_runtime_run(settings, runtime_run_id=runtime_run_id, **payload)
+
+
 def run_agent_runtime(
     settings: Settings,
     *,
@@ -146,29 +238,90 @@ def run_agent_runtime(
     context: dict[str, Any] | None = None,
     max_steps: int = 5,
     resume_from_step_index: int | None = None,
+    runtime_run_id: str | None = None,
 ) -> RuntimeExecutionResult:
-    normalized_context = dict(context or {})
-    plan = build_execution_plan(settings, goal=goal, context=normalized_context)
+    runtime_run_id = runtime_run_id or str(uuid.uuid4())
+    persisted_run = get_runtime_run(settings, runtime_run_id=runtime_run_id)
+
+    effective_goal = str((persisted_run or {}).get("goal") or goal)
+    persisted_context = dict((persisted_run or {}).get("context") or {})
+    normalized_context = {**persisted_context, **dict(context or {})}
+    persisted_checkpoint = dict((persisted_run or {}).get("checkpoint") or {})
+    if persisted_checkpoint and "checkpoint" not in normalized_context:
+        normalized_context["checkpoint"] = persisted_checkpoint
+
+    if persisted_run and persisted_run.get("plan"):
+        plan = _plan_from_dict(dict(persisted_run["plan"]))
+    else:
+        plan = build_execution_plan(settings, goal=effective_goal, context=normalized_context)
+
+    existing_steps_payload = list((persisted_run or {}).get("steps") or [])
+    attempts = int((persisted_run or {}).get("attempts") or 0) + 1
+    runtime_started_at = str((persisted_run or {}).get("started_at") or utc_now())
+    start_step_index = _resolve_start_step_index(normalized_context, resume_from_step_index)
+    initial_checkpoint = persisted_checkpoint or _build_checkpoint(
+        plan=plan,
+        completed_step_indices=[],
+        next_step_index=start_step_index,
+        resume_from_step_index=start_step_index if start_step_index > 1 else None,
+    )
+
+    _persist_runtime_run_state(
+        settings,
+        runtime_run_id=runtime_run_id,
+        goal=effective_goal,
+        plan=plan,
+        status="running",
+        summary=plan.summary,
+        steps_payload=existing_steps_payload,
+        checkpoint=initial_checkpoint,
+        context=normalized_context,
+        attempts=attempts,
+        started_at=runtime_started_at,
+        last_resume_from_step_index=start_step_index,
+        last_max_steps=max_steps,
+    )
+
     results: list[RuntimeStepResult] = []
     completed_step_indices: list[int] = []
     total_steps = len(plan.steps)
 
     if max_steps <= 0:
         checkpoint = _build_checkpoint(plan=plan, completed_step_indices=[], next_step_index=1)
+        steps_payload = existing_steps_payload + [asdict(step) for step in results]
+        _persist_runtime_run_state(
+            settings,
+            runtime_run_id=runtime_run_id,
+            goal=effective_goal,
+            plan=plan,
+            status="blocked",
+            summary=plan.summary,
+            steps_payload=steps_payload,
+            checkpoint=checkpoint,
+            context={**normalized_context, "checkpoint": checkpoint},
+            attempts=attempts,
+            blocked_reason="max_steps must be greater than zero",
+            resume_hint=_resume_hint("blocked", checkpoint, "max_steps must be greater than zero"),
+            started_at=runtime_started_at,
+            finished_at=utc_now(),
+            last_resume_from_step_index=start_step_index,
+            last_max_steps=max_steps,
+        )
         return RuntimeExecutionResult(
-            goal=goal,
+            runtime_run_id=runtime_run_id,
+            goal=effective_goal,
             status="blocked",
             summary="runtime loop was asked to run zero steps",
             plan=plan,
             steps=[],
             iterations=0,
+            attempts=attempts,
             blocked_reason="max_steps must be greater than zero",
             resume_hint=_resume_hint("blocked", checkpoint, "max_steps must be greater than zero"),
             checkpoint=checkpoint,
-            context=normalized_context,
+            context={**normalized_context, "checkpoint": checkpoint},
         )
 
-    start_step_index = _resolve_start_step_index(normalized_context, resume_from_step_index)
     if start_step_index > total_steps:
         checkpoint = _build_checkpoint(
             plan=plan,
@@ -176,13 +329,33 @@ def run_agent_runtime(
             next_step_index=total_steps + 1,
             resume_from_step_index=start_step_index,
         )
+        steps_payload = existing_steps_payload + [asdict(step) for step in results]
+        _persist_runtime_run_state(
+            settings,
+            runtime_run_id=runtime_run_id,
+            goal=effective_goal,
+            plan=plan,
+            status="completed",
+            summary=plan.summary,
+            steps_payload=steps_payload,
+            checkpoint=checkpoint,
+            context={**normalized_context, "checkpoint": checkpoint},
+            attempts=attempts,
+            resume_hint=_resume_hint("completed", checkpoint),
+            started_at=runtime_started_at,
+            finished_at=utc_now(),
+            last_resume_from_step_index=start_step_index,
+            last_max_steps=max_steps,
+        )
         return RuntimeExecutionResult(
-            goal=goal,
+            runtime_run_id=runtime_run_id,
+            goal=effective_goal,
             status="completed",
             summary=plan.summary,
             plan=plan,
             steps=[],
             iterations=0,
+            attempts=attempts,
             resume_hint=_resume_hint("completed", checkpoint),
             checkpoint=checkpoint,
             context={**normalized_context, "checkpoint": checkpoint},
@@ -217,13 +390,33 @@ def run_agent_runtime(
                 blocked_step_index=index,
                 resume_from_step_index=start_step_index,
             )
+            steps_payload = existing_steps_payload + [asdict(step_result) for step_result in results]
+            _persist_runtime_run_state(
+                settings,
+                runtime_run_id=runtime_run_id,
+                goal=effective_goal,
+                plan=plan,
+                status="pending_approval",
+                summary=plan.summary,
+                steps_payload=steps_payload,
+                checkpoint=checkpoint,
+                context={**normalized_context, "checkpoint": checkpoint},
+                attempts=attempts,
+                blocked_reason=detail,
+                resume_hint=_resume_hint("pending_approval", checkpoint, detail),
+                started_at=runtime_started_at,
+                last_resume_from_step_index=start_step_index,
+                last_max_steps=max_steps,
+            )
             return RuntimeExecutionResult(
-                goal=goal,
+                runtime_run_id=runtime_run_id,
+                goal=effective_goal,
                 status="pending_approval",
                 summary=plan.summary,
                 plan=plan,
                 steps=results,
                 iterations=len(results),
+                attempts=attempts,
                 blocked_reason=detail,
                 resume_hint=_resume_hint("pending_approval", checkpoint, detail),
                 checkpoint=checkpoint,
@@ -248,13 +441,34 @@ def run_agent_runtime(
                 blocked_step_index=index,
                 resume_from_step_index=start_step_index,
             )
+            steps_payload = existing_steps_payload + [asdict(step_result) for step_result in results]
+            _persist_runtime_run_state(
+                settings,
+                runtime_run_id=runtime_run_id,
+                goal=effective_goal,
+                plan=plan,
+                status="blocked",
+                summary=plan.summary,
+                steps_payload=steps_payload,
+                checkpoint=checkpoint,
+                context={**normalized_context, "checkpoint": checkpoint},
+                attempts=attempts,
+                blocked_reason=detail,
+                resume_hint=_resume_hint("blocked", checkpoint, detail),
+                started_at=runtime_started_at,
+                finished_at=utc_now(),
+                last_resume_from_step_index=start_step_index,
+                last_max_steps=max_steps,
+            )
             return RuntimeExecutionResult(
-                goal=goal,
+                runtime_run_id=runtime_run_id,
+                goal=effective_goal,
                 status="blocked",
                 summary=plan.summary,
                 plan=plan,
                 steps=results,
                 iterations=len(results),
+                attempts=attempts,
                 blocked_reason=detail,
                 resume_hint=_resume_hint("blocked", checkpoint, detail),
                 checkpoint=checkpoint,
@@ -272,13 +486,34 @@ def run_agent_runtime(
                 blocked_step_index=index,
                 resume_from_step_index=start_step_index,
             )
+            steps_payload = existing_steps_payload + [asdict(step_result) for step_result in results]
+            _persist_runtime_run_state(
+                settings,
+                runtime_run_id=runtime_run_id,
+                goal=effective_goal,
+                plan=plan,
+                status="blocked",
+                summary=plan.summary,
+                steps_payload=steps_payload,
+                checkpoint=checkpoint,
+                context={**normalized_context, "checkpoint": checkpoint},
+                attempts=attempts,
+                blocked_reason=detail,
+                resume_hint=_resume_hint("blocked", checkpoint, detail),
+                started_at=runtime_started_at,
+                finished_at=utc_now(),
+                last_resume_from_step_index=start_step_index,
+                last_max_steps=max_steps,
+            )
             return RuntimeExecutionResult(
-                goal=goal,
+                runtime_run_id=runtime_run_id,
+                goal=effective_goal,
                 status="blocked",
                 summary=plan.summary,
                 plan=plan,
                 steps=results,
                 iterations=len(results),
+                attempts=attempts,
                 blocked_reason=detail,
                 resume_hint=_resume_hint("blocked", checkpoint, detail),
                 checkpoint=checkpoint,
@@ -297,13 +532,33 @@ def run_agent_runtime(
                 blocked_step_index=index,
                 resume_from_step_index=start_step_index,
             )
+            steps_payload = existing_steps_payload + [asdict(step_result) for step_result in results]
+            _persist_runtime_run_state(
+                settings,
+                runtime_run_id=runtime_run_id,
+                goal=effective_goal,
+                plan=plan,
+                status="pending_approval",
+                summary=plan.summary,
+                steps_payload=steps_payload,
+                checkpoint=checkpoint,
+                context={**normalized_context, "checkpoint": checkpoint},
+                attempts=attempts,
+                blocked_reason=detail,
+                resume_hint=_resume_hint("pending_approval", checkpoint, detail),
+                started_at=runtime_started_at,
+                last_resume_from_step_index=start_step_index,
+                last_max_steps=max_steps,
+            )
             return RuntimeExecutionResult(
-                goal=goal,
+                runtime_run_id=runtime_run_id,
+                goal=effective_goal,
                 status="pending_approval",
                 summary=plan.summary,
                 plan=plan,
                 steps=results,
                 iterations=len(results),
+                attempts=attempts,
                 blocked_reason=detail,
                 resume_hint=_resume_hint("pending_approval", checkpoint, detail),
                 checkpoint=checkpoint,
@@ -321,13 +576,33 @@ def run_agent_runtime(
                 blocked_step_index=index,
                 resume_from_step_index=start_step_index,
             )
+            steps_payload = existing_steps_payload + [asdict(step_result) for step_result in results]
+            _persist_runtime_run_state(
+                settings,
+                runtime_run_id=runtime_run_id,
+                goal=effective_goal,
+                plan=plan,
+                status="pending_input",
+                summary=plan.summary,
+                steps_payload=steps_payload,
+                checkpoint=checkpoint,
+                context={**normalized_context, "checkpoint": checkpoint},
+                attempts=attempts,
+                blocked_reason=detail,
+                resume_hint=_resume_hint("pending_input", checkpoint, detail),
+                started_at=runtime_started_at,
+                last_resume_from_step_index=start_step_index,
+                last_max_steps=max_steps,
+            )
             return RuntimeExecutionResult(
-                goal=goal,
+                runtime_run_id=runtime_run_id,
+                goal=effective_goal,
                 status="pending_input",
                 summary=plan.summary,
                 plan=plan,
                 steps=results,
                 iterations=len(results),
+                attempts=attempts,
                 blocked_reason=detail,
                 resume_hint=_resume_hint("pending_input", checkpoint, detail),
                 checkpoint=checkpoint,
@@ -361,15 +636,37 @@ def run_agent_runtime(
                 blocked_step_index=index,
                 resume_from_step_index=start_step_index,
             )
+            steps_payload = existing_steps_payload + [asdict(step_result) for step_result in results]
+            final_status = "failed" if task_status not in {"blocked", "pending_approval", "pending_input"} else task_status
+            _persist_runtime_run_state(
+                settings,
+                runtime_run_id=runtime_run_id,
+                goal=effective_goal,
+                plan=plan,
+                status=final_status,
+                summary=plan.summary,
+                steps_payload=steps_payload,
+                checkpoint=checkpoint,
+                context={**normalized_context, "checkpoint": checkpoint},
+                attempts=attempts,
+                blocked_reason=str(executed.get("reason") or executed.get("stderr") or f"step ended with status {task_status}"),
+                resume_hint=_resume_hint(final_status, checkpoint, str(executed.get("stderr") or executed.get("reason") or "")),
+                started_at=runtime_started_at,
+                finished_at=utc_now(),
+                last_resume_from_step_index=start_step_index,
+                last_max_steps=max_steps,
+            )
             return RuntimeExecutionResult(
-                goal=goal,
-                status=task_status,
+                runtime_run_id=runtime_run_id,
+                goal=effective_goal,
+                status=final_status,
                 summary=plan.summary,
                 plan=plan,
                 steps=results,
                 iterations=len(results),
+                attempts=attempts,
                 blocked_reason=str(executed.get("reason") or executed.get("stderr") or f"step ended with status {task_status}"),
-                resume_hint=_resume_hint(task_status, checkpoint, str(executed.get("stderr") or executed.get("reason") or "")),
+                resume_hint=_resume_hint(final_status, checkpoint, str(executed.get("stderr") or executed.get("reason") or "")),
                 checkpoint=checkpoint,
                 context={**normalized_context, "checkpoint": checkpoint},
             )
@@ -389,13 +686,33 @@ def run_agent_runtime(
             next_step_index=next_step_index,
             resume_from_step_index=start_step_index,
         )
+        steps_payload = existing_steps_payload + [asdict(step_result) for step_result in results]
+        _persist_runtime_run_state(
+            settings,
+            runtime_run_id=runtime_run_id,
+            goal=effective_goal,
+            plan=plan,
+            status="partial",
+            summary=plan.summary,
+            steps_payload=steps_payload,
+            checkpoint=checkpoint,
+            context={**normalized_context, "checkpoint": checkpoint},
+            attempts=attempts,
+            blocked_reason="runtime loop stopped after reaching max_steps",
+            resume_hint=_resume_hint("partial", checkpoint, "runtime loop stopped after reaching max_steps"),
+            started_at=runtime_started_at,
+            last_resume_from_step_index=start_step_index,
+            last_max_steps=max_steps,
+        )
         return RuntimeExecutionResult(
-            goal=goal,
+            runtime_run_id=runtime_run_id,
+            goal=effective_goal,
             status="partial",
             summary=plan.summary,
             plan=plan,
             steps=results,
             iterations=len(results),
+            attempts=attempts,
             blocked_reason="runtime loop stopped after reaching max_steps",
             resume_hint=_resume_hint("partial", checkpoint, "runtime loop stopped after reaching max_steps"),
             checkpoint=checkpoint,
@@ -408,13 +725,33 @@ def run_agent_runtime(
         next_step_index=next_step_index,
         resume_from_step_index=start_step_index,
     )
+    steps_payload = existing_steps_payload + [asdict(step_result) for step_result in results]
+    _persist_runtime_run_state(
+        settings,
+        runtime_run_id=runtime_run_id,
+        goal=effective_goal,
+        plan=plan,
+        status="completed",
+        summary=plan.summary,
+        steps_payload=steps_payload,
+        checkpoint=checkpoint,
+        context={**normalized_context, "checkpoint": checkpoint},
+        attempts=attempts,
+        resume_hint=_resume_hint("completed", checkpoint),
+        started_at=runtime_started_at,
+        finished_at=utc_now(),
+        last_resume_from_step_index=start_step_index,
+        last_max_steps=max_steps,
+    )
     return RuntimeExecutionResult(
-        goal=goal,
+        runtime_run_id=runtime_run_id,
+        goal=effective_goal,
         status="completed",
         summary=plan.summary,
         plan=plan,
         steps=results,
         iterations=len(results),
+        attempts=attempts,
         checkpoint=checkpoint,
         context={**normalized_context, "checkpoint": checkpoint},
     )
