@@ -155,15 +155,31 @@ def upsert_memory_record(
     pinned: bool = False,
     last_accessed_at: str | None = None,
 ) -> dict[str, Any]:
-    now = utc_now()
     tags_list = tags or []
     metadata_dict = metadata or {}
     artifacts_list = artifacts or []
     conn = connect(settings.db_path)
     try:
-        existing = conn.execute("SELECT id, created_at FROM memory_records WHERE memory_key = ?", (memory_key,)).fetchone()
+        existing = conn.execute("SELECT id FROM memory_records WHERE memory_key = ?", (memory_key,)).fetchone()
         if existing is None:
             memory_record_id = str(uuid.uuid4())
+            values = _serialize_record_args(
+                memory_key=memory_key,
+                kind=kind,
+                scope_type=scope_type,
+                scope_id=scope_id,
+                title=title,
+                summary=summary,
+                content=content,
+                tags=tags_list,
+                metadata=metadata_dict,
+                artifacts=artifacts_list,
+                source=source,
+                source_ref=source_ref,
+                importance=importance,
+                pinned=pinned,
+                last_accessed_at=last_accessed_at,
+            )
             conn.execute(
                 """
                 INSERT INTO memory_records (
@@ -172,27 +188,7 @@ def upsert_memory_record(
                     pinned, last_accessed_at, created_at, updated_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (
-                    memory_record_id,
-                    *
-                    _serialize_record_args(
-                        memory_key=memory_key,
-                        kind=kind,
-                        scope_type=scope_type,
-                        scope_id=scope_id,
-                        title=title,
-                        summary=summary,
-                        content=content,
-                        tags=tags_list,
-                        metadata=metadata_dict,
-                        artifacts=artifacts_list,
-                        source=source,
-                        source_ref=source_ref,
-                        importance=importance,
-                        pinned=pinned,
-                        last_accessed_at=last_accessed_at,
-                    ),
-                ),
+                (memory_record_id, *values),
             )
         else:
             memory_record_id = str(existing["id"])
@@ -231,7 +227,7 @@ def upsert_memory_record(
                     importance,
                     1 if pinned else 0,
                     last_accessed_at,
-                    now,
+                    utc_now(),
                     memory_key,
                 ),
             )
