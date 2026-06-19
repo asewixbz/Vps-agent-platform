@@ -28,7 +28,7 @@ app = FastAPI(title=settings.app_name)
 
 class ToolRegisterRequest(BaseModel):
     name: str
-    kind: Literal["python", "shell", "browser", "model", "messaging"] = "python"
+    kind: Literal["python", "shell", "browser", "model", "messaging"]
     description: str = ""
     entrypoint: str | None = None
     status: Literal["draft", "tested", "trusted", "blocked"] = "draft"
