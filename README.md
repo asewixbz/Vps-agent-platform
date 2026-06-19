@@ -28,6 +28,7 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - provider-agnostic model adapter contract
 - Kie.ai model adapter wiring
 - model health/chat API endpoints
+- conservative execution planner API and CLI
 
 ## What is not included yet
 
@@ -35,6 +36,7 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - GPU/model runner
 - automatic code generation for arbitrary tools
 - full sandbox hardening with seccomp/AppArmor profiles
+- multi-step agent runtime with persistent memory
 
 ## Folder layout
 
@@ -56,6 +58,7 @@ vps-agent-platform/
       main.py
       model_adapter.py
       model_runtime.py
+      planner.py
       policy.py
       runner.py
       settings.py
@@ -106,6 +109,7 @@ python -m app.cli tools
 python -m app.cli tasks
 python -m app.cli model-health
 python -m app.cli model-chat --payload '{"messages":[{"role":"user","content":"Say hello"}]}'
+python -m app.cli plan "Summarize the latest open tasks"
 python -m app.cli register-tool local_python_test python --description "Run a local Python smoke test" --entrypoint python --status trusted --trust-level 2
 python -m app.cli submit local_python_test --payload '{"script":"print(\"hello from the runner\")"}'
 python -m app.cli approve <task-id> --note "approved for run"
@@ -117,6 +121,9 @@ Use `--base-url` if the API is not running on `http://localhost:8000`.
 
 - `GET /model/health`
 - `POST /model/chat`
+- `POST /agent/plan`
+
+The planning endpoint is conservative by design: it can return a heuristic plan even when the model runner is disabled, and it will try to refine that plan through the configured adapter when model execution is enabled.
 
 These route through the configured adapter and let the control plane exercise the provider without changing the runtime. The chat endpoint is enabled only when `APP_MODEL_RUNNER_ENABLED=true`.
 
@@ -180,6 +187,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - worker process
 - browser runner
 - artifact store
+- execution planning bridge
 
 ### Phase 3
 - Postgres
