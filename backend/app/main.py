@@ -19,6 +19,7 @@ from .store import (
     get_task,
     get_tool,
     init_db,
+    list_runtime_run_events,
     list_runtime_runs,
     list_tasks,
     list_tools,
@@ -101,6 +102,7 @@ def phases() -> dict[str, Any]:
             "multi-step runtime loop",
             "checkpoint and resume markers",
             "persistent runtime history",
+            "runtime event logs",
             "Postgres",
             "stronger policy engine",
             "trust scoring",
@@ -207,6 +209,14 @@ def agent_run_get(runtime_run_id: str) -> dict[str, Any]:
     if run is None:
         raise HTTPException(status_code=404, detail="runtime run not found")
     return run
+
+
+@app.get("/agent/runs/{runtime_run_id}/events")
+def agent_run_events(runtime_run_id: str) -> list[dict[str, Any]]:
+    run = get_runtime_run(settings, runtime_run_id=runtime_run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="runtime run not found")
+    return list_runtime_run_events(settings, runtime_run_id=runtime_run_id)
 
 
 @app.post("/agent/run")
