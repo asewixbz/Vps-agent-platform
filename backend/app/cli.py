@@ -220,6 +220,38 @@ def cmd_approve(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_model_health(args: argparse.Namespace) -> int:
+    data = request_json("GET", args.base_url, "/model/health")
+    if args.json:
+        print_json(data)
+    else:
+        print(f"status: {data.get('status')}")
+        print(f"adapter: {data.get('adapter')}")
+        print(f"message: {data.get('message')}")
+    return 0
+
+
+def cmd_model_chat(args: argparse.Namespace) -> int:
+    payload = load_payload(args.payload, args.payload_file)
+    data = request_json("POST", args.base_url, "/model/chat", {"payload": payload})
+    if args.json:
+        print_json(data)
+    else:
+        print(f"model: {data.get('model')}")
+        print(f"provider: {data.get('provider')}")
+        if data.get("finish_reason"):
+            print(f"finish_reason: {data.get('finish_reason')}")
+        if data.get("text"):
+            print(data.get("text"))
+        if data.get("tool_calls"):
+            print("tool_calls:")
+            print(json.dumps(data.get("tool_calls"), indent=2, ensure_ascii=False))
+        if data.get("structured_data") is not None:
+            print("structured_data:")
+            print(json.dumps(data.get("structured_data"), indent=2, ensure_ascii=False))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="vps-agent",
@@ -235,6 +267,11 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("queue", help="show queue size")
     subparsers.add_parser("tools", help="list tools")
     subparsers.add_parser("tasks", help="list tasks")
+    subparsers.add_parser("model-health", help="check model adapter health")
+
+    model_chat_parser = subparsers.add_parser("model-chat", help="call the configured model adapter")
+    model_chat_parser.add_argument("--payload", help="JSON payload string")
+    model_chat_parser.add_argument("--payload-file", help="path to a JSON payload file, or - for stdin")
 
     register_tool_parser = subparsers.add_parser("register-tool", help="register a tool")
     register_tool_parser.add_argument("name", help="tool name")
@@ -275,6 +312,8 @@ def dispatch(args: argparse.Namespace) -> int:
         "task": cmd_task,
         "submit": cmd_submit,
         "approve": cmd_approve,
+        "model-health": cmd_model_health,
+        "model-chat": cmd_model_chat,
     }
     try:
         return handlers[command](args)
