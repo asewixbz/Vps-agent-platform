@@ -62,6 +62,7 @@ class RuntimeRunRequest(BaseModel):
     goal: str
     context: dict[str, Any] = Field(default_factory=dict)
     max_steps: int = Field(default=5, gt=0, le=50)
+    resume_from_step_index: int | None = Field(default=None, gt=0)
 
 
 @app.on_event("startup")
@@ -95,6 +96,7 @@ def phases() -> dict[str, Any]:
         ],
         "phase_3": [
             "multi-step runtime loop",
+            "checkpoint and resume markers",
             "Postgres",
             "stronger policy engine",
             "trust scoring",
@@ -192,5 +194,11 @@ def agent_plan(request: PlanRequest) -> dict[str, Any]:
 
 @app.post("/agent/run")
 def agent_run(request: RuntimeRunRequest) -> dict[str, Any]:
-    result = run_agent_runtime(settings, goal=request.goal, context=request.context, max_steps=request.max_steps)
+    result = run_agent_runtime(
+        settings,
+        goal=request.goal,
+        context=request.context,
+        max_steps=request.max_steps,
+        resume_from_step_index=request.resume_from_step_index,
+    )
     return runtime_execution_to_dict(result)
