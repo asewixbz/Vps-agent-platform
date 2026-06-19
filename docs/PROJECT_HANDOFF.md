@@ -34,6 +34,7 @@ The project should be treated as an execution platform first, and a UI product s
 - model health/chat endpoints
 - conservative execution planner bridge
 - conservative multi-step runtime loop
+- checkpoint and resume markers for runtime progress
 
 ### What exists but is still early
 
@@ -304,11 +305,11 @@ Acceptance criteria:
 - `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, runtime, and tool registration
 - `backend/app/model_adapter.py` — provider-neutral model request/response contract and adapter registry
 - `backend/app/planner.py` — conservative planning bridge that can work with or without the model runner
-- `backend/app/agent_runtime.py` — multi-step runtime loop that executes planned steps conservatively
+- `backend/app/agent_runtime.py` — multi-step runtime loop that executes planned steps conservatively and returns checkpoints for resuming
 
 ## Immediate next work
 
-1. Make the runtime loop track per-step progress and resume markers more explicitly.
+1. Use the runtime checkpoints to add persistent run history and resume state.
 2. Introduce persistent memory structures for long-lived work.
 3. Expand browser and artifact handling once the runtime loop is stable.
 4. Add stronger sandboxing and observability before broader tool synthesis.
@@ -323,4 +324,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. The next real step is to make the runtime loop track progress more explicitly and then add durable memory on top.
+The repository is already a usable execution backbone. The next real step is to persist runtime checkpoints and then layer durable memory on top.
