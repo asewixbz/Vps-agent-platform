@@ -252,6 +252,22 @@ def cmd_model_chat(args: argparse.Namespace) -> int:
     return 0
 
 
+def _print_checkpoint(data: dict[str, Any]) -> None:
+    checkpoint = data.get("checkpoint") or {}
+    if not checkpoint:
+        return
+    print("checkpoint:")
+    print(f"  next_step_index: {checkpoint.get('next_step_index')}")
+    print(f"  completed_step_count: {checkpoint.get('completed_step_count')}")
+    print(f"  total_steps: {checkpoint.get('total_steps')}")
+    if checkpoint.get("blocked_step_index") is not None:
+        print(f"  blocked_step_index: {checkpoint.get('blocked_step_index')}")
+    if checkpoint.get("completed_step_indices"):
+        print(f"  completed_step_indices: {checkpoint.get('completed_step_indices')}")
+    if data.get("resume_hint"):
+        print(f"resume_hint: {data.get('resume_hint')}")
+
+
 def cmd_plan(args: argparse.Namespace) -> int:
     context = load_metadata(args.context, args.context_file)
     data = request_json(
@@ -298,6 +314,7 @@ def cmd_run(args: argparse.Namespace) -> int:
             "goal": args.goal,
             "context": context,
             "max_steps": args.max_steps,
+            "resume_from_step_index": args.resume_from_step_index,
         },
     )
     if args.json:
@@ -311,6 +328,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         plan = data.get("plan") or {}
         if plan.get("recommended_tool"):
             print(f"recommended_tool: {plan.get('recommended_tool')}")
+        _print_checkpoint(data)
         steps = data.get("steps") or []
         if steps:
             print("steps:")
@@ -365,6 +383,7 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--context", help="JSON context string")
     run_parser.add_argument("--context-file", help="path to a JSON context file, or - for stdin")
     run_parser.add_argument("--max-steps", type=int, default=5, help="maximum number of runtime steps to process")
+    run_parser.add_argument("--resume-from-step", type=int, help="resume runtime execution from a 1-based step index")
 
     register_tool_parser = subparsers.add_parser("register-tool", help="register a tool")
     register_tool_parser.add_argument("name", help="tool name")
