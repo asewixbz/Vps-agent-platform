@@ -252,6 +252,42 @@ def cmd_model_chat(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_plan(args: argparse.Namespace) -> int:
+    context = load_metadata(args.context, args.context_file)
+    data = request_json(
+        "POST",
+        args.base_url,
+        "/agent/plan",
+        {
+            "goal": args.goal,
+            "context": context,
+        },
+    )
+    if args.json:
+        print_json(data)
+    else:
+        print(f"source: {data.get('source')}")
+        print(f"summary: {data.get('summary')}")
+        if data.get("recommended_tool"):
+            print(f"recommended_tool: {data.get('recommended_tool')}")
+        print(f"requires_approval: {bool(data.get('requires_approval'))}")
+        notes = data.get("notes") or []
+        if notes:
+            print("notes:")
+            for note in notes:
+                print(f"  - {note}")
+        steps = data.get("steps") or []
+        if steps:
+            print("steps:")
+            for index, step in enumerate(steps, start=1):
+                print(f"  {index}. [{step.get('kind')}] {step.get('title')}")
+                if step.get("tool_name"):
+                    print(f"     tool: {step.get('tool_name')}")
+                if step.get("description"):
+                    print(f"     {step.get('description')}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="vps-agent",
@@ -272,6 +308,11 @@ def build_parser() -> argparse.ArgumentParser:
     model_chat_parser = subparsers.add_parser("model-chat", help="call the configured model adapter")
     model_chat_parser.add_argument("--payload", help="JSON payload string")
     model_chat_parser.add_argument("--payload-file", help="path to a JSON payload file, or - for stdin")
+
+    plan_parser = subparsers.add_parser("plan", help="build an execution plan for a goal")
+    plan_parser.add_argument("goal", help="goal or task description")
+    plan_parser.add_argument("--context", help="JSON context string")
+    plan_parser.add_argument("--context-file", help="path to a JSON context file, or - for stdin")
 
     register_tool_parser = subparsers.add_parser("register-tool", help="register a tool")
     register_tool_parser.add_argument("name", help="tool name")
@@ -314,6 +355,7 @@ def dispatch(args: argparse.Namespace) -> int:
         "approve": cmd_approve,
         "model-health": cmd_model_health,
         "model-chat": cmd_model_chat,
+        "plan": cmd_plan,
     }
     try:
         return handlers[command](args)
