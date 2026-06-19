@@ -41,6 +41,7 @@ class RuntimeExecutionResult:
     context: dict[str, Any] = field(default_factory=dict)
 
 
+
 def _plan_from_dict(payload: dict[str, Any]) -> AgentPlan:
     steps: list[PlanStep] = []
     raw_steps = payload.get("steps")
@@ -190,30 +191,14 @@ def _persist_runtime_run_state(
     last_resume_from_step_index: int | None = None,
     last_max_steps: int | None = None,
 ) -> dict[str, Any]:
-    payload = {
-        "goal": goal,
-        "plan": asdict(plan),
-        "context": context,
-        "status": status,
-        "summary": summary,
-        "steps": steps_payload,
-        "checkpoint": checkpoint,
-        "blocked_reason": blocked_reason,
-        "resume_hint": resume_hint,
-        "attempts": attempts,
-        "started_at": started_at,
-        "finished_at": finished_at,
-        "last_run_at": utc_now(),
-        "last_resume_from_step_index": last_resume_from_step_index,
-        "last_max_steps": last_max_steps,
-    }
+    plan_payload = asdict(plan)
     existing = get_runtime_run(settings, runtime_run_id=runtime_run_id)
     if existing is None:
         return create_runtime_run(
             settings,
             runtime_run_id=runtime_run_id,
             goal=goal,
-            plan=asdict(plan),
+            plan=plan_payload,
             context=context,
             status=status,
             summary=summary,
@@ -228,7 +213,25 @@ def _persist_runtime_run_state(
             last_resume_from_step_index=last_resume_from_step_index,
             last_max_steps=last_max_steps,
         )
-    return update_runtime_run(settings, runtime_run_id=runtime_run_id, **payload)
+    return update_runtime_run(
+        settings,
+        runtime_run_id=runtime_run_id,
+        goal=goal,
+        status=status,
+        summary=summary,
+        plan_json=plan_payload,
+        context_json=context,
+        steps_json=steps_payload,
+        checkpoint_json=checkpoint,
+        blocked_reason=blocked_reason,
+        resume_hint=resume_hint,
+        attempts=attempts,
+        started_at=started_at,
+        finished_at=finished_at,
+        last_run_at=utc_now(),
+        last_resume_from_step_index=last_resume_from_step_index,
+        last_max_steps=last_max_steps,
+    )
 
 
 def run_agent_runtime(
