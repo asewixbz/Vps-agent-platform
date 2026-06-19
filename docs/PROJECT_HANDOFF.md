@@ -30,13 +30,16 @@ The project should be treated as an execution platform first, and a UI product s
 - CLI client for terminal-first usage
 - provider-agnostic model adapter contract
 - adapter settings scaffold for future provider swaps
+- concrete Kie.ai adapter wiring
+- model health/chat endpoints
+- conservative execution planner bridge
 
 ### What exists but is still early
 
 - browser execution is behind a feature flag
-- model execution is only a placeholder
+- model execution is only a placeholder for broader orchestration use
 - shell execution is intentionally restricted
-- there is no conversational agent layer yet
+- there is no multi-step conversational agent runtime yet
 - there is no durable memory layer for long-running work
 - there is no production-grade sandboxing
 
@@ -290,7 +293,7 @@ Acceptance criteria:
 
 ## Current code map
 
-- `backend/app/main.py` — API endpoints for tools, tasks, approvals, and queue status
+- `backend/app/main.py` — API endpoints for tools, tasks, approvals, planning, and queue status
 - `backend/app/store.py` — SQLite schema and CRUD
 - `backend/app/policy.py` — trust and safety checks
 - `backend/app/job_queue.py` — Redis queue wrapper
@@ -298,15 +301,16 @@ Acceptance criteria:
 - `backend/app/executor.py` — task execution orchestration
 - `backend/app/worker.py` — queue consumer loop
 - `backend/app/settings.py` — configuration and model adapter settings scaffold
-- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, and tool registration
+- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, and tool registration
 - `backend/app/model_adapter.py` — provider-neutral model request/response contract and adapter registry
+- `backend/app/planner.py` — conservative planning bridge that can work with or without the model runner
 
 ## Immediate next work
 
-1. Implement the first concrete provider adapter behind the new contract.
-2. Decide how the CLI will hand off user text to the planner/runtime layer.
-3. Add a lightweight agent runtime loop after the CLI and adapter are working.
-4. Introduce persistent memory structures for long-lived work.
+1. Turn the planning bridge into a multi-step agent runtime that can execute, inspect results, and decide the next step.
+2. Introduce persistent memory structures for long-lived work.
+3. Expand browser and artifact handling once the runtime loop is stable.
+4. Add stronger sandboxing and observability before broader tool synthesis.
 
 ## Working rules for future contributors
 
@@ -318,4 +322,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. The next real step is to connect a provider-agnostic AI orchestration layer on top of the new terminal client.
+The repository is already a usable execution backbone. The next real step is to turn the new planning bridge into a multi-step agent runtime on top of the terminal client.
