@@ -89,6 +89,7 @@ If you want to run browser tasks, set `APP_BROWSER_RUNNER_ENABLED=true` in `.env
 To use the Kie.ai adapter, set:
 
 ```bash
+APP_MODEL_RUNNER_ENABLED=true
 APP_MODEL_ADAPTER_NAME=kie_ai
 APP_MODEL_ADAPTER_OPTIONS_JSON='{"api_key":"<your-kie-ai-api-key>"}'
 ```
@@ -117,7 +118,7 @@ Use `--base-url` if the API is not running on `http://localhost:8000`.
 - `GET /model/health`
 - `POST /model/chat`
 
-These route through the configured adapter and let the control plane exercise the provider without changing the runtime.
+These route through the configured adapter and let the control plane exercise the provider without changing the runtime. The chat endpoint is enabled only when `APP_MODEL_RUNNER_ENABLED=true`.
 
 ## Check the queue
 
