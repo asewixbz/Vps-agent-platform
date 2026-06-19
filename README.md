@@ -30,6 +30,7 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - model health/chat API endpoints
 - conservative execution planner API and CLI
 - conservative multi-step runtime loop API and CLI
+- checkpoint/resume markers for the runtime loop
 
 ## What is not included yet
 
@@ -113,6 +114,7 @@ python -m app.cli model-health
 python -m app.cli model-chat --payload '{"messages":[{"role":"user","content":"Say hello"}]}'
 python -m app.cli plan "Summarize the latest open tasks"
 python -m app.cli run "Summarize the latest open tasks"
+python -m app.cli run "Continue the previous run" --resume-from-step 3
 python -m app.cli register-tool local_python_test python --description "Run a local Python smoke test" --entrypoint python --status trusted --trust-level 2
 python -m app.cli submit local_python_test --payload '{"script":"print(\"hello from the runner\")"}'
 python -m app.cli approve <task-id> --note "approved for run"
@@ -129,7 +131,7 @@ Use `--base-url` if the API is not running on `http://localhost:8000`.
 
 The planning endpoint is conservative by design: it can return a heuristic plan even when the model runner is disabled, and it will try to refine that plan through the configured adapter when model execution is enabled.
 
-The runtime endpoint executes the plan step by step and stops when it hits approval, missing input, or a failing step.
+The runtime endpoint executes the plan step by step and stops when it hits approval, missing input, or a failing step. It also returns checkpoint data so a later call can resume from the next step.
 
 These route through the configured adapter and let the control plane exercise the provider without changing the runtime. The chat endpoint is enabled only when `APP_MODEL_RUNNER_ENABLED=true`.
 
