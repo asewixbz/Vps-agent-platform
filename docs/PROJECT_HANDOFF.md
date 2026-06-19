@@ -40,13 +40,14 @@ The project should be treated as an execution platform first, and a UI product s
 - runtime event replay filters for step-scoped and grouped inspection
 - durable memory records with artifact indexing
 - runtime run snapshots persisted into durable memory
+- project/contact dossier helpers
 
 ### What exists but is still early
 
 - browser execution is behind a feature flag
 - model execution is only a placeholder for broader orchestration use
 - shell execution is intentionally restricted
-- the durable memory layer is still basic and needs project/contact-specific workflows
+- the durable memory layer still needs richer dossier workflows and linking
 - there is no production-grade sandboxing
 
 ## Technical direction
@@ -258,6 +259,7 @@ Deliverables:
 - contact dossiers
 - experiment logs
 - artifact indexing
+- dossier helpers for recurring workflows
 
 Acceptance criteria:
 
@@ -299,7 +301,8 @@ Acceptance criteria:
 
 ## Current code map
 
-- `backend/app/main.py` — API endpoints for tools, tasks, approvals, planning, runtime, run history, memory, event logs, and queue status
+- `backend/app/main.py` — API endpoints for tools, tasks, approvals, planning, runtime, run history, memory, dossiers, event logs, and queue status
+- `backend/app/dossiers.py` — project/contact dossier helpers built on top of durable memory
 - `backend/app/memory.py` — durable memory storage, artifact indexing, and runtime snapshot helpers
 - `backend/app/store.py` — SQLite schema and CRUD for core control-plane data
 - `backend/app/policy.py` — trust and safety checks
@@ -316,7 +319,7 @@ Acceptance criteria:
 
 ## Immediate next work
 
-1. Add project/contact dossier helpers on top of the durable memory records.
+1. Add richer linking between dossiers, runtime runs, and artifacts.
 2. Expand browser and artifact handling once the runtime loop is stable.
 3. Add stronger sandboxing and observability before broader tool synthesis.
 
@@ -330,4 +333,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. Durable memory storage is now present; the next useful step is to add higher-level dossier helpers on top of it.
+The repository is already a usable execution backbone. Durable memory and dossier helpers are now present; the next useful step is richer linking and artifact handling on top of them.
