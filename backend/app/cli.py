@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 DEFAULT_BASE_URL = os.getenv("VPS_AGENT_API_URL", os.getenv("APP_API_URL", "http://localhost:8000"))
@@ -34,6 +35,13 @@ def _parse_json_object(raw: str, label: str) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValueError(f"{label} must be a JSON object")
     return data
+
+
+def _build_path(path: str, params: dict[str, Any]) -> str:
+    filtered = {key: str(value) for key, value in params.items() if value is not None and value != ""}
+    if not filtered:
+        return path
+    return f"{path}?{urlencode(filtered)}"
 
 
 def request_json(method: str, base_url: str, path: str, payload: dict[str, Any] | None = None) -> Any:
@@ -82,6 +90,13 @@ def print_json(data: Any) -> None:
     print(json.dumps(data, indent=2, ensure_ascii=False))
 
 
+def _truncate(text: str, limit: int = 72) -> str:
+    cleaned = text.replace("\n", " ").strip()
+    if len(cleaned) <= limit:
+        return cleaned
+    return cleaned[: limit - 1] + "…"
+
+
 def format_tool_row(tool: dict[str, Any]) -> str:
     return f"{tool.get('name', ''):<20} {tool.get('kind', ''):<10} {tool.get('status', ''):<10} trust={tool.get('trust_level', 0)}  {tool.get('description', '')}"
 
@@ -89,13 +104,6 @@ def format_tool_row(tool: dict[str, Any]) -> str:
 def format_task_row(task: dict[str, Any]) -> str:
     approved = "yes" if task.get("approved") else "no"
     return f"{task.get('id', ''):<36} {task.get('status', ''):<16} {task.get('tool_name', ''):<18} approved={approved}  {task.get('created_at', '')}"
-
-
-def _truncate(text: str, limit: int = 72) -> str:
-    cleaned = text.replace("\n", " ").strip()
-    if len(cleaned) <= limit:
-        return cleaned
-    return cleaned[: limit - 1] + "…"
 
 
 def format_runtime_run_row(run: dict[str, Any]) -> str:
@@ -115,6 +123,25 @@ def format_runtime_event_row(event: dict[str, Any]) -> str:
     step_label = f"step={step_index}" if step_index is not None else "step=-"
     message = _truncate(str(event.get("message") or ""), 64)
     return f"{event.get('id', ''):<6} {event.get('event_type', ''):<18} {step_label:<10} {message}"
+
+
+def format_memory_record_row(record: dict[str, Any]) -> str:
+    scope = f"{record.get('scope_type', '')}:{record.get('scope_id', '')}"
+    pinned = "yes" if record.get("pinned") else "no"
+    artifacts = int(record.get("artifact_count") or 0)
+    title = _truncate(str(record.get("title") or ""), 48)
+    return (
+        f"{record.get('id', ''):<36} {record.get('kind', ''):<16} {scope:<24} "
+        f"artifacts={artifacts:<2} pinned={pinned:<3} {title}"
+    )
+
+
+def format_memory_artifact_row(artifact: dict[str, Any]) -> str:
+    label = artifact.get("label") or ""
+    return (
+        f"{artifact.get('id', ''):<6} {artifact.get('artifact_type', ''):<20} "
+        f"{_truncate(str(artifact.get('artifact_ref') or ''), 34):<34} {label}"
+    )
 
 
 def cmd_health(args: argparse.Namespace) -> int:
@@ -263,15 +290,13 @@ def cmd_run_show(args: argparse.Namespace) -> int:
 
 
 def cmd_run_events(args: argparse.Namespace) -> int:
-    path = f"/agent/runs/{args.runtime_run_id}/events"
-    params: list[str] = []
-    if args.step_index is not None:
-        params.append(f"step_index={args.step_index}")
-    if args.grouped:
-        params.append("grouped=true")
-    if params:
-        path = f"{path}?{'&'.join(params)}"
-
+    path = _build_path(
+        f"/agent/runs/{args.runtime_run_id}/events",
+        {
+            "step_index": args.step_index,
+            "grouped": "true" if args.grouped else None,
+        },
+    )
     data = request_json("GET", args.base_url, path)
     if args.json:
         print_json(data)
@@ -457,6 +482,100 @@ def cmd_run(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_memory_list(args: argparse.Namespace) -> int:
+    path = _build_path(
+        "/memory/records",
+        {
+            "kind": args.kind,
+            "scope_type": args.scope_type,
+            "scope_id": args.scope_id,
+            "query": args.query,
+            "limit": args.limit,
+        },
+    )
+    data = request_json("GET", args.base_url, path)
+    if args.json:
+        print_json(data)
+    else:
+        for record in data:
+            print(format_memory_record_row(record))
+    return 0
+
+
+def cmd_memory_show(args: argparse.Namespace) -> int:
+    data = request_json("GET", args.base_url, f"/memory/records/{args.memory_record_id}")
+    if args.json:
+        print_json(data)
+    else:
+        print(f"id: {data.get('id')}")
+        print(f"memory_key: {data.get('memory_key')}")
+        print(f"kind: {data.get('kind')}")
+        print(f"scope: {data.get('scope_type')}:{data.get('scope_id')}")
+        print(f"title: {data.get('title')}")
+        print(f"summary: {data.get('summary')}")
+        if data.get("content"):
+            print("content:")
+            print(data.get("content"))
+        if data.get("tags"):
+            print(f"tags: {data.get('tags')}")
+        if data.get("metadata"):
+            print("metadata:")
+            print(json.dumps(data.get("metadata"), indent=2, ensure_ascii=False))
+        print(f"artifact_count: {data.get('artifact_count') or 0}")
+        if data.get("artifacts"):
+            print("artifacts:")
+            for artifact in data.get("artifacts"):
+                print(f"  - {artifact.get('artifact_type')}: {artifact.get('artifact_ref')}")
+                if artifact.get("label"):
+                    print(f"    label: {artifact.get('label')}")
+    return 0
+
+
+def cmd_memory_upsert(args: argparse.Namespace) -> int:
+    payload = load_payload(args.payload, args.payload_file)
+    data = request_json("POST", args.base_url, "/memory/records", payload)
+    if args.json:
+        print_json(data)
+    else:
+        print(f"memory record saved: {data.get('id')}")
+        print(f"memory_key: {data.get('memory_key')}")
+        print(f"kind: {data.get('kind')}")
+        print(f"title: {data.get('title')}")
+    return 0
+
+
+def cmd_memory_touch(args: argparse.Namespace) -> int:
+    data = request_json("POST", args.base_url, f"/memory/records/{args.memory_record_id}/touch")
+    if args.json:
+        print_json(data)
+    else:
+        print(f"memory record touched: {data.get('id')}")
+        print(f"updated_at: {data.get('updated_at')}")
+    return 0
+
+
+def cmd_memory_artifacts(args: argparse.Namespace) -> int:
+    path = _build_path(f"/memory/records/{args.memory_record_id}/artifacts", {"limit": args.limit})
+    data = request_json("GET", args.base_url, path)
+    if args.json:
+        print_json(data)
+    else:
+        for artifact in data:
+            print(format_memory_artifact_row(artifact))
+    return 0
+
+
+def cmd_memory_artifact_add(args: argparse.Namespace) -> int:
+    payload = load_payload(args.payload, args.payload_file)
+    data = request_json("POST", args.base_url, f"/memory/records/{args.memory_record_id}/artifacts", payload)
+    if args.json:
+        print_json(data)
+    else:
+        print(f"artifact appended to memory record: {data.get('id')}")
+        print(f"artifact_count: {data.get('artifact_count') or 0}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="vps-agent",
@@ -524,6 +643,32 @@ def build_parser() -> argparse.ArgumentParser:
     approve_parser.add_argument("task_id", help="task id")
     approve_parser.add_argument("--note", help="approval note")
 
+    memory_list_parser = subparsers.add_parser("memory-list", help="list durable memory records")
+    memory_list_parser.add_argument("--kind", help="filter by memory kind")
+    memory_list_parser.add_argument("--scope-type", help="filter by scope type")
+    memory_list_parser.add_argument("--scope-id", help="filter by scope id")
+    memory_list_parser.add_argument("--query", help="search title/content/tags")
+    memory_list_parser.add_argument("--limit", type=int, default=100, help="maximum number of records to return")
+
+    memory_show_parser = subparsers.add_parser("memory-show", help="show a durable memory record")
+    memory_show_parser.add_argument("memory_record_id", help="memory record id")
+
+    memory_upsert_parser = subparsers.add_parser("memory-upsert", help="create or update a durable memory record")
+    memory_upsert_parser.add_argument("--payload", help="JSON payload string")
+    memory_upsert_parser.add_argument("--payload-file", help="path to a JSON payload file, or - for stdin")
+
+    memory_touch_parser = subparsers.add_parser("memory-touch", help="touch a durable memory record")
+    memory_touch_parser.add_argument("memory_record_id", help="memory record id")
+
+    memory_artifacts_parser = subparsers.add_parser("memory-artifacts", help="list artifacts linked to a durable memory record")
+    memory_artifacts_parser.add_argument("memory_record_id", help="memory record id")
+    memory_artifacts_parser.add_argument("--limit", type=int, default=100, help="maximum number of artifacts to return")
+
+    memory_artifact_add_parser = subparsers.add_parser("memory-artifact-add", help="append an artifact reference to a durable memory record")
+    memory_artifact_add_parser.add_argument("memory_record_id", help="memory record id")
+    memory_artifact_add_parser.add_argument("--payload", help="JSON payload string")
+    memory_artifact_add_parser.add_argument("--payload-file", help="path to a JSON payload file, or - for stdin")
+
     return parser
 
 
@@ -546,6 +691,12 @@ def dispatch(args: argparse.Namespace) -> int:
         "model-chat": cmd_model_chat,
         "plan": cmd_plan,
         "run": cmd_run,
+        "memory-list": cmd_memory_list,
+        "memory-show": cmd_memory_show,
+        "memory-upsert": cmd_memory_upsert,
+        "memory-touch": cmd_memory_touch,
+        "memory-artifacts": cmd_memory_artifacts,
+        "memory-artifact-add": cmd_memory_artifact_add,
     }
     try:
         return handlers[command](args)
