@@ -35,6 +35,7 @@ The project should be treated as an execution platform first, and a UI product s
 - conservative execution planner bridge
 - conservative multi-step runtime loop
 - checkpoint and resume markers for runtime progress
+- persistent runtime run history in SQLite
 
 ### What exists but is still early
 
@@ -294,7 +295,7 @@ Acceptance criteria:
 
 ## Current code map
 
-- `backend/app/main.py` — API endpoints for tools, tasks, approvals, planning, runtime, and queue status
+- `backend/app/main.py` — API endpoints for tools, tasks, approvals, planning, runtime, run history, and queue status
 - `backend/app/store.py` — SQLite schema and CRUD
 - `backend/app/policy.py` — trust and safety checks
 - `backend/app/job_queue.py` — Redis queue wrapper
@@ -302,14 +303,14 @@ Acceptance criteria:
 - `backend/app/executor.py` — task execution orchestration
 - `backend/app/worker.py` — queue consumer loop
 - `backend/app/settings.py` — configuration and model adapter settings scaffold
-- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, runtime, and tool registration
+- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, runtime, run history, and tool registration
 - `backend/app/model_adapter.py` — provider-neutral model request/response contract and adapter registry
 - `backend/app/planner.py` — conservative planning bridge that can work with or without the model runner
 - `backend/app/agent_runtime.py` — multi-step runtime loop that executes planned steps conservatively and returns checkpoints for resuming
 
 ## Immediate next work
 
-1. Use the runtime checkpoints to add persistent run history and resume state.
+1. Add explicit runtime-step event logs so each resume can be audited more clearly.
 2. Introduce persistent memory structures for long-lived work.
 3. Expand browser and artifact handling once the runtime loop is stable.
 4. Add stronger sandboxing and observability before broader tool synthesis.
@@ -324,4 +325,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. The next real step is to persist runtime checkpoints and then layer durable memory on top.
+The repository is already a usable execution backbone. The next real step is to add explicit runtime-step logs and then layer durable memory on top.
