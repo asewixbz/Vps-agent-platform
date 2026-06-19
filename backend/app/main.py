@@ -160,6 +160,8 @@ def model_health() -> dict[str, Any]:
 
 @app.post("/model/chat")
 def model_chat(request: ModelChatRequest) -> dict[str, Any]:
+    if not settings.model_runner_enabled:
+        raise HTTPException(status_code=503, detail="model runner is not enabled")
     try:
         response = chat_model(settings, request.payload)
     except ModelAdapterError as exc:
