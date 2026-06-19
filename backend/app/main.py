@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from .job_queue import enqueue_task, queue_size
+from .model_adapter import ModelAdapterError
+from .model_runtime import chat_model, model_health as runtime_model_health
 from .settings import get_settings
 from .store import (
     approve_task,
@@ -25,7 +28,7 @@ app = FastAPI(title=settings.app_name)
 
 class ToolRegisterRequest(BaseModel):
     name: str
-    kind: Literal["python", "shell", "browser", "model", "messaging"]
+    kind: Literal["python", "shell", "browser", "model", "messaging"] = "python"
     description: str = ""
     entrypoint: str | None = None
     status: Literal["draft", "tested", "trusted", "blocked"] = "draft"
@@ -42,6 +45,10 @@ class TaskCreateRequest(BaseModel):
 
 class TaskApprovalRequest(BaseModel):
     note: str | None = None
+
+
+class ModelChatRequest(BaseModel):
+    payload: dict[str, Any] = Field(default_factory=dict)
 
 
 @app.on_event("startup")
@@ -144,3 +151,17 @@ def tasks_approve(task_id: str, request: TaskApprovalRequest) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="task not found")
     enqueue_task(task_id, settings)
     return get_task(settings, task_id=task_id) or task
+
+
+@app.get("/model/health")
+def model_health() -> dict[str, Any]:
+    return runtime_model_health(settings)
+
+
+@app.post("/model/chat")
+def model_chat(request: ModelChatRequest) -> dict[str, Any]:
+    try:
+        response = chat_model(settings, request.payload)
+    except ModelAdapterError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return asdict(response)
