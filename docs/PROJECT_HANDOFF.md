@@ -37,6 +37,7 @@ The project should be treated as an execution platform first, and a UI product s
 - checkpoint and resume markers for runtime progress
 - persistent runtime run history in SQLite
 - explicit runtime event logs in SQLite
+- runtime event replay filters for step-scoped and grouped inspection
 
 ### What exists but is still early
 
@@ -308,13 +309,13 @@ Acceptance criteria:
 - `backend/app/model_adapter.py` — provider-neutral model request/response contract and adapter registry
 - `backend/app/planner.py` — conservative planning bridge that can work with or without the model runner
 - `backend/app/agent_runtime.py` — multi-step runtime loop that executes planned steps conservatively and returns checkpoints for resuming
+- `backend/app/runtime_events.py` — runtime event normalization and replay helpers
 
 ## Immediate next work
 
-1. Add event replay helpers so a resumed run can inspect prior step events more directly.
-2. Introduce persistent memory structures for long-lived work.
-3. Expand browser and artifact handling once the runtime loop is stable.
-4. Add stronger sandboxing and observability before broader tool synthesis.
+1. Introduce persistent memory structures for long-lived work.
+2. Expand browser and artifact handling once the runtime loop is stable.
+3. Add stronger sandboxing and observability before broader tool synthesis.
 
 ## Working rules for future contributors
 
@@ -326,4 +327,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. The next real step is to add event replay helpers and then layer durable memory on top.
+The repository is already a usable execution backbone. The next real step is now durable memory, following the event replay layer that was just added.
