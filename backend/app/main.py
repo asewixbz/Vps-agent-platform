@@ -8,6 +8,14 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from .agent_runtime import run_agent_runtime, runtime_execution_to_dict
+from .dossiers import (
+    get_contact_dossier,
+    get_project_dossier,
+    list_contact_dossiers,
+    list_project_dossiers,
+    upsert_contact_dossier,
+    upsert_project_dossier,
+)
 from .job_queue import enqueue_task, queue_size
 from .memory import (
     add_memory_record_artifact,
@@ -105,6 +113,40 @@ class MemoryArtifactRequest(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class ContactDossierRequest(BaseModel):
+    contact_id: str
+    title: str
+    summary: str = ""
+    content: str = ""
+    stage: str | None = None
+    next_step: str | None = None
+    status: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    source: str | None = None
+    source_ref: str | None = None
+    importance: int = 0
+    pinned: bool = False
+    last_accessed_at: str | None = None
+
+
+class ProjectDossierRequest(BaseModel):
+    project_id: str
+    title: str
+    summary: str = ""
+    content: str = ""
+    stage: str | None = None
+    next_step: str | None = None
+    status: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    source: str | None = None
+    source_ref: str | None = None
+    importance: int = 0
+    pinned: bool = False
+    last_accessed_at: str | None = None
+
+
 @app.on_event("startup")
 def startup() -> None:
     init_db(settings)
@@ -146,8 +188,7 @@ def phases() -> dict[str, Any]:
         ],
         "phase_4": [
             "durable memory records",
-            "project/task summaries",
-            "contact dossiers",
+            "project/contact dossiers",
             "artifact indexing",
             "long-lived workflow context",
         ],
@@ -333,6 +374,74 @@ def agent_run(request: RuntimeRunRequest) -> dict[str, Any]:
             label="runtime event log",
             metadata={"runtime_run_id": result.runtime_run_id, "status": result.status},
         )
+
+    context = dict(request.context)
+    contact_id = context.get("contact_id")
+    if isinstance(contact_id, str) and contact_id.strip():
+        contact_title = str(context.get("contact_name") or context.get("contact_title") or contact_id)
+        upsert_contact_dossier(
+            settings,
+            contact_id=contact_id,
+            title=contact_title,
+            summary=result.summary,
+            content="\n".join(
+                [
+                    f"Goal: {result.goal}",
+                    f"Status: {result.status}",
+                    f"Attempts: {result.attempts}",
+                    f"Iterations: {result.iterations}",
+                    f"Resume hint: {result.resume_hint or ''}",
+                    f"Checkpoint: {json.dumps(result.checkpoint, ensure_ascii=False)}",
+                ]
+            ).strip(),
+            stage=result.status,
+            next_step=result.resume_hint,
+            status=result.status,
+            tags=["runtime", "contact", "dossier"],
+            metadata={
+                "runtime_run_id": result.runtime_run_id,
+                "goal": result.goal,
+                "checkpoint": result.checkpoint,
+                "blocked_reason": result.blocked_reason,
+            },
+            source="agent_runtime",
+            source_ref=result.runtime_run_id,
+            importance=1 if result.status == "completed" else 0,
+        )
+
+    project_id = context.get("project_id")
+    if isinstance(project_id, str) and project_id.strip():
+        project_title = str(context.get("project_name") or context.get("project_title") or result.goal)
+        upsert_project_dossier(
+            settings,
+            project_id=project_id,
+            title=project_title,
+            summary=result.summary,
+            content="\n".join(
+                [
+                    f"Goal: {result.goal}",
+                    f"Status: {result.status}",
+                    f"Attempts: {result.attempts}",
+                    f"Iterations: {result.iterations}",
+                    f"Resume hint: {result.resume_hint or ''}",
+                    f"Checkpoint: {json.dumps(result.checkpoint, ensure_ascii=False)}",
+                ]
+            ).strip(),
+            stage=result.status,
+            next_step=result.resume_hint,
+            status=result.status,
+            tags=["runtime", "project", "dossier"],
+            metadata={
+                "runtime_run_id": result.runtime_run_id,
+                "goal": result.goal,
+                "checkpoint": result.checkpoint,
+                "blocked_reason": result.blocked_reason,
+            },
+            source="agent_runtime",
+            source_ref=result.runtime_run_id,
+            importance=1 if result.status == "completed" else 0,
+        )
+
     return runtime_execution_to_dict(result)
 
 
@@ -413,3 +522,84 @@ def memory_record_artifact_add(memory_record_id: str, request: MemoryArtifactReq
     if record is None:
         raise HTTPException(status_code=404, detail="memory record not found")
     return record
+
+
+@app.get("/dossiers")
+def dossiers(
+    kind: str | None = None,
+    query: str | None = None,
+    limit: int = 100,
+) -> list[dict[str, Any]]:
+    if kind == "contact":
+        return list_contact_dossiers(settings, query=query, limit=limit)
+    if kind == "project":
+        return list_project_dossiers(settings, query=query, limit=limit)
+    return list_memory_records(settings, query=query, limit=limit)
+
+
+@app.get("/dossiers/contact")
+def contact_dossiers(query: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
+    return list_contact_dossiers(settings, query=query, limit=limit)
+
+
+@app.post("/dossiers/contact")
+def contact_dossier_upsert(request: ContactDossierRequest) -> dict[str, Any]:
+    return upsert_contact_dossier(
+        settings,
+        contact_id=request.contact_id,
+        title=request.title,
+        summary=request.summary,
+        content=request.content,
+        stage=request.stage,
+        next_step=request.next_step,
+        status=request.status,
+        tags=request.tags,
+        metadata=request.metadata,
+        source=request.source,
+        source_ref=request.source_ref,
+        importance=request.importance,
+        pinned=request.pinned,
+        last_accessed_at=request.last_accessed_at,
+    )
+
+
+@app.get("/dossiers/contact/{contact_id}")
+def contact_dossier_get(contact_id: str) -> dict[str, Any]:
+    dossier = get_contact_dossier(settings, contact_id=contact_id)
+    if dossier is None:
+        raise HTTPException(status_code=404, detail="contact dossier not found")
+    return dossier
+
+
+@app.get("/dossiers/project")
+def project_dossiers(query: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
+    return list_project_dossiers(settings, query=query, limit=limit)
+
+
+@app.post("/dossiers/project")
+def project_dossier_upsert(request: ProjectDossierRequest) -> dict[str, Any]:
+    return upsert_project_dossier(
+        settings,
+        project_id=request.project_id,
+        title=request.title,
+        summary=request.summary,
+        content=request.content,
+        stage=request.stage,
+        next_step=request.next_step,
+        status=request.status,
+        tags=request.tags,
+        metadata=request.metadata,
+        source=request.source,
+        source_ref=request.source_ref,
+        importance=request.importance,
+        pinned=request.pinned,
+        last_accessed_at=request.last_accessed_at,
+    )
+
+
+@app.get("/dossiers/project/{project_id}")
+def project_dossier_get(project_id: str) -> dict[str, Any]:
+    dossier = get_project_dossier(settings, project_id=project_id)
+    if dossier is None:
+        raise HTTPException(status_code=404, detail="project dossier not found")
+    return dossier
