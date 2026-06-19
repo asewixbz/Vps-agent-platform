@@ -15,9 +15,11 @@ from .settings import get_settings
 from .store import (
     approve_task,
     create_task,
+    get_runtime_run,
     get_task,
     get_tool,
     init_db,
+    list_runtime_runs,
     list_tasks,
     list_tools,
     register_tool,
@@ -63,6 +65,7 @@ class RuntimeRunRequest(BaseModel):
     context: dict[str, Any] = Field(default_factory=dict)
     max_steps: int = Field(default=5, gt=0, le=50)
     resume_from_step_index: int | None = Field(default=None, gt=0)
+    runtime_run_id: str | None = None
 
 
 @app.on_event("startup")
@@ -97,6 +100,7 @@ def phases() -> dict[str, Any]:
         "phase_3": [
             "multi-step runtime loop",
             "checkpoint and resume markers",
+            "persistent runtime history",
             "Postgres",
             "stronger policy engine",
             "trust scoring",
@@ -192,6 +196,19 @@ def agent_plan(request: PlanRequest) -> dict[str, Any]:
     return asdict(plan)
 
 
+@app.get("/agent/runs")
+def agent_runs() -> list[dict[str, Any]]:
+    return list_runtime_runs(settings)
+
+
+@app.get("/agent/runs/{runtime_run_id}")
+def agent_run_get(runtime_run_id: str) -> dict[str, Any]:
+    run = get_runtime_run(settings, runtime_run_id=runtime_run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="runtime run not found")
+    return run
+
+
 @app.post("/agent/run")
 def agent_run(request: RuntimeRunRequest) -> dict[str, Any]:
     result = run_agent_runtime(
@@ -200,5 +217,6 @@ def agent_run(request: RuntimeRunRequest) -> dict[str, Any]:
         context=request.context,
         max_steps=request.max_steps,
         resume_from_step_index=request.resume_from_step_index,
+        runtime_run_id=request.runtime_run_id,
     )
     return runtime_execution_to_dict(result)
