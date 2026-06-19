@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import asdict
 from typing import Any, Literal
 
@@ -8,6 +9,15 @@ from pydantic import BaseModel, Field
 
 from .agent_runtime import run_agent_runtime, runtime_execution_to_dict
 from .job_queue import enqueue_task, queue_size
+from .memory import (
+    add_memory_record_artifact,
+    get_memory_record,
+    init_memory_schema,
+    list_memory_record_artifacts,
+    list_memory_records,
+    touch_memory_record,
+    upsert_memory_record,
+)
 from .model_adapter import ModelAdapterError
 from .model_runtime import chat_model, model_health as runtime_model_health
 from .planner import build_execution_plan
@@ -70,9 +80,35 @@ class RuntimeRunRequest(BaseModel):
     runtime_run_id: str | None = None
 
 
+class MemoryRecordRequest(BaseModel):
+    memory_key: str
+    kind: str
+    scope_type: str = "global"
+    scope_id: str = "global"
+    title: str
+    summary: str = ""
+    content: str = ""
+    tags: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    artifacts: list[dict[str, Any]] = Field(default_factory=list)
+    source: str | None = None
+    source_ref: str | None = None
+    importance: int = 0
+    pinned: bool = False
+    last_accessed_at: str | None = None
+
+
+class MemoryArtifactRequest(BaseModel):
+    artifact_type: str
+    artifact_ref: str
+    label: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 @app.on_event("startup")
 def startup() -> None:
     init_db(settings)
+    init_memory_schema(settings)
     seed_builtin_tools(settings)
 
 
@@ -109,9 +145,23 @@ def phases() -> dict[str, Any]:
             "trust scoring",
         ],
         "phase_4": [
+            "durable memory records",
+            "project/task summaries",
+            "contact dossiers",
+            "artifact indexing",
+            "long-lived workflow context",
+        ],
+        "phase_5": [
+            "workflow templates",
+            "ranking workflows",
+            "report generation workflows",
+            "repeatable monitoring jobs",
+        ],
+        "phase_6": [
             "automatic tool synthesis",
             "sandbox-first execution",
             "human approval for risky actions",
+            "stronger observability and audit logs",
         ],
     }
 
@@ -238,4 +288,128 @@ def agent_run(request: RuntimeRunRequest) -> dict[str, Any]:
         resume_from_step_index=request.resume_from_step_index,
         runtime_run_id=request.runtime_run_id,
     )
+    runtime_snapshot = upsert_memory_record(
+        settings,
+        memory_key=f"runtime_run:{result.runtime_run_id}",
+        kind="runtime_summary",
+        scope_type="runtime_run",
+        scope_id=result.runtime_run_id,
+        title=result.goal,
+        summary=result.summary,
+        content="\n".join(
+            [
+                f"Goal: {result.goal}",
+                f"Status: {result.status}",
+                f"Summary: {result.summary}",
+                f"Attempts: {result.attempts}",
+                f"Iterations: {result.iterations}",
+                f"Blocked reason: {result.blocked_reason or ''}",
+                f"Resume hint: {result.resume_hint or ''}",
+                f"Checkpoint: {json.dumps(result.checkpoint, ensure_ascii=False)}",
+            ]
+        ).strip(),
+        tags=["runtime", "summary", result.status],
+        metadata={
+            "runtime_run_id": result.runtime_run_id,
+            "status": result.status,
+            "attempts": result.attempts,
+            "iterations": result.iterations,
+            "checkpoint": result.checkpoint,
+            "blocked_reason": result.blocked_reason,
+            "resume_hint": result.resume_hint,
+            "plan": asdict(result.plan),
+        },
+        source="agent_runtime",
+        source_ref=result.runtime_run_id,
+        importance=1 if result.status == "completed" else 0,
+        pinned=False,
+    )
+    if int(runtime_snapshot.get("artifact_count") or 0) == 0:
+        add_memory_record_artifact(
+            settings,
+            memory_record_id=runtime_snapshot["id"],
+            artifact_type="runtime_run_event_log",
+            artifact_ref=f"runtime_run:{result.runtime_run_id}",
+            label="runtime event log",
+            metadata={"runtime_run_id": result.runtime_run_id, "status": result.status},
+        )
     return runtime_execution_to_dict(result)
+
+
+@app.get("/memory/records")
+def memory_records(
+    kind: str | None = None,
+    scope_type: str | None = None,
+    scope_id: str | None = None,
+    query: str | None = None,
+    limit: int = 100,
+) -> list[dict[str, Any]]:
+    return list_memory_records(
+        settings,
+        kind=kind,
+        scope_type=scope_type,
+        scope_id=scope_id,
+        query=query,
+        limit=limit,
+    )
+
+
+@app.post("/memory/records")
+def memory_records_upsert(request: MemoryRecordRequest) -> dict[str, Any]:
+    return upsert_memory_record(
+        settings,
+        memory_key=request.memory_key,
+        kind=request.kind,
+        scope_type=request.scope_type,
+        scope_id=request.scope_id,
+        title=request.title,
+        summary=request.summary,
+        content=request.content,
+        tags=request.tags,
+        metadata=request.metadata,
+        artifacts=request.artifacts,
+        source=request.source,
+        source_ref=request.source_ref,
+        importance=request.importance,
+        pinned=request.pinned,
+        last_accessed_at=request.last_accessed_at,
+    )
+
+
+@app.get("/memory/records/{memory_record_id}")
+def memory_record_get(memory_record_id: str) -> dict[str, Any]:
+    record = get_memory_record(settings, memory_record_id=memory_record_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="memory record not found")
+    return record
+
+
+@app.post("/memory/records/{memory_record_id}/touch")
+def memory_record_touch(memory_record_id: str) -> dict[str, Any]:
+    record = touch_memory_record(settings, memory_record_id=memory_record_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="memory record not found")
+    return record
+
+
+@app.get("/memory/records/{memory_record_id}/artifacts")
+def memory_record_artifacts(memory_record_id: str) -> list[dict[str, Any]]:
+    record = get_memory_record(settings, memory_record_id=memory_record_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="memory record not found")
+    return list_memory_record_artifacts(settings, memory_record_id=memory_record_id)
+
+
+@app.post("/memory/records/{memory_record_id}/artifacts")
+def memory_record_artifact_add(memory_record_id: str, request: MemoryArtifactRequest) -> dict[str, Any]:
+    record = add_memory_record_artifact(
+        settings,
+        memory_record_id=memory_record_id,
+        artifact_type=request.artifact_type,
+        artifact_ref=request.artifact_ref,
+        label=request.label,
+        metadata=request.metadata,
+    )
+    if record is None:
+        raise HTTPException(status_code=404, detail="memory record not found")
+    return record
