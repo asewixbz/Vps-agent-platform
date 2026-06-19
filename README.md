@@ -33,6 +33,7 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - persistent runtime run history, checkpoint/resume markers, and event logs
 - durable memory records with artifact indexing
 - project and contact dossier helpers
+- durable memory links between runtime snapshots, dossiers, and artifact refs
 - runtime event replay filters by step or grouped view
 
 ## What is not included yet
@@ -63,6 +64,7 @@ vps-agent-platform/
       job_queue.py
       main.py
       memory.py
+      memory_links.py
       model_adapter.py
       model_runtime.py
       planner.py
@@ -125,6 +127,9 @@ python -m app.cli memory-upsert --payload '{"memory_key":"contact:asewisher@duck
 python -m app.cli memory-touch <memory-record-id>
 python -m app.cli memory-artifacts <memory-record-id>
 python -m app.cli memory-artifact-add <memory-record-id> --payload '{"artifact_type":"file","artifact_ref":"docs/notes.md","label":"project notes"}'
+python -m app.cli memory-links
+python -m app.cli memory-link-add memory_record_a memory_record_a memory_record_b memory_record_b updates --note "runtime snapshot updates dossier"
+python -m app.cli memory-record-links <memory-record-id>
 python -m app.cli model-health
 python -m app.cli model-chat --payload '{"messages":[{"role":"user","content":"Say hello"}]}'
 python -m app.cli plan "Summarize the latest open tasks"
@@ -155,6 +160,9 @@ Use `--base-url` if the API is not running on `http://localhost:8000`.
 - `POST /memory/records/{memory_record_id}/touch`
 - `GET /memory/records/{memory_record_id}/artifacts`
 - `POST /memory/records/{memory_record_id}/artifacts`
+- `GET /memory/links`
+- `POST /memory/links`
+- `GET /memory/records/{memory_record_id}/links`
 
 ## Dossier endpoints
 
@@ -172,7 +180,9 @@ The runtime endpoint executes the plan step by step and stops when it hits appro
 
 The runtime endpoint also snapshots each run into durable memory so completed or blocked runs can be rediscovered later.
 
-If the runtime context includes `project_id` or `contact_id`, the same run snapshot is also promoted into a project/contact dossier.
+If the runtime context includes `project_id` or `contact_id`, the same run snapshot is also promoted into a project/contact dossier and linked back to that dossier in durable memory.
+
+Runtime snapshots also link to their event-log artifact refs, so the memory layer can keep a trail from run summary to supporting artifact.
 
 The event endpoint supports replay filters:
 
@@ -255,6 +265,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 ### Phase 4
 - durable memory records
 - project/contact dossiers
+- memory links
 - artifact indexing
 - long-lived workflow context
 
