@@ -33,13 +33,13 @@ The project should be treated as an execution platform first, and a UI product s
 - concrete Kie.ai adapter wiring
 - model health/chat endpoints
 - conservative execution planner bridge
+- conservative multi-step runtime loop
 
 ### What exists but is still early
 
 - browser execution is behind a feature flag
 - model execution is only a placeholder for broader orchestration use
 - shell execution is intentionally restricted
-- there is no multi-step conversational agent runtime yet
 - there is no durable memory layer for long-running work
 - there is no production-grade sandboxing
 
@@ -293,7 +293,7 @@ Acceptance criteria:
 
 ## Current code map
 
-- `backend/app/main.py` — API endpoints for tools, tasks, approvals, planning, and queue status
+- `backend/app/main.py` — API endpoints for tools, tasks, approvals, planning, runtime, and queue status
 - `backend/app/store.py` — SQLite schema and CRUD
 - `backend/app/policy.py` — trust and safety checks
 - `backend/app/job_queue.py` — Redis queue wrapper
@@ -301,13 +301,14 @@ Acceptance criteria:
 - `backend/app/executor.py` — task execution orchestration
 - `backend/app/worker.py` — queue consumer loop
 - `backend/app/settings.py` — configuration and model adapter settings scaffold
-- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, and tool registration
+- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, runtime, and tool registration
 - `backend/app/model_adapter.py` — provider-neutral model request/response contract and adapter registry
 - `backend/app/planner.py` — conservative planning bridge that can work with or without the model runner
+- `backend/app/agent_runtime.py` — multi-step runtime loop that executes planned steps conservatively
 
 ## Immediate next work
 
-1. Turn the planning bridge into a multi-step agent runtime that can execute, inspect results, and decide the next step.
+1. Make the runtime loop track per-step progress and resume markers more explicitly.
 2. Introduce persistent memory structures for long-lived work.
 3. Expand browser and artifact handling once the runtime loop is stable.
 4. Add stronger sandboxing and observability before broader tool synthesis.
@@ -322,4 +323,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. The next real step is to turn the new planning bridge into a multi-step agent runtime on top of the terminal client.
+The repository is already a usable execution backbone. The next real step is to make the runtime loop track progress more explicitly and then add durable memory on top.
