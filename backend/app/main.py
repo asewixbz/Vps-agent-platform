@@ -6,6 +6,7 @@ from typing import Any, Literal
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from .agent_runtime import run_agent_runtime, runtime_execution_to_dict
 from .job_queue import enqueue_task, queue_size
 from .model_adapter import ModelAdapterError
 from .model_runtime import chat_model, model_health as runtime_model_health
@@ -57,6 +58,12 @@ class PlanRequest(BaseModel):
     context: dict[str, Any] = Field(default_factory=dict)
 
 
+class RuntimeRunRequest(BaseModel):
+    goal: str
+    context: dict[str, Any] = Field(default_factory=dict)
+    max_steps: int = Field(default=5, gt=0, le=50)
+
+
 @app.on_event("startup")
 def startup() -> None:
     init_db(settings)
@@ -84,8 +91,10 @@ def phases() -> dict[str, Any]:
             "worker processes",
             "browser runner",
             "artifact store",
+            "execution planning bridge",
         ],
         "phase_3": [
+            "multi-step runtime loop",
             "Postgres",
             "stronger policy engine",
             "trust scoring",
@@ -179,3 +188,9 @@ def model_chat(request: ModelChatRequest) -> dict[str, Any]:
 def agent_plan(request: PlanRequest) -> dict[str, Any]:
     plan = build_execution_plan(settings, goal=request.goal, context=request.context)
     return asdict(plan)
+
+
+@app.post("/agent/run")
+def agent_run(request: RuntimeRunRequest) -> dict[str, Any]:
+    result = run_agent_runtime(settings, goal=request.goal, context=request.context, max_steps=request.max_steps)
+    return runtime_execution_to_dict(result)
