@@ -288,6 +288,52 @@ def cmd_plan(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_run(args: argparse.Namespace) -> int:
+    context = load_metadata(args.context, args.context_file)
+    data = request_json(
+        "POST",
+        args.base_url,
+        "/agent/run",
+        {
+            "goal": args.goal,
+            "context": context,
+            "max_steps": args.max_steps,
+        },
+    )
+    if args.json:
+        print_json(data)
+    else:
+        print(f"status: {data.get('status')}")
+        print(f"summary: {data.get('summary')}")
+        print(f"iterations: {data.get('iterations')}")
+        if data.get("blocked_reason"):
+            print(f"blocked_reason: {data.get('blocked_reason')}")
+        plan = data.get("plan") or {}
+        if plan.get("recommended_tool"):
+            print(f"recommended_tool: {plan.get('recommended_tool')}")
+        steps = data.get("steps") or []
+        if steps:
+            print("steps:")
+            for step in steps:
+                line = f"  [{step.get('status')}] {step.get('title')}"
+                if step.get("tool_name"):
+                    line += f" (tool: {step.get('tool_name')})"
+                print(line)
+                if step.get("task_id"):
+                    print(f"     task_id: {step.get('task_id')}")
+                if step.get("detail"):
+                    print(f"     {step.get('detail')}")
+                if step.get("stdout"):
+                    print("     stdout:")
+                    for line_text in str(step.get("stdout")).splitlines():
+                        print(f"       {line_text}")
+                if step.get("stderr"):
+                    print("     stderr:")
+                    for line_text in str(step.get("stderr")).splitlines():
+                        print(f"       {line_text}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="vps-agent",
@@ -313,6 +359,12 @@ def build_parser() -> argparse.ArgumentParser:
     plan_parser.add_argument("goal", help="goal or task description")
     plan_parser.add_argument("--context", help="JSON context string")
     plan_parser.add_argument("--context-file", help="path to a JSON context file, or - for stdin")
+
+    run_parser = subparsers.add_parser("run", help="run the conservative multi-step runtime loop")
+    run_parser.add_argument("goal", help="goal or task description")
+    run_parser.add_argument("--context", help="JSON context string")
+    run_parser.add_argument("--context-file", help="path to a JSON context file, or - for stdin")
+    run_parser.add_argument("--max-steps", type=int, default=5, help="maximum number of runtime steps to process")
 
     register_tool_parser = subparsers.add_parser("register-tool", help="register a tool")
     register_tool_parser.add_argument("name", help="tool name")
@@ -356,6 +408,7 @@ def dispatch(args: argparse.Namespace) -> int:
         "model-health": cmd_model_health,
         "model-chat": cmd_model_chat,
         "plan": cmd_plan,
+        "run": cmd_run,
     }
     try:
         return handlers[command](args)
