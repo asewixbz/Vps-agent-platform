@@ -13,19 +13,21 @@ The model layer is intentionally isolated behind a provider-neutral contract so 
 
 ## Current status
 
-Stage 1 is in place:
+Stage 1 now includes a concrete provider connector:
 
 - the internal contract exists
 - the adapter registry exists
-- settings are ready for future provider selection
+- settings are ready for provider selection
 - there is a placeholder adapter for the unconfigured state
+- the Kie.ai adapter is wired in
+- the FastAPI app exposes `/model/health` and `/model/chat`
+- the CLI exposes `model-health` and `model-chat`
 
-What is *not* implemented yet:
+What is still intentionally limited:
 
-- any concrete provider connector
-- streaming support in the runtime
-- routing logic between multiple providers
-- agent planning on top of the adapter
+- streaming is surfaced in the contract but not yet wired through the runtime as a first-class streaming API
+- provider routing between multiple providers is not implemented
+- planner-style agent execution sits on top of this layer and is still a later step
 
 ## Contract
 
@@ -49,7 +51,7 @@ It defines:
 
 ### 1. Keep the core neutral
 
-The execution core should not know whether the provider is kie, another aggregator, or a direct model API.
+The execution core should not know whether the provider is Kie.ai, another aggregator, or a direct model API.
 
 Only adapters may know provider-specific payload shapes, response formats, auth details, or special limits.
 
@@ -76,6 +78,14 @@ The model-related settings live in `backend/app/settings.py`:
 
 The `.env.example` file documents the matching environment variables.
 
+For Kie.ai, the adapter options JSON can include:
+
+- `api_key`
+- `base_url`
+- `endpoint`
+- `default_model`
+- `request_timeout_seconds`
+
 ## Adapter behavior
 
 ### Unconfigured adapter
@@ -87,6 +97,18 @@ This adapter is deliberate:
 - it makes the unconfigured state explicit
 - it avoids pretending a model is available when it is not
 - it gives the runtime a clean error path instead of a silent failure
+
+### Kie.ai adapter
+
+The Kie.ai adapter translates the neutral request shape into `POST /codex/v1/responses`.
+
+It currently supports:
+
+- bearer-token auth
+- text message conversion
+- tool-call payload passthrough via request metadata
+- response normalization into `ModelResponse`
+- health reporting
 
 ### Future adapters
 
