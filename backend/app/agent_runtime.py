@@ -7,7 +7,7 @@ from typing import Any
 from .executor import execute_task
 from .planner import AgentPlan, PlanStep, build_execution_plan
 from .settings import Settings
-from .store import create_runtime_run, get_runtime_run, update_runtime_run, utc_now
+from .store import create_runtime_run, create_runtime_run_event, get_runtime_run, update_runtime_run, utc_now
 
 
 @dataclass(frozen=True)
@@ -172,6 +172,53 @@ def _resume_hint(status: str, checkpoint: dict[str, Any], blocked_reason: str | 
     return f"Resume from step {next_step_index}."
 
 
+def _emit_runtime_event(
+    settings: Settings,
+    *,
+    runtime_run_id: str,
+    status: str,
+    summary: str,
+    checkpoint: dict[str, Any],
+    attempts: int,
+    blocked_reason: str | None = None,
+    resume_hint: str | None = None,
+    started_at: str | None = None,
+    finished_at: str | None = None,
+    last_resume_from_step_index: int | None = None,
+    last_max_steps: int | None = None,
+    context: dict[str, Any] | None = None,
+) -> None:
+    step_index = checkpoint.get("blocked_step_index")
+    if not isinstance(step_index, int) or step_index <= 0:
+        step_index = checkpoint.get("next_step_index")
+    payload = {
+        "status": status,
+        "summary": summary,
+        "checkpoint": checkpoint,
+        "attempts": attempts,
+        "blocked_reason": blocked_reason,
+        "resume_hint": resume_hint,
+        "started_at": started_at,
+        "finished_at": finished_at,
+        "last_resume_from_step_index": last_resume_from_step_index,
+        "last_max_steps": last_max_steps,
+        "context": context or {},
+    }
+    message = blocked_reason or summary or f"runtime status changed to {status}"
+    try:
+        create_runtime_run_event(
+            settings,
+            runtime_run_id=runtime_run_id,
+            event_type=status,
+            step_index=step_index if isinstance(step_index, int) and step_index > 0 else None,
+            message=message,
+            payload=payload,
+            created_at=finished_at or utc_now(),
+        )
+    except Exception:
+        pass
+
+
 def _persist_runtime_run_state(
     settings: Settings,
     *,
@@ -194,7 +241,7 @@ def _persist_runtime_run_state(
     plan_payload = asdict(plan)
     existing = get_runtime_run(settings, runtime_run_id=runtime_run_id)
     if existing is None:
-        return create_runtime_run(
+        run = create_runtime_run(
             settings,
             runtime_run_id=runtime_run_id,
             goal=goal,
@@ -213,25 +260,43 @@ def _persist_runtime_run_state(
             last_resume_from_step_index=last_resume_from_step_index,
             last_max_steps=last_max_steps,
         )
-    return update_runtime_run(
+    else:
+        run = update_runtime_run(
+            settings,
+            runtime_run_id=runtime_run_id,
+            goal=goal,
+            status=status,
+            summary=summary,
+            plan_json=plan_payload,
+            context_json=context,
+            steps_json=steps_payload,
+            checkpoint_json=checkpoint,
+            blocked_reason=blocked_reason,
+            resume_hint=resume_hint,
+            attempts=attempts,
+            started_at=started_at,
+            finished_at=finished_at,
+            last_run_at=utc_now(),
+            last_resume_from_step_index=last_resume_from_step_index,
+            last_max_steps=last_max_steps,
+        )
+
+    _emit_runtime_event(
         settings,
         runtime_run_id=runtime_run_id,
-        goal=goal,
         status=status,
         summary=summary,
-        plan_json=plan_payload,
-        context_json=context,
-        steps_json=steps_payload,
-        checkpoint_json=checkpoint,
+        checkpoint=checkpoint,
+        attempts=attempts,
         blocked_reason=blocked_reason,
         resume_hint=resume_hint,
-        attempts=attempts,
         started_at=started_at,
         finished_at=finished_at,
-        last_run_at=utc_now(),
         last_resume_from_step_index=last_resume_from_step_index,
         last_max_steps=last_max_steps,
+        context=context,
     )
+    return run or {}
 
 
 def run_agent_runtime(
