@@ -127,7 +127,7 @@ def init_db(settings: Settings) -> None:
 
 
 def _load_json(raw: Any, default: Any) -> Any:
-    if raw in {None, ""}:
+    if raw is None or raw == "":
         return default
     if isinstance(raw, (dict, list)):
         return raw
