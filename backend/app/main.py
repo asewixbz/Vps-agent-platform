@@ -12,6 +12,7 @@ from .dossiers import (
     get_contact_dossier,
     get_project_dossier,
     list_contact_dossiers,
+    list_dossiers,
     list_project_dossiers,
     upsert_contact_dossier,
     upsert_project_dossier,
@@ -534,7 +535,7 @@ def dossiers(
         return list_contact_dossiers(settings, query=query, limit=limit)
     if kind == "project":
         return list_project_dossiers(settings, query=query, limit=limit)
-    return list_memory_records(settings, query=query, limit=limit)
+    return list_dossiers(settings, query=query, limit=limit)
 
 
 @app.get("/dossiers/contact")
