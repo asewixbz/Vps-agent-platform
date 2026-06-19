@@ -11,6 +11,7 @@ from .job_queue import enqueue_task, queue_size
 from .model_adapter import ModelAdapterError
 from .model_runtime import chat_model, model_health as runtime_model_health
 from .planner import build_execution_plan
+from .runtime_events import group_runtime_events, runtime_events_for_step
 from .settings import get_settings
 from .store import (
     approve_task,
@@ -212,11 +213,19 @@ def agent_run_get(runtime_run_id: str) -> dict[str, Any]:
 
 
 @app.get("/agent/runs/{runtime_run_id}/events")
-def agent_run_events(runtime_run_id: str) -> list[dict[str, Any]]:
+def agent_run_events(
+    runtime_run_id: str,
+    step_index: int | None = None,
+    grouped: bool = False,
+) -> dict[str, Any] | list[dict[str, Any]]:
     run = get_runtime_run(settings, runtime_run_id=runtime_run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="runtime run not found")
-    return list_runtime_run_events(settings, runtime_run_id=runtime_run_id)
+    events = list_runtime_run_events(settings, runtime_run_id=runtime_run_id)
+    events = runtime_events_for_step(events, step_index)
+    if grouped:
+        return group_runtime_events(events)
+    return events
 
 
 @app.post("/agent/run")
