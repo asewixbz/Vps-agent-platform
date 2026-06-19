@@ -89,6 +89,16 @@ def init_db(settings: Settings) -> None:
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS runtime_run_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                runtime_run_id TEXT NOT NULL,
+                event_type TEXT NOT NULL,
+                step_index INTEGER,
+                message TEXT NOT NULL,
+                payload_json TEXT NOT NULL DEFAULT '{}',
+                created_at TEXT NOT NULL
+            );
             """
         )
         _ensure_columns(
@@ -449,7 +459,18 @@ def update_runtime_run(settings: Settings, *, runtime_run_id: str, **fields: Any
 def get_runtime_run(settings: Settings, *, runtime_run_id: str) -> dict[str, Any] | None:
     conn = connect(settings.db_path)
     try:
-        row = conn.execute("SELECT * FROM runtime_runs WHERE id = ?", (runtime_run_id,)).fetchone()
+        row = conn.execute(
+            """
+            SELECT runtime_runs.*, (
+                SELECT COUNT(1)
+                FROM runtime_run_events
+                WHERE runtime_run_events.runtime_run_id = runtime_runs.id
+            ) AS event_count
+            FROM runtime_runs
+            WHERE runtime_runs.id = ?
+            """,
+            (runtime_run_id,),
+        ).fetchone()
         return _to_dict(row)
     finally:
         conn.close()
@@ -458,12 +479,73 @@ def get_runtime_run(settings: Settings, *, runtime_run_id: str) -> dict[str, Any
 def list_runtime_runs(settings: Settings, *, limit: int | None = 100) -> list[dict[str, Any]]:
     conn = connect(settings.db_path)
     try:
-        query = "SELECT * FROM runtime_runs ORDER BY updated_at DESC"
+        query = """
+            SELECT runtime_runs.*, (
+                SELECT COUNT(1)
+                FROM runtime_run_events
+                WHERE runtime_run_events.runtime_run_id = runtime_runs.id
+            ) AS event_count
+            FROM runtime_runs
+            ORDER BY updated_at DESC
+        """
         params: tuple[Any, ...] = ()
         if limit is not None:
             query += " LIMIT ?"
             params = (limit,)
         rows = conn.execute(query, params).fetchall()
         return [r for row in rows if (r := _to_dict(row)) is not None]
+    finally:
+        conn.close()
+
+
+def create_runtime_run_event(
+    settings: Settings,
+    *,
+    runtime_run_id: str,
+    event_type: str,
+    message: str,
+    step_index: int | None = None,
+    payload: dict[str, Any] | None = None,
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    now = created_at or utc_now()
+    conn = connect(settings.db_path)
+    try:
+        cursor = conn.execute(
+            """
+            INSERT INTO runtime_run_events (runtime_run_id, event_type, step_index, message, payload_json, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (runtime_run_id, event_type, step_index, message, json.dumps(payload or {}), now),
+        )
+        conn.commit()
+        return {
+            "id": cursor.lastrowid,
+            "runtime_run_id": runtime_run_id,
+            "event_type": event_type,
+            "step_index": step_index,
+            "message": message,
+            "payload": payload or {},
+            "created_at": now,
+        }
+    finally:
+        conn.close()
+
+
+def list_runtime_run_events(
+    settings: Settings,
+    *,
+    runtime_run_id: str,
+    limit: int | None = None,
+) -> list[dict[str, Any]]:
+    conn = connect(settings.db_path)
+    try:
+        query = "SELECT * FROM runtime_run_events WHERE runtime_run_id = ? ORDER BY id ASC"
+        params: list[Any] = [runtime_run_id]
+        if limit is not None:
+            query += " LIMIT ?"
+            params.append(limit)
+        rows = conn.execute(query, tuple(params)).fetchall()
+        return [e for row in rows if (e := _to_dict(row)) is not None]
     finally:
         conn.close()
