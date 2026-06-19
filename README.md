@@ -32,6 +32,7 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - conservative multi-step runtime loop API and CLI
 - persistent runtime run history, checkpoint/resume markers, and event logs
 - durable memory records with artifact indexing
+- project and contact dossier helpers
 - runtime event replay filters by step or grouped view
 
 ## What is not included yet
@@ -57,6 +58,7 @@ vps-agent-platform/
       __main__.py
       agent_runtime.py
       cli.py
+      dossiers.py
       executor.py
       job_queue.py
       main.py
@@ -154,11 +156,23 @@ Use `--base-url` if the API is not running on `http://localhost:8000`.
 - `GET /memory/records/{memory_record_id}/artifacts`
 - `POST /memory/records/{memory_record_id}/artifacts`
 
+## Dossier endpoints
+
+- `GET /dossiers`
+- `GET /dossiers/contact`
+- `POST /dossiers/contact`
+- `GET /dossiers/contact/{contact_id}`
+- `GET /dossiers/project`
+- `POST /dossiers/project`
+- `GET /dossiers/project/{project_id}`
+
 The planning endpoint is conservative by design: it can return a heuristic plan even when the model runner is disabled, and it will try to refine that plan through the configured adapter when model execution is enabled.
 
 The runtime endpoint executes the plan step by step and stops when it hits approval, missing input, or a failing step. It also returns checkpoint data so a later call can resume from the next step, stores the cumulative run state in SQLite, and writes step-level runtime events for auditability.
 
 The runtime endpoint also snapshots each run into durable memory so completed or blocked runs can be rediscovered later.
+
+If the runtime context includes `project_id` or `contact_id`, the same run snapshot is also promoted into a project/contact dossier.
 
 The event endpoint supports replay filters:
 
@@ -240,8 +254,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 
 ### Phase 4
 - durable memory records
-- project/task summaries
-- contact dossiers
+- project/contact dossiers
 - artifact indexing
 - long-lived workflow context
 
