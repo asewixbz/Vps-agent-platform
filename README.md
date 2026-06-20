@@ -126,7 +126,7 @@ python -m app.cli run-show <runtime-run-id>
 python -m app.cli run-events <runtime-run-id>
 python -m app.cli run-events <runtime-run-id> --step-index 3
 python -m app.cli run-events <runtime-run-id> --grouped
-python -m app.cli run-provenance <runtime-run-id>
+python -m app.cli run-provenance <runtime-run-id> --limit 50
 python -m app.cli memory-list
 python -m app.cli memory-show <memory-record-id>
 python -m app.cli memory-upsert --payload '{"memory_key":"contact:asewisher@duck.com","kind":"contact_dossier","scope_type":"contact","scope_id":"asewisher@duck.com","title":"Asewisher","summary":"Primary contact dossier","content":"Stable notes and next steps"}'
@@ -136,7 +136,7 @@ python -m app.cli memory-artifact-add <memory-record-id> --payload '{"artifact_t
 python -m app.cli memory-links
 python -m app.cli memory-link-add <source-type> <source-id> <target-type> <target-id> updates --note "runtime snapshot updates dossier"
 python -m app.cli memory-record-links <memory-record-id>
-python -m app.cli memory-provenance <memory-record-id>
+python -m app.cli memory-provenance <memory-record-id> --limit 50
 python -m app.cli model-health
 python -m app.cli model-chat --payload '{"messages":[{"role":"user","content":"Say hello"}]}'
 python -m app.cli plan "Summarize the latest open tasks"
@@ -173,8 +173,8 @@ Use `--base-url` if the API is not running on `http://localhost:8000`.
 - `GET /memory/records/{memory_record_id}/links`
 - `GET /memory/records/{memory_record_id}/provenance`
 
-The `memory-provenance` CLI command is the easiest way to inspect a record together with its linked memory records and artifact refs.
-The `run-provenance` CLI command does the same for a runtime run, starting from its stored snapshot.
+The `memory-provenance` CLI command is the easiest way to inspect a record together with its linked memory records and artifact refs. Use `--limit` to cap traversal breadth.
+The `run-provenance` CLI command does the same for a runtime run, starting from its stored snapshot. Use `--limit` the same way.
 
 ## Dossier endpoints
 
