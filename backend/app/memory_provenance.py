@@ -6,7 +6,6 @@ import os
 import sys
 from typing import Any
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 DEFAULT_BASE_URL = os.getenv("VPS_AGENT_API_URL", os.getenv("APP_API_URL", "http://localhost:8000"))
@@ -24,13 +23,6 @@ def _decode_body(raw: bytes) -> Any:
         return json.loads(text)
     except json.JSONDecodeError:
         return text
-
-
-def _build_path(path: str, params: dict[str, Any]) -> str:
-    filtered = {key: str(value) for key, value in params.items() if value is not None and value != ""}
-    if not filtered:
-        return path
-    return f"{path}?{urlencode(filtered)}"
 
 
 def request_json(method: str, base_url: str, path: str, payload: dict[str, Any] | None = None) -> Any:
@@ -76,52 +68,36 @@ def format_memory_record_row(record: dict[str, Any]) -> str:
     return f"{record.get('id', ''):<36} {record.get('kind', ''):<16} {scope:<24} pinned={pinned:<3} {title}"
 
 
+def format_memory_artifact_row(artifact: dict[str, Any]) -> str:
+    label = artifact.get("label") or ""
+    return (
+        f"{artifact.get('id', ''):<6} {artifact.get('artifact_type', ''):<20} "
+        f"{_truncate(str(artifact.get('artifact_ref') or ''), 34):<34} {label}"
+    )
+
+
 def print_json(data: Any) -> None:
     print(json.dumps(data, indent=2, ensure_ascii=False))
 
 
 def build_provenance(args: argparse.Namespace) -> dict[str, Any]:
-    record = request_json("GET", args.base_url, f"/memory/records/{args.memory_record_id}")
-    links = request_json(
+    return request_json(
         "GET",
         args.base_url,
-        _build_path(
-            f"/memory/records/{args.memory_record_id}/links",
-            {
-                "direction": "both",
-                "limit": args.limit,
-            },
-        ),
+        f"/memory/records/{args.memory_record_id}/provenance",
+        None,
     )
-
-    related_records: list[dict[str, Any]] = []
-    artifact_links: list[dict[str, Any]] = []
-    seen_related_ids: set[str] = set()
-    for link in links if isinstance(links, list) else []:
-        source_type = str(link.get("source_type") or "")
-        target_type = str(link.get("target_type") or "")
-        source_id = str(link.get("source_id") or "")
-        target_id = str(link.get("target_id") or "")
-        if source_type == "memory_record" and source_id and source_id != args.memory_record_id and source_id not in seen_related_ids:
-            seen_related_ids.add(source_id)
-            related_records.append(request_json("GET", args.base_url, f"/memory/records/{source_id}"))
-        if target_type == "memory_record" and target_id and target_id != args.memory_record_id and target_id not in seen_related_ids:
-            seen_related_ids.add(target_id)
-            related_records.append(request_json("GET", args.base_url, f"/memory/records/{target_id}"))
-        if source_type == "artifact" or target_type == "artifact":
-            artifact_links.append(link)
-
-    return {
-        "record": record,
-        "links": links,
-        "related_records": related_records,
-        "artifact_links": artifact_links,
-    }
 
 
 def cmd_memory_provenance(args: argparse.Namespace) -> int:
     data = build_provenance(args)
-    record = data["record"]
+    record = data.get("record") or {}
+    summary = data.get("summary") or {}
+    direct_artifacts = data.get("direct_artifacts") or []
+    related_records = data.get("related_records") or []
+    artifact_links = data.get("artifact_links") or []
+    artifact_refs = data.get("artifact_refs") or []
+
     if args.json:
         print_json(data)
         return 0
@@ -136,20 +112,32 @@ def cmd_memory_provenance(args: argparse.Namespace) -> int:
         print(f"summary: {record.get('summary')}")
     if record.get("tags"):
         print(f"tags: {record.get('tags')}")
-    print(f"links: {len(data['links']) if isinstance(data['links'], list) else 0}")
-    print(f"related_records: {len(data['related_records'])}")
-    print(f"artifact_links: {len(data['artifact_links'])}")
+    print(f"links: {len(data.get('links') or [])}")
+    print(f"related_records: {summary.get('related_record_count', len(related_records))}")
+    print(f"direct_artifacts: {summary.get('direct_artifact_count', len(direct_artifacts))}")
+    print(f"artifact_links: {summary.get('artifact_link_count', len(artifact_links))}")
+    print(f"artifact_refs: {summary.get('artifact_ref_count', len(artifact_refs))}")
 
-    if data["related_records"]:
+    if direct_artifacts:
+        print("direct artifacts:")
+        for artifact in direct_artifacts:
+            print(f"  - {format_memory_artifact_row(artifact)}")
+    if related_records:
         print("related records:")
-        for related in data["related_records"]:
+        for related in related_records:
             print(f"  - {format_memory_record_row(related)}")
             if related.get("summary"):
                 print(f"    summary: {_truncate(str(related.get('summary')), 72)}")
-    if data["artifact_links"]:
+            if related.get("artifacts"):
+                print(f"    artifacts: {len(related.get('artifacts') or [])}")
+    if artifact_links:
         print("artifact links:")
-        for link in data["artifact_links"]:
+        for link in artifact_links:
             print(f"  - {format_memory_link_row(link)}")
+    if artifact_refs:
+        print("artifact refs:")
+        for artifact_ref in artifact_refs:
+            print(f"  - {artifact_ref}")
     return 0
 
 
@@ -160,7 +148,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("memory_record_id", help="memory record id")
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="FastAPI base URL (default: %(default)s)")
-    parser.add_argument("--limit", type=int, default=100, help="maximum number of links to inspect")
     parser.add_argument("--json", action="store_true", help="print JSON output")
     return parser
 
