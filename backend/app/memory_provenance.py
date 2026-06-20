@@ -84,7 +84,7 @@ def build_provenance(args: argparse.Namespace) -> dict[str, Any]:
     return request_json(
         "GET",
         args.base_url,
-        f"/memory/records/{args.memory_record_id}/provenance",
+        f"/memory/records/{args.memory_record_id}/provenance?limit={args.limit}",
         None,
     )
 
@@ -148,6 +148,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("memory_record_id", help="memory record id")
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="FastAPI base URL (default: %(default)s)")
+    parser.add_argument("--limit", type=int, default=100, help="maximum number of linked records to inspect")
     parser.add_argument("--json", action="store_true", help="print JSON output")
     return parser
 
