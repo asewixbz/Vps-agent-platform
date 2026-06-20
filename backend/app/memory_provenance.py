@@ -64,8 +64,8 @@ def format_memory_link_row(link: dict[str, Any]) -> str:
 def format_memory_record_row(record: dict[str, Any]) -> str:
     scope = f"{record.get('scope_type', '')}:{record.get('scope_id', '')}"
     pinned = "yes" if record.get("pinned") else "no"
-    title = _truncate(str(record.get("title") or ""), 48)
     depth = record.get("depth", 0)
+    title = _truncate(str(record.get("title") or ""), 48)
     return f"{record.get('id', ''):<36} {record.get('kind', ''):<16} {scope:<24} depth={depth:<2} pinned={pinned:<3} {title}"
 
 
@@ -81,16 +81,21 @@ def print_json(data: Any) -> None:
     print(json.dumps(data, indent=2, ensure_ascii=False))
 
 
+def _provenance_depth(args: argparse.Namespace) -> int:
+    return int(getattr(args, "depth", 2))
+
+
 def build_provenance(args: argparse.Namespace) -> dict[str, Any]:
+    depth = _provenance_depth(args)
     return request_json(
         "GET",
         args.base_url,
-        f"/memory/records/{args.memory_record_id}/provenance?limit={args.limit}&depth={args.depth}",
+        f"/memory/records/{args.memory_record_id}/provenance?limit={args.limit}&depth={depth}",
         None,
     )
 
 
-def _print_records(title: str, records: list[dict[str, Any]]) -> None:
+def _print_record_section(title: str, records: list[dict[str, Any]]) -> None:
     if not records:
         return
     print(title)
@@ -98,12 +103,12 @@ def _print_records(title: str, records: list[dict[str, Any]]) -> None:
         print(f"  - {format_memory_record_row(record)}")
         if record.get("summary"):
             print(f"    summary: {_truncate(str(record.get('summary')), 72)}")
-        if record.get("via"):
-            via = record.get("via") or {}
-            relation_type = via.get("relation_type") or ""
-            direction = via.get("direction") or ""
-            via_record_id = record.get("via_record_id") or ""
-            print(f"    via: {direction} {relation_type} from {via_record_id}")
+        via = record.get("via") or {}
+        if via:
+            print(
+                f"    via: {via.get('direction')} {via.get('relation_type')} "
+                f"from {record.get('via_record_id')}"
+            )
         if record.get("artifacts"):
             print(f"    artifacts: {len(record.get('artifacts') or [])}")
 
@@ -141,9 +146,12 @@ def cmd_memory_provenance(args: argparse.Namespace) -> int:
     print(f"artifact_links: {summary.get('artifact_link_count', len(artifact_links))}")
     print(f"artifact_refs: {summary.get('artifact_ref_count', len(artifact_refs))}")
 
-    _print_records("direct artifacts:", [{"id": artifact.get("id"), "kind": artifact.get("artifact_type"), "scope_type": "artifact", "scope_id": artifact.get("artifact_ref"), "title": artifact.get("label") or artifact.get("artifact_ref"), "depth": 0, "summary": artifact.get("artifact_ref")} for artifact in direct_artifacts])
-    _print_records("related records:", related_records)
-    _print_records("transitive records:", transitive_records)
+    if direct_artifacts:
+        print("direct artifacts:")
+        for artifact in direct_artifacts:
+            print(f"  - {format_memory_artifact_row(artifact)}")
+    _print_record_section("related records:", related_records)
+    _print_record_section("transitive records:", transitive_records)
 
     if artifact_links:
         print("artifact links:")
