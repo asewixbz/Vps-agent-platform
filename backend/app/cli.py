@@ -98,7 +98,7 @@ def _truncate(text: str, limit: int = 72) -> str:
     cleaned = text.replace("\n", " ").strip()
     if len(cleaned) <= limit:
         return cleaned
-    return cleaned[: limit - 1] + ""
+    return cleaned[: limit - 1] + "…"
 
 
 def format_tool_row(tool: dict[str, Any]) -> str:
