@@ -81,7 +81,7 @@ def print_json(data: Any) -> None:
 
 
 def cmd_runtime_provenance(args: argparse.Namespace) -> int:
-    data = request_json("GET", args.base_url, f"/agent/runs/{args.runtime_run_id}/provenance")
+    data = request_json("GET", args.base_url, f"/agent/runs/{args.runtime_run_id}/provenance?limit={args.limit}")
     runtime_run = data.get("runtime_run") or {}
     snapshot = data.get("memory_snapshot") or {}
     provenance = data.get("provenance") or {}
@@ -138,6 +138,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("runtime_run_id", help="runtime run id")
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="FastAPI base URL (default: %(default)s)")
+    parser.add_argument("--limit", type=int, default=100, help="maximum number of linked records to inspect")
     parser.add_argument("--json", action="store_true", help="print JSON output")
     return parser
 
