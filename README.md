@@ -65,12 +65,14 @@ vps-agent-platform/
       job_queue.py
       main.py
       memory.py
+      memory_graph.py
       memory_links.py
       memory_provenance.py
       model_adapter.py
       model_runtime.py
       planner.py
       policy.py
+      provenance_api.py
       runner.py
       settings.py
       store.py
@@ -154,6 +156,7 @@ Use `--base-url` if the API is not running on `http://localhost:8000`.
 - `GET /agent/runs`
 - `GET /agent/runs/{runtime_run_id}`
 - `GET /agent/runs/{runtime_run_id}/events`
+- `GET /agent/runs/{runtime_run_id}/provenance`
 
 ## Memory endpoints
 
@@ -166,6 +169,7 @@ Use `--base-url` if the API is not running on `http://localhost:8000`.
 - `GET /memory/links`
 - `POST /memory/links`
 - `GET /memory/records/{memory_record_id}/links`
+- `GET /memory/records/{memory_record_id}/provenance`
 
 The `memory-provenance` CLI command is the easiest way to inspect a record together with its linked memory records and artifact refs.
 
