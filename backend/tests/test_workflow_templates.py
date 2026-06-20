@@ -7,6 +7,7 @@ from unittest import TestCase
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from app.cli import build_parser
 from app.planner import build_execution_plan
 from app.settings import Settings
 from app.store import init_db, seed_builtin_tools
@@ -221,3 +222,18 @@ class WorkflowTemplateTests(TestCase):
         self.assertEqual(plan.steps[1].tool_name, "python_local")
         self.assertIn("Resolved workflow template 'scan_workflow'", plan.notes)
         self.assertEqual(plan.metadata["workflow_template"]["name"], "scan_workflow")
+
+    def test_workflow_template_cli_commands_are_registered(self) -> None:
+        parser = build_parser()
+
+        parsed = parser.parse_args(["workflow-templates"])
+        self.assertEqual(parsed.command, "workflow-templates")
+        self.assertTrue(callable(parsed.func))
+
+        parsed = parser.parse_args(["workflow-template", "scan_workflow"])
+        self.assertEqual(parsed.command, "workflow-template")
+        self.assertTrue(callable(parsed.func))
+
+        parsed = parser.parse_args(["workflow-template-run", "report_workflow", "Weekly report"])
+        self.assertEqual(parsed.command, "workflow-template-run")
+        self.assertTrue(callable(parsed.func))
