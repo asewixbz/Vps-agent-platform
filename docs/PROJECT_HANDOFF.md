@@ -266,6 +266,7 @@ Deliverables:
 - provenance views for durable memory graphs
 - runtime provenance views
 - dossier helpers for recurring workflows
+- configurable provenance traversal depth for memory and runtime inspection
 
 Acceptance criteria:
 
