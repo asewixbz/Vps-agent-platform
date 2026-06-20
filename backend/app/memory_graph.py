@@ -65,6 +65,7 @@ def _build_record_entry(
     settings: Settings,
     *,
     record: dict[str, Any],
+    section: str,
     depth: int,
     via_link: dict[str, Any] | None = None,
     via_record_id: str | None = None,
@@ -74,6 +75,7 @@ def _build_record_entry(
         **record,
         "artifacts": artifacts,
         "artifact_count": len(artifacts),
+        "section": section,
         "depth": depth,
     }
     if via_link is not None:
@@ -90,6 +92,47 @@ def _build_record_entry(
     if via_record_id is not None:
         entry["via_record_id"] = via_record_id
     return entry
+
+
+def _build_artifact_sources(record_entry: dict[str, Any]) -> list[dict[str, Any]]:
+    sources: list[dict[str, Any]] = []
+    for artifact in record_entry.get("artifacts") or []:
+        if not isinstance(artifact, dict):
+            continue
+        sources.append(
+            {
+                "section": record_entry.get("section"),
+                "record_id": record_entry.get("id"),
+                "record_kind": record_entry.get("kind"),
+                "record_title": record_entry.get("title"),
+                "depth": record_entry.get("depth", 0),
+                "artifact_type": artifact.get("artifact_type"),
+                "artifact_ref": artifact.get("artifact_ref"),
+                "label": artifact.get("label"),
+            }
+        )
+    return sources
+
+
+def _build_artifact_only_entries(record_entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    artifact_map: dict[tuple[Any, ...], dict[str, Any]] = {}
+    ordered_keys: list[tuple[Any, ...]] = []
+    for record_entry in record_entries:
+        for source in _build_artifact_sources(record_entry):
+            key = _unique_artifact_key(source)
+            if key not in artifact_map:
+                artifact_map[key] = {
+                    "artifact_type": source.get("artifact_type"),
+                    "artifact_ref": source.get("artifact_ref"),
+                    "label": source.get("label"),
+                    "sources": [source],
+                }
+                ordered_keys.append(key)
+                continue
+            sources = artifact_map[key].setdefault("sources", [])
+            if source not in sources:
+                sources.append(source)
+    return [artifact_map[key] for key in ordered_keys]
 
 
 def _traverse_memory_record_graph(
@@ -134,18 +177,20 @@ def _traverse_memory_record_graph(
             }
             queue.append((neighbor_id, next_depth))
 
-    related_records: list[dict[str, Any]] = []
+    one_hop_records: list[dict[str, Any]] = []
     transitive_records: list[dict[str, Any]] = []
     artifact_links: list[dict[str, Any]] = []
     artifact_refs: list[str] = []
     seen_record_ids: set[str] = {root_record_id}
     seen_artifact_refs: set[str] = set()
 
-    for artifact in _collect_record_artifacts(settings, get_memory_record(settings, memory_record_id=root_record_id) or {}):
-        artifact_ref = str(artifact.get("artifact_ref") or "")
-        if artifact_ref and artifact_ref not in seen_artifact_refs:
-            seen_artifact_refs.add(artifact_ref)
-            artifact_refs.append(artifact_ref)
+    root_record = get_memory_record(settings, memory_record_id=root_record_id)
+    if root_record is not None:
+        for artifact in _collect_record_artifacts(settings, root_record):
+            artifact_ref = str(artifact.get("artifact_ref") or "")
+            if artifact_ref and artifact_ref not in seen_artifact_refs:
+                seen_artifact_refs.add(artifact_ref)
+                artifact_refs.append(artifact_ref)
 
     ordered_records = [
         (record_id, record_meta)
@@ -161,9 +206,11 @@ def _traverse_memory_record_graph(
         depth_value = int(record_meta.get("depth") or 0)
         via_link = record_meta.get("via_link")
         via_record_id = record_meta.get("via_record_id")
+        section = "one_hop" if depth_value == 1 else "transitive"
         entry = _build_record_entry(
             settings,
             record=record,
+            section=section,
             depth=depth_value,
             via_link=via_link if isinstance(via_link, dict) else None,
             via_record_id=via_record_id if isinstance(via_record_id, str) else None,
@@ -173,8 +220,8 @@ def _traverse_memory_record_graph(
             if artifact_ref and artifact_ref not in seen_artifact_refs:
                 seen_artifact_refs.add(artifact_ref)
                 artifact_refs.append(artifact_ref)
-        if depth_value <= 1:
-            related_records.append(entry)
+        if depth_value == 1:
+            one_hop_records.append(entry)
         else:
             transitive_records.append(entry)
 
@@ -194,12 +241,12 @@ def _traverse_memory_record_graph(
         if source_type == "artifact" or target_type == "artifact":
             artifact_links.append(link)
 
-    related_records.sort(key=lambda item: str(item.get("updated_at") or ""), reverse=True)
+    one_hop_records.sort(key=lambda item: str(item.get("updated_at") or ""), reverse=True)
     transitive_records.sort(key=lambda item: (int(item.get("depth") or 0), str(item.get("updated_at") or "")), reverse=True)
     artifact_links.sort(key=lambda item: str(item.get("created_at") or ""), reverse=True)
 
     return {
-        "related_records": related_records,
+        "one_hop_records": one_hop_records,
         "transitive_records": transitive_records,
         "artifact_links": artifact_links,
         "artifact_refs": artifact_refs,
@@ -222,38 +269,36 @@ def build_memory_record_provenance(
     direct_links = _memory_record_links_for_record(settings, memory_record_id, limit=limit)
     graph = _traverse_memory_record_graph(settings, root_record_id=memory_record_id, depth=depth, limit=limit)
     direct_artifacts = _collect_record_artifacts(settings, record)
-    direct_related_records = graph["related_records"]
+    root_record = {**record, "artifacts": direct_artifacts, "artifact_count": len(direct_artifacts), "section": "root", "depth": 0}
+    one_hop_records = graph["one_hop_records"]
     transitive_records = graph["transitive_records"]
-    artifact_links = graph["artifact_links"]
-    artifact_refs = graph["artifact_refs"]
     traversal_links = graph["traversal_links"]
+    artifact_only_artifacts = _build_artifact_only_entries([root_record, *one_hop_records, *transitive_records])
+    artifact_links = graph["artifact_links"]
+    artifact_refs = list(graph["artifact_refs"])
 
-    for artifact in direct_artifacts:
+    for artifact in artifact_only_artifacts:
         artifact_ref = str(artifact.get("artifact_ref") or "")
         if artifact_ref and artifact_ref not in artifact_refs:
             artifact_refs.insert(0, artifact_ref)
 
-    related_records = [
-        {
-            **related,
-            "artifact_count": len(related.get("artifacts") or []),
-        }
-        for related in direct_related_records
-    ]
-    transitive_records = [
-        {
-            **related,
-            "artifact_count": len(related.get("artifacts") or []),
-        }
-        for related in transitive_records
-    ]
-
-    root_record = {**record, "artifacts": direct_artifacts, "artifact_count": len(direct_artifacts), "depth": 0}
+    artifact_only = {
+        "artifacts": artifact_only_artifacts,
+        "links": artifact_links,
+        "refs": artifact_refs,
+        "artifact_count": len(artifact_only_artifacts),
+        "artifact_link_count": len(artifact_links),
+        "artifact_ref_count": len(artifact_refs),
+    }
 
     return {
+        "root": root_record,
+        "one_hop": one_hop_records,
+        "transitive": transitive_records,
+        "artifact_only": artifact_only,
         "record": root_record,
         "direct_artifacts": direct_artifacts,
-        "related_records": related_records,
+        "related_records": one_hop_records,
         "transitive_records": transitive_records,
         "artifact_links": artifact_links,
         "artifact_refs": artifact_refs,
@@ -264,17 +309,20 @@ def build_memory_record_provenance(
             "depth": depth,
             "limit": limit,
             "visited_record_count": graph["visited_record_count"],
-            "direct_related_record_count": len(related_records),
+            "one_hop_record_count": len(one_hop_records),
             "transitive_record_count": len(transitive_records),
             "traversal_link_count": len(traversal_links),
+            "artifact_only_count": len(artifact_only_artifacts),
             "artifact_link_count": len(artifact_links),
             "artifact_ref_count": len(artifact_refs),
         },
         "summary": {
             "record_id": memory_record_id,
             "record_kind": record.get("kind"),
-            "related_record_count": len(related_records),
+            "one_hop_record_count": len(one_hop_records),
+            "related_record_count": len(one_hop_records),
             "transitive_record_count": len(transitive_records),
+            "artifact_only_count": len(artifact_only_artifacts),
             "direct_artifact_count": len(direct_artifacts),
             "artifact_link_count": len(artifact_links),
             "artifact_ref_count": len(artifact_refs),
