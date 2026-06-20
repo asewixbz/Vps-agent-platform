@@ -10,7 +10,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.planner import build_execution_plan
 from app.settings import Settings
 from app.store import init_db, seed_builtin_tools
-from app.workflow_templates import default_workflow_templates, normalize_workflow_template, resolve_workflow_template, workflow_template_to_dict
+from app.workflow_templates import (
+    build_workflow_template_context,
+    default_workflow_templates,
+    normalize_workflow_template,
+    resolve_workflow_template,
+    workflow_template_to_dict,
+)
 
 
 class WorkflowTemplateTests(TestCase):
@@ -92,6 +98,59 @@ class WorkflowTemplateTests(TestCase):
         self.assertEqual(data["name"], "scan_workflow")
         self.assertEqual(data["steps"][1]["kind"], "execute")
         self.assertEqual(data["steps"][1]["tool_name"], "python_local")
+
+    def test_build_workflow_template_context_materializes_report_payloads(self) -> None:
+        template = resolve_workflow_template({"workflow_template_name": "report_workflow"})
+        self.assertIsNotNone(template)
+        assert template is not None
+
+        context = build_workflow_template_context(
+            template,
+            workflow_inputs={
+                "report_title": "Weekly update",
+                "audience": "ops",
+                "output_constraints": ["concise", "cited"],
+                "source_data": {"items": ["alpha", "beta"]},
+            },
+        )
+
+        self.assertEqual(context["workflow_template_name"], "report_workflow")
+        self.assertEqual(context["workflow_inputs"]["audience"], "ops")
+        self.assertIn("payload_by_tool", context)
+        self.assertIn("tool_payloads", context)
+        self.assertEqual(context["payload_by_tool"]["python_local"], context["tool_payloads"]["python_local"])
+
+        script = context["payload_by_tool"]["python_local"]["script"]
+        self.assertIn("report.json", script)
+        self.assertIn("report.md", script)
+        self.assertIn("_report_result", script)
+        self.assertIn("Workflow template", script)
+
+    def test_build_workflow_template_context_materializes_rank_payloads(self) -> None:
+        template = resolve_workflow_template({"workflow_template_name": "rank_workflow"})
+        self.assertIsNotNone(template)
+        assert template is not None
+
+        context = build_workflow_template_context(
+            template,
+            workflow_inputs={
+                "criteria": {
+                    "weights": {"priority": 3, "fit": 2},
+                    "preferred_values": {"status": "ready"},
+                    "required_fields": ["title"],
+                },
+                "candidates": [
+                    {"title": "A", "priority": 2, "fit": 1, "status": "ready"},
+                    {"title": "B", "priority": 1, "fit": 2, "status": "pending"},
+                ],
+            },
+        )
+
+        self.assertEqual(context["workflow_template_name"], "rank_workflow")
+        script = context["payload_by_tool"]["python_local"]["script"]
+        self.assertIn("ranking.json", script)
+        self.assertIn("_score_candidate", script)
+        self.assertIn("required_fields", script)
 
     def test_build_execution_plan_prefers_workflow_template_context(self) -> None:
         with TemporaryDirectory() as tmpdir:
