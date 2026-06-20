@@ -12,6 +12,7 @@ from urllib.request import Request, urlopen
 
 from .memory_provenance import cmd_memory_provenance as cmd_memory_provenance_view
 from .runtime_provenance import cmd_runtime_provenance as cmd_runtime_provenance_view
+from .workflow_templates_cli import WORKFLOW_TEMPLATE_HANDLERS, register_workflow_template_cli
 
 DEFAULT_BASE_URL = os.getenv("VPS_AGENT_API_URL", os.getenv("APP_API_URL", "http://localhost:8000"))
 
@@ -97,7 +98,7 @@ def _truncate(text: str, limit: int = 72) -> str:
     cleaned = text.replace("\n", " ").strip()
     if len(cleaned) <= limit:
         return cleaned
-    return cleaned[: limit - 1] + "…"
+    return cleaned[: limit - 1] + ""
 
 
 def format_tool_row(tool: dict[str, Any]) -> str:
@@ -467,7 +468,7 @@ def cmd_run(args: argparse.Namespace) -> int:
             print(f"blocked_reason: {data.get('blocked_reason')}")
         plan = data.get("plan") or {}
         if plan.get("recommended_tool"):
-            print(f"recommended_tool: {plan.get('recommended_tool')}")
+            print(f"recommended_tool: {data.get('recommended_tool')}")
         _print_checkpoint(data)
         steps = data.get("steps") or []
         if steps:
@@ -777,6 +778,8 @@ def build_parser() -> argparse.ArgumentParser:
     runtime_provenance_parser.add_argument("--depth", type=int, default=2, help="maximum traversal depth for memory links")
     runtime_provenance_parser.add_argument("--json", action="store_true", help="print JSON output")
 
+    register_workflow_template_cli(subparsers)
+
     return parser
 
 
@@ -810,6 +813,7 @@ def dispatch(args: argparse.Namespace) -> int:
         "memory-record-links": cmd_memory_record_links,
         "memory-provenance": cmd_memory_provenance_view,
         "run-provenance": cmd_runtime_provenance_view,
+        **WORKFLOW_TEMPLATE_HANDLERS,
     }
     try:
         return handlers[command](args)
