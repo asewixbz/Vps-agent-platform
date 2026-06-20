@@ -44,13 +44,22 @@ The project should be treated as an execution platform first, and a UI product s
 - durable memory links between runtime snapshots, dossiers, and artifact refs
 - durable memory provenance views
 - runtime and memory provenance API routes
+- sectioned provenance payloads with explicit root, one-hop, transitive, and artifact-only views
+- sectioned provenance contract tests
+
+### Phase status
+
+- Phase 1 complete
+- Phase 2 complete
+- Phase 3 complete
+- Phase 4 complete
 
 ### What exists but is still early
 
 - browser execution is behind a feature flag
 - model execution is only a placeholder for broader orchestration use
 - shell execution is intentionally restricted
-- the durable memory layer still needs richer dossier workflows, link traversal, and artifact handling
+- Phase 5 workflow templates are next
 - there is no production-grade sandboxing
 
 ## Technical direction
@@ -274,6 +283,12 @@ Acceptance criteria:
 - the system can continue a task later without losing the important context
 - the system can track long-lived work items and their state
 
+Status:
+
+- Phase 4 is complete
+- the sectioned provenance contract is locked in with tests
+- the next active phase is Phase 5 workflow templates
+
 ### Phase 5 — Workflow templates
 
 Goal: make repeated jobs predictable and cheap to run.
@@ -331,7 +346,7 @@ Acceptance criteria:
 
 ## Immediate next work
 
-1. Expand artifact handling and richer link traversal on top of durable memory.
+1. Start Phase 5 workflow templates.
 2. Strengthen browser and artifact handling once the runtime loop is stable.
 3. Add stronger sandboxing and observability before broader tool synthesis.
 
@@ -345,4 +360,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present; the next useful step is richer artifact handling and link traversal on top of them.
+The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present and locked down with sectioned provenance contract tests. Phase 4 is complete; the next active work is Phase 5 workflow templates.
