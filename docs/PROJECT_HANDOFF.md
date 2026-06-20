@@ -59,7 +59,7 @@ The project should be treated as an execution platform first, and a UI product s
 - browser execution is behind a feature flag
 - model execution is only a placeholder for broader orchestration use
 - shell execution is intentionally restricted
-- Phase 5 workflow templates are next
+- Phase 5 workflow templates are wired into the planner/runtime/API surface
 - there is no production-grade sandboxing
 
 ## Technical direction
@@ -343,10 +343,11 @@ Acceptance criteria:
 - `backend/app/planner.py` — conservative planning bridge that can work with or without the model runner
 - `backend/app/agent_runtime.py` — multi-step runtime loop that executes planned steps conservatively and returns checkpoints for resuming
 - `backend/app/runtime_events.py` — runtime event normalization and replay helpers
+- `backend/app/workflow_templates_api.py` — workflow template API routes
 
 ## Immediate next work
 
-1. Start Phase 5 workflow templates.
+1. Expand Phase 5 workflow templates beyond the built-in scan/rank/report set and add scheduling hooks later if needed.
 2. Strengthen browser and artifact handling once the runtime loop is stable.
 3. Add stronger sandboxing and observability before broader tool synthesis.
 
@@ -360,4 +361,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present and locked down with sectioned provenance contract tests. Phase 4 is complete; the next active work is Phase 5 workflow templates.
+The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present and locked down with sectioned provenance contract tests. Phase 4 is complete; workflow templates are now wired into the planner/runtime/API surface and the next work is expanding them and adding scheduling hooks.
