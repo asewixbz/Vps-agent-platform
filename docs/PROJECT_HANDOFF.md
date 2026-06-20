@@ -317,7 +317,7 @@ Acceptance criteria:
 - `backend/app/executor.py` — task execution orchestration
 - `backend/app/worker.py` — queue consumer loop
 - `backend/app/settings.py` — configuration and model adapter settings scaffold
-- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, runtime, run history, event logs, memory records, links, and tool registration
+- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, runtime, run history, event logs, memory records, links, provenance, and tool registration
 - `backend/app/model_adapter.py` — provider-neutral model request/response contract and adapter registry
 - `backend/app/planner.py` — conservative planning bridge that can work with or without the model runner
 - `backend/app/agent_runtime.py` — multi-step runtime loop that executes planned steps conservatively and returns checkpoints for resuming
