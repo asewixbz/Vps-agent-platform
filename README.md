@@ -35,6 +35,7 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - project and contact dossier helpers
 - durable memory links between runtime snapshots, dossiers, and artifact refs
 - memory provenance inspection for durable memory graphs
+- runtime provenance inspection for runtime runs
 - runtime event replay filters by step or grouped view
 
 ## What is not included yet
@@ -125,6 +126,7 @@ python -m app.cli run-show <runtime-run-id>
 python -m app.cli run-events <runtime-run-id>
 python -m app.cli run-events <runtime-run-id> --step-index 3
 python -m app.cli run-events <runtime-run-id> --grouped
+python -m app.cli run-provenance <runtime-run-id>
 python -m app.cli memory-list
 python -m app.cli memory-show <memory-record-id>
 python -m app.cli memory-upsert --payload '{"memory_key":"contact:asewisher@duck.com","kind":"contact_dossier","scope_type":"contact","scope_id":"asewisher@duck.com","title":"Asewisher","summary":"Primary contact dossier","content":"Stable notes and next steps"}'
@@ -172,6 +174,7 @@ Use `--base-url` if the API is not running on `http://localhost:8000`.
 - `GET /memory/records/{memory_record_id}/provenance`
 
 The `memory-provenance` CLI command is the easiest way to inspect a record together with its linked memory records and artifact refs.
+The `run-provenance` CLI command does the same for a runtime run, starting from its stored snapshot.
 
 ## Dossier endpoints
 
