@@ -59,7 +59,7 @@ The project should be treated as an execution platform first, and a UI product s
 - browser execution is behind a feature flag
 - model execution is only a placeholder for broader orchestration use
 - shell execution is intentionally restricted
-- Phase 5 workflow templates are wired into the planner/runtime/API surface
+- Phase 5 workflow templates are wired into the planner/runtime/API/CLI surface
 - there is no production-grade sandboxing
 
 ## Technical direction
@@ -338,12 +338,13 @@ Acceptance criteria:
 - `backend/app/executor.py` — task execution orchestration
 - `backend/app/worker.py` — queue consumer loop
 - `backend/app/settings.py` — configuration and model adapter settings scaffold
-- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, runtime, run history, event logs, memory records, links, provenance, runtime provenance, and tool registration
+- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, runtime, run history, event logs, memory records, links, provenance, runtime provenance, tool registration, and workflow template commands
 - `backend/app/model_adapter.py` — provider-neutral model request/response contract and adapter registry
 - `backend/app/planner.py` — conservative planning bridge that can work with or without the model runner
 - `backend/app/agent_runtime.py` — multi-step runtime loop that executes planned steps conservatively and returns checkpoints for resuming
 - `backend/app/runtime_events.py` — runtime event normalization and replay helpers
 - `backend/app/workflow_templates_api.py` — workflow template API routes
+- `backend/app/workflow_templates_cli.py` — workflow template CLI commands
 
 ## Immediate next work
 
@@ -361,4 +362,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present and locked down with sectioned provenance contract tests. Phase 4 is complete; workflow templates are now wired into the planner/runtime/API surface and the next work is expanding them and adding scheduling hooks.
+The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present and locked down with sectioned provenance contract tests. Phase 4 is complete; workflow templates are now wired into the planner/runtime/API/CLI surface and the next work is expanding them and adding scheduling hooks.
