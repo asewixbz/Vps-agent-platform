@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from dataclasses import asdict, dataclass, field
+from textwrap import dedent
 from typing import Any
 
 DEFAULT_WORKFLOW_TEMPLATE_NAMES = ("scan_workflow", "rank_workflow", "report_workflow")
@@ -28,6 +30,18 @@ class WorkflowTemplate:
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
+def _normalize_structure(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {str(key): _normalize_structure(value[key]) for key in sorted(value, key=lambda item: str(item))}
+    if isinstance(value, list):
+        return [_normalize_structure(item) for item in value]
+    if isinstance(value, tuple):
+        return [_normalize_structure(item) for item in value]
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
+
+
 def _normalize_notes(raw_notes: Any) -> list[str]:
     if not isinstance(raw_notes, list):
         return []
@@ -35,7 +49,8 @@ def _normalize_notes(raw_notes: Any) -> list[str]:
 
 
 def _normalize_metadata(raw_metadata: Any) -> dict[str, Any]:
-    return dict(raw_metadata) if isinstance(raw_metadata, dict) else {}
+    normalized = _normalize_structure(raw_metadata)
+    return normalized if isinstance(normalized, dict) else {}
 
 
 def _normalize_steps(raw_steps: Any) -> list[WorkflowTemplateStep] | None:
@@ -103,6 +118,344 @@ def normalize_workflow_template(raw_template: Any) -> WorkflowTemplate | None:
 def workflow_template_to_dict(template: WorkflowTemplate) -> dict[str, Any]:
     data = asdict(template)
     return data
+
+
+def _python_string_literal(value: str) -> str:
+    return json.dumps(value, ensure_ascii=False)
+
+
+def _build_report_workflow_script(template: WorkflowTemplate, workflow_inputs: dict[str, Any]) -> str:
+    template_json = json.dumps(workflow_template_to_dict(template), ensure_ascii=False, sort_keys=True)
+    inputs_json = json.dumps(_normalize_structure(workflow_inputs), ensure_ascii=False, sort_keys=True)
+    lines = [
+        "from __future__ import annotations",
+        "",
+        "import json",
+        "from pathlib import Path",
+        "",
+        f"TEMPLATE = json.loads({_python_string_literal(template_json)})",
+        f"INPUTS = json.loads({_python_string_literal(inputs_json)})",
+        "WORKDIR = Path.cwd()",
+        "",
+        "def _write_text(path: Path, text: str) -> Path:",
+        "    path.write_text(text, encoding=\"utf-8\")",
+        "    return path",
+        "",
+        "def _write_json(path: Path, payload: object) -> Path:",
+        "    return _write_text(path, json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + \"\\n\")",
+        "",
+        "def _as_list(value: object) -> list[object]:",
+        "    if isinstance(value, list):",
+        "        return value",
+        "    if isinstance(value, dict):",
+        "        return [{\"key\": key, \"value\": value[key]} for key in sorted(value)]",
+        "    if value is None:",
+        "        return []",
+        "    return [value]",
+        "",
+        "def _stringify(value: object) -> str:",
+        "    if value is None:",
+        "        return \"\"",
+        "    if isinstance(value, str):",
+        "        return value",
+        "    return json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True)",
+        "",
+        "def _report_result() -> dict[str, object]:",
+        "    title = str(INPUTS.get(\"report_title\") or INPUTS.get(\"title\") or TEMPLATE[\"summary\"])",
+        "    audience = str(INPUTS.get(\"audience\") or \"general\")",
+        "    output_constraints = _as_list(INPUTS.get(\"output_constraints\"))",
+        "    source_data = INPUTS.get(\"source_data\")",
+        "    source_items = _as_list(source_data)",
+        "    report = {",
+        "        \"template_name\": TEMPLATE[\"name\"],",
+        "        \"template_kind\": TEMPLATE[\"kind\"],",
+        "        \"title\": title,",
+        "        \"audience\": audience,",
+        "        \"output_constraints\": output_constraints,",
+        "        \"source_data\": source_data,",
+        "        \"source_count\": len(source_items),",
+        "        \"sections\": [",
+        "            {\"heading\": \"Overview\", \"body\": f\"{title} for {audience}\"},",
+        "            {\"heading\": \"Source data\", \"body\": _stringify(source_data)},",
+        "            {\"heading\": \"Output constraints\", \"body\": _stringify(output_constraints)},",
+        "        ],",
+        "        \"artifact_paths\": [],",
+        "    }",
+        "    json_path = WORKDIR / \"report.json\"",
+        "    md_path = WORKDIR / \"report.md\"",
+        "    report[\"artifact_paths\"] = [str(json_path), str(md_path)]",
+        "    _write_json(json_path, report)",
+        "    md_lines = [",
+        "        f\"# {title}\",",
+        "        \"\",",
+        "        f\"Audience: {audience}\",",
+        "        f\"Source count: {len(source_items)}\",",
+        "        \"\",",
+        "        \"## Source data\",",
+        "        _stringify(source_data),",
+        "        \"\",",
+        "        \"## Output constraints\",",
+        "        _stringify(output_constraints),",
+        "    ]",
+        "    _write_text(md_path, \"\\n\".join(md_lines).rstrip() + \"\\n\")",
+        "    return report",
+        "",
+        "def _score_candidate(candidate: object, criteria: object) -> tuple[float, list[str]]:",
+        "    candidate_dict = candidate if isinstance(candidate, dict) else {\"value\": candidate}",
+        "    score = 0.0",
+        "    rationale: list[str] = []",
+        "",
+        "    def _missing(value: object) -> bool:",
+        "        return value in {None, \"\", [], {}}",
+        "",
+        "    if isinstance(criteria, dict):",
+        "        required_fields = criteria.get(\"required_fields\")",
+        "        if isinstance(required_fields, list):",
+        "            for field in required_fields:",
+        "                key = str(field)",
+        "                if _missing(candidate_dict.get(key)):",
+        "                    score -= 1000.0",
+        "                    rationale.append(f\"{key} missing -> -1000\")",
+        "",
+        "        preferred_values = criteria.get(\"preferred_values\") if isinstance(criteria.get(\"preferred_values\"), dict) else {}",
+        "        weights = criteria.get(\"weights\")",
+        "        if isinstance(weights, dict):",
+        "            for field in sorted(weights, key=lambda item: str(item)):",
+        "                weight = weights[field]",
+        "                if not isinstance(weight, (int, float)):",
+        "                    continue",
+        "                key = str(field)",
+        "                value = candidate_dict.get(key)",
+        "                if key in preferred_values:",
+        "                    if value == preferred_values[key]:",
+        "                        score += float(weight)",
+        "                        rationale.append(f\"{key} matched preferred value -> +{weight}\")",
+        "                    else:",
+        "                        rationale.append(f\"{key} did not match preferred value -> +0\")",
+        "                elif isinstance(value, (int, float)):",
+        "                    contribution = float(value) * float(weight)",
+        "                    score += contribution",
+        "                    rationale.append(f\"{key}={value} * {weight} -> {contribution}\")",
+        "                elif value:",
+        "                    score += float(weight)",
+        "                    rationale.append(f\"{key} present -> +{weight}\")",
+        "                else:",
+        "                    rationale.append(f\"{key} missing -> +0\")",
+        "    elif isinstance(criteria, list):",
+        "        for rule in criteria:",
+        "            if not isinstance(rule, dict):",
+        "                continue",
+        "            key = str(rule.get(\"field\") or \"value\")",
+        "            weight = rule.get(\"weight\", 1)",
+        "            if not isinstance(weight, (int, float)):",
+        "                weight = 1",
+        "            preferred = rule.get(\"preferred\")",
+        "            required = bool(rule.get(\"required\") or False)",
+        "            value = candidate_dict.get(key)",
+        "            if required and _missing(value):",
+        "                score -= 1000.0",
+        "                rationale.append(f\"{key} missing -> -1000\")",
+        "                continue",
+        "            if preferred is not None:",
+        "                if value == preferred:",
+        "                    score += float(weight)",
+        "                    rationale.append(f\"{key} matched preferred value -> +{weight}\")",
+        "                else:",
+        "                    rationale.append(f\"{key} did not match preferred value -> +0\")",
+        "                continue",
+        "            if isinstance(value, (int, float)):",
+        "                contribution = float(value) * float(weight)",
+        "                score += contribution",
+        "                rationale.append(f\"{key}={value} * {weight} -> {contribution}\")",
+        "            elif value:",
+        "                score += float(weight)",
+        "                rationale.append(f\"{key} present -> +{weight}\")",
+        "            else:",
+        "                rationale.append(f\"{key} missing -> +0\")",
+        "    else:",
+        "        for key in sorted(candidate_dict, key=lambda item: str(item)):",
+        "            value = candidate_dict[key]",
+        "            if isinstance(value, (int, float)):",
+        "                score += float(value)",
+        "                rationale.append(f\"{key}={value} -> +{value}\")",
+        "            elif value:",
+        "                score += 1.0",
+        "                rationale.append(f\"{key} present -> +1\")",
+        "",
+        "    return score, rationale",
+        "",
+        "def _rank_result() -> dict[str, object]:",
+        "    criteria = INPUTS.get(\"criteria\") or INPUTS.get(\"ranking_criteria\") or INPUTS.get(\"weights\")",
+        "    candidates = _as_list(INPUTS.get(\"candidates\"))",
+        "    ranked_candidates = []",
+        "    for index, candidate in enumerate(candidates):",
+        "        candidate_dict = candidate if isinstance(candidate, dict) else {\"value\": candidate}",
+        "        score, rationale = _score_candidate(candidate_dict, criteria)",
+        "        ranked_candidates.append({",
+        "            \"candidate\": candidate_dict,",
+        "            \"score\": score,",
+        "            \"rationale\": rationale,",
+        "            \"original_index\": index,",
+        "        })",
+        "",
+        "    ranked_candidates.sort(",
+        "        key=lambda item: (",
+        "            -float(item[\"score\"]),",
+        "            json.dumps(item[\"candidate\"], ensure_ascii=False, sort_keys=True),",
+        "            item[\"original_index\"],",
+        "        )",
+        "    )",
+        "",
+        "    result = {",
+        "        \"template_name\": TEMPLATE[\"name\"],",
+        "        \"template_kind\": TEMPLATE[\"kind\"],",
+        "        \"criteria\": criteria,",
+        "        \"candidate_count\": len(candidates),",
+        "        \"ranked_candidates\": ranked_candidates,",
+        "        \"artifact_paths\": [],",
+        "    }",
+        "    json_path = WORKDIR / \"ranking.json\"",
+        "    md_path = WORKDIR / \"ranking.md\"",
+        "    result[\"artifact_paths\"] = [str(json_path), str(md_path)]",
+        "    _write_json(json_path, result)",
+        "    md_lines = [",
+        "        f\"# {TEMPLATE['summary']}\",",
+        "        \"\",",
+        "        f\"Criteria: {_stringify(criteria)}\",",
+        "        \"\",",
+        "        \"## Ranked candidates\",",
+        "    ]",
+        "    for item in ranked_candidates:",
+        "        md_lines.append(f\"- score={item['score']}: {_stringify(item['candidate'])}\")",
+        "        for note in item['rationale']:",
+        "            md_lines.append(f\"  - {note}\")",
+        "    _write_text(md_path, \"\\n\".join(md_lines).rstrip() + \"\\n\")",
+        "    return result",
+        "",
+        "def _scan_result() -> dict[str, object]:",
+        "    source_items = _as_list(INPUTS.get(\"source_items\") or INPUTS.get(\"sources\") or INPUTS.get(\"items\"))",
+        "    filters = INPUTS.get(\"filters\")",
+        "    normalized_items = []",
+        "    seen = set()",
+        "    duplicate_count = 0",
+        "    for item in source_items:",
+        "        item_dict = item if isinstance(item, dict) else {\"value\": item}",
+        "        marker = json.dumps(item_dict, ensure_ascii=False, sort_keys=True)",
+        "        if marker in seen:",
+        "            duplicate_count += 1",
+        "            continue",
+        "        seen.add(marker)",
+        "        normalized_items.append(item_dict)",
+        "",
+        "    result = {",
+        "        \"template_name\": TEMPLATE[\"name\"],",
+        "        \"template_kind\": TEMPLATE[\"kind\"],",
+        "        \"filters\": filters,",
+        "        \"source_count\": len(source_items),",
+        "        \"duplicate_count\": duplicate_count,",
+        "        \"normalized_items\": normalized_items,",
+        "        \"artifact_paths\": [],",
+        "    }",
+        "    json_path = WORKDIR / \"scan.json\"",
+        "    md_path = WORKDIR / \"scan.md\"",
+        "    result[\"artifact_paths\"] = [str(json_path), str(md_path)]",
+        "    _write_json(json_path, result)",
+        "    md_lines = [",
+        "        f\"# {TEMPLATE['summary']}\",",
+        "        \"\",",
+        "        f\"Source count: {len(source_items)}\",",
+        "        f\"Duplicate count: {duplicate_count}\",",
+        "        \"\",",
+        "        \"## Normalized items\",",
+        "    ]",
+        "    for item in normalized_items:",
+        "        md_lines.append(f\"- {_stringify(item)}\")",
+        "    _write_text(md_path, \"\\n\".join(md_lines).rstrip() + \"\\n\")",
+        "    return result",
+        "",
+        "def _workflow_result() -> dict[str, object]:",
+        "    if TEMPLATE[\"kind\"] == \"rank\":",
+        "        return _rank_result()",
+        "    if TEMPLATE[\"kind\"] == \"scan\":",
+        "        return _scan_result()",
+        "    return _report_result()",
+        "",
+        "if __name__ == \"__main__\":",
+        "    result = _workflow_result()",
+        "    print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def _build_rank_workflow_script(template: WorkflowTemplate, workflow_inputs: dict[str, Any]) -> str:
+    return _build_report_workflow_script(template, workflow_inputs) if template.kind == "report" else _build_report_workflow_script(template, workflow_inputs) if template.kind == "workflow" else _build_report_workflow_script(template, workflow_inputs)
+
+
+def _build_scan_workflow_script(template: WorkflowTemplate, workflow_inputs: dict[str, Any]) -> str:
+    return _build_report_workflow_script(template, workflow_inputs) if template.kind == "report" else _build_report_workflow_script(template, workflow_inputs) if template.kind == "workflow" else _build_report_workflow_script(template, workflow_inputs)
+
+
+def workflow_template_execution_payloads(template: WorkflowTemplate, workflow_inputs: Any | None = None) -> dict[str, dict[str, Any]]:
+    normalized_inputs = _normalize_structure(workflow_inputs) if workflow_inputs is not None else {}
+    if not isinstance(normalized_inputs, dict):
+        normalized_inputs = {}
+
+    payloads: dict[str, dict[str, Any]] = {}
+    for step in template.steps:
+        if step.kind != "execute" or step.tool_name is None:
+            continue
+        if step.tool_name in payloads:
+            continue
+        if step.tool_name == "python_local":
+            if template.kind == "rank":
+                script = _build_rank_workflow_script(template, normalized_inputs)
+            elif template.kind == "scan":
+                script = _build_scan_workflow_script(template, normalized_inputs)
+            else:
+                script = _build_report_workflow_script(template, normalized_inputs)
+            payloads[step.tool_name] = {"script": script}
+        else:
+            payloads[step.tool_name] = {}
+    return payloads
+
+
+def build_workflow_template_context(
+    template: WorkflowTemplate,
+    *,
+    workflow_inputs: Any | None = None,
+    context: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    normalized_context = dict(context or {})
+    if workflow_inputs is None:
+        workflow_inputs = normalized_context.get("workflow_inputs")
+
+    normalized_inputs = _normalize_structure(workflow_inputs) if workflow_inputs is not None else {}
+    if not isinstance(normalized_inputs, dict):
+        normalized_inputs = {}
+
+    generated_payloads = workflow_template_execution_payloads(template, normalized_inputs)
+    if generated_payloads:
+        payload_by_tool = normalized_context.get("payload_by_tool")
+        if isinstance(payload_by_tool, dict):
+            merged_payloads = dict(payload_by_tool)
+        else:
+            merged_payloads = {}
+
+        tool_payloads = normalized_context.get("tool_payloads")
+        if isinstance(tool_payloads, dict):
+            for key, value in tool_payloads.items():
+                merged_payloads.setdefault(str(key), value)
+
+        for tool_name, payload in generated_payloads.items():
+            merged_payloads.setdefault(tool_name, payload)
+
+        normalized_context["payload_by_tool"] = merged_payloads
+        normalized_context["tool_payloads"] = merged_payloads
+
+    normalized_context["workflow_template_name"] = template.name
+    normalized_context["workflow_template"] = workflow_template_to_dict(template)
+    normalized_context["workflow_inputs"] = normalized_inputs
+    return normalized_context
 
 
 def default_workflow_templates() -> dict[str, WorkflowTemplate]:
