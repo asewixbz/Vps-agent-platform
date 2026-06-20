@@ -42,13 +42,14 @@ The project should be treated as an execution platform first, and a UI product s
 - runtime run snapshots persisted into durable memory
 - project/contact dossier helpers
 - durable memory links between runtime snapshots, dossiers, and artifact refs
+- durable memory provenance views
 
 ### What exists but is still early
 
 - browser execution is behind a feature flag
 - model execution is only a placeholder for broader orchestration use
 - shell execution is intentionally restricted
-- the durable memory layer still needs richer dossier workflows and artifact handling
+- the durable memory layer still needs richer dossier workflows, link traversal, and artifact handling
 - there is no production-grade sandboxing
 
 ## Technical direction
@@ -261,6 +262,7 @@ Deliverables:
 - experiment logs
 - artifact indexing
 - memory links between snapshots, dossiers, and artifacts
+- provenance views for durable memory graphs
 - dossier helpers for recurring workflows
 
 Acceptance criteria:
@@ -307,6 +309,7 @@ Acceptance criteria:
 - `backend/app/dossiers.py` — project/contact dossier helpers built on top of durable memory
 - `backend/app/memory.py` — durable memory storage, artifact indexing, and runtime snapshot helpers
 - `backend/app/memory_links.py` — durable memory link storage and query helpers
+- `backend/app/memory_provenance.py` — provenance inspector for durable memory graphs
 - `backend/app/store.py` — SQLite schema and CRUD for core control-plane data
 - `backend/app/policy.py` — trust and safety checks
 - `backend/app/job_queue.py` — Redis queue wrapper
@@ -322,7 +325,7 @@ Acceptance criteria:
 
 ## Immediate next work
 
-1. Expand artifact handling and richer link views on top of durable memory.
+1. Expand artifact handling and richer link traversal on top of durable memory.
 2. Strengthen browser and artifact handling once the runtime loop is stable.
 3. Add stronger sandboxing and observability before broader tool synthesis.
 
@@ -336,4 +339,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. Durable memory, dossier helpers, and memory links are now present; the next useful step is richer artifact handling and link traversal on top of them.
+The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, and provenance views are now present; the next useful step is richer artifact handling and link traversal on top of them.
