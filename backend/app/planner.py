@@ -8,6 +8,7 @@ from .model_adapter import ModelAdapterError
 from .model_runtime import chat_model
 from .settings import Settings
 from .store import list_tools
+from .workflow_templates import resolve_workflow_template, workflow_template_to_dict
 
 RISKY_GOAL_SNIPPETS = (
     "delete",
@@ -114,6 +115,35 @@ def _requires_approval(goal: str, tool: dict[str, Any] | None) -> tuple[bool, li
 
     requires_approval = risky_goal or tool_status != "trusted" or trust_level < 2 or kind == "shell"
     return requires_approval, notes
+
+
+def _build_template_plan(goal: str, context: dict[str, Any], tools: list[dict[str, Any]], template: Any) -> AgentPlan:
+    steps = [
+        PlanStep(
+            title=step.title,
+            kind=step.kind,
+            description=step.description,
+            tool_name=step.tool_name,
+            requires_approval=step.requires_approval,
+        )
+        for step in template.steps
+    ]
+    notes = list(template.notes)
+    notes.append(f"Resolved workflow template '{template.name}'")
+    return AgentPlan(
+        goal=goal,
+        summary=template.summary,
+        source="workflow_template",
+        recommended_tool=template.recommended_tool,
+        requires_approval=template.requires_approval,
+        steps=steps,
+        notes=notes,
+        metadata={
+            "context": context,
+            "available_tools": len(tools),
+            "workflow_template": workflow_template_to_dict(template),
+        },
+    )
 
 
 def _build_heuristic_plan(goal: str, context: dict[str, Any], tools: list[dict[str, Any]]) -> AgentPlan:
@@ -282,7 +312,26 @@ def _model_plan(settings: Settings, goal: str, context: dict[str, Any], tools: l
 def build_execution_plan(settings: Settings, *, goal: str, context: dict[str, Any] | None = None) -> AgentPlan:
     normalized_context = dict(context or {})
     tools = list_tools(settings)
+    workflow_template = resolve_workflow_template(normalized_context)
+    if workflow_template is not None:
+        return _build_template_plan(goal, normalized_context, tools, workflow_template)
+
+    workflow_template_requested = any(key in normalized_context for key in ("workflow_template", "workflow_template_name"))
     heuristic_plan = _build_heuristic_plan(goal, normalized_context, tools)
+
+    if workflow_template_requested:
+        fallback_notes = list(heuristic_plan.notes)
+        fallback_notes.append("workflow template request could not be resolved; used heuristic fallback.")
+        return AgentPlan(
+            goal=heuristic_plan.goal,
+            summary=heuristic_plan.summary,
+            source=heuristic_plan.source,
+            recommended_tool=heuristic_plan.recommended_tool,
+            requires_approval=heuristic_plan.requires_approval,
+            steps=heuristic_plan.steps,
+            notes=fallback_notes,
+            metadata={**heuristic_plan.metadata, "workflow_template_requested": normalized_context.get("workflow_template_name") or True},
+        )
 
     if not settings.model_runner_enabled:
         return heuristic_plan
