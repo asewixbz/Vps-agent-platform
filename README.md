@@ -34,6 +34,7 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - durable memory records with artifact indexing
 - project and contact dossier helpers
 - durable memory links between runtime snapshots, dossiers, and artifact refs
+- memory provenance inspection for durable memory graphs
 - runtime event replay filters by step or grouped view
 
 ## What is not included yet
@@ -65,6 +66,7 @@ vps-agent-platform/
       main.py
       memory.py
       memory_links.py
+      memory_provenance.py
       model_adapter.py
       model_runtime.py
       planner.py
@@ -130,8 +132,9 @@ python -m app.cli memory-artifact-add <memory-record-id> --payload '{"artifact_t
 python -m app.cli memory-links
 python -m app.cli memory-link-add <source-type> <source-id> <target-type> <target-id> updates --note "runtime snapshot updates dossier"
 python -m app.cli memory-record-links <memory-record-id>
-python -m app.cli model-health
-python -m app.cli model-chat --payload '{"messages":[{"role":"user","content":"Say hello"}]}'
+python -m app.memory_provenance <memory-record-id>
+python -m app.model-health
+python -m app.model-chat --payload '{"messages":[{"role":"user","content":"Say hello"}]}'
 python -m app.cli plan "Summarize the latest open tasks"
 python -m app.cli run "Summarize the latest open tasks"
 python -m app.cli run "Continue the previous run" --runtime-run-id <runtime-run-id> --resume-from-step 3
@@ -163,6 +166,8 @@ Use `--base-url` if the API is not running on `http://localhost:8000`.
 - `GET /memory/links`
 - `POST /memory/links`
 - `GET /memory/records/{memory_record_id}/links`
+
+The `memory-provenance` utility is the easiest way to inspect a record together with its linked memory records and artifact refs.
 
 ## Dossier endpoints
 
