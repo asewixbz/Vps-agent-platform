@@ -56,8 +56,9 @@ def _truncate(text: str, limit: int = 84) -> str:
 
 def _record_row(record: dict[str, Any]) -> str:
     scope = f"{record.get('scope_type', '')}:{record.get('scope_id', '')}"
+    depth = record.get("depth", 0)
     return (
-        f"{record.get('id', ''):<36} {record.get('kind', ''):<16} {scope:<24} "
+        f"{record.get('id', ''):<36} {record.get('kind', ''):<16} {scope:<24} depth={depth:<2} "
         f"{_truncate(str(record.get('title') or ''), 40)}"
     )
 
@@ -81,10 +82,11 @@ def print_json(data: Any) -> None:
 
 
 def cmd_runtime_provenance(args: argparse.Namespace) -> int:
-    data = request_json("GET", args.base_url, f"/agent/runs/{args.runtime_run_id}/provenance?limit={args.limit}")
+    data = request_json("GET", args.base_url, f"/agent/runs/{args.runtime_run_id}/provenance?limit={args.limit}&depth={args.depth}")
     runtime_run = data.get("runtime_run") or {}
     snapshot = data.get("memory_snapshot") or {}
     provenance = data.get("provenance") or {}
+    traversal = provenance.get("traversal") or {}
 
     if args.json:
         print_json(data)
@@ -101,6 +103,8 @@ def cmd_runtime_provenance(args: argparse.Namespace) -> int:
     if snapshot.get("summary"):
         print(f"snapshot_summary: {snapshot.get('summary')}")
     print(f"related_records: {len(provenance.get('related_records') or [])}")
+    print(f"transitive_records: {len(provenance.get('transitive_records') or [])}")
+    print(f"visited_records: {traversal.get('visited_record_count', 0)}")
     print(f"direct_artifacts: {len(provenance.get('direct_artifacts') or [])}")
     print(f"artifact_links: {len(provenance.get('artifact_links') or [])}")
     print(f"artifact_refs: {len(provenance.get('artifact_refs') or [])}")
@@ -118,6 +122,20 @@ def cmd_runtime_provenance(args: argparse.Namespace) -> int:
             print(f"  - {_record_row(related)}")
             if related.get("summary"):
                 print(f"    summary: {_truncate(str(related.get('summary')), 72)}")
+            if related.get("via"):
+                via = related.get("via") or {}
+                print(f"    via: {via.get('direction')} {via.get('relation_type')} from {related.get('via_record_id')}")
+            if related.get("artifacts"):
+                print(f"    artifacts: {len(related.get('artifacts') or [])}")
+    if provenance.get("transitive_records"):
+        print("transitive records:")
+        for related in provenance.get("transitive_records") or []:
+            print(f"  - {_record_row(related)}")
+            if related.get("summary"):
+                print(f"    summary: {_truncate(str(related.get('summary')), 72)}")
+            if related.get("via"):
+                via = related.get("via") or {}
+                print(f"    via: {via.get('direction')} {via.get('relation_type')} from {related.get('via_record_id')}")
             if related.get("artifacts"):
                 print(f"    artifacts: {len(related.get('artifacts') or [])}")
     if provenance.get("artifact_links"):
@@ -139,6 +157,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("runtime_run_id", help="runtime run id")
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="FastAPI base URL (default: %(default)s)")
     parser.add_argument("--limit", type=int, default=100, help="maximum number of linked records to inspect")
+    parser.add_argument("--depth", type=int, default=2, help="maximum traversal depth for memory links")
     parser.add_argument("--json", action="store_true", help="print JSON output")
     return parser
 
