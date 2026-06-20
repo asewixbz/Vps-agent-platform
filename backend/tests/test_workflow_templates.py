@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from app.planner import build_execution_plan
+from app.settings import Settings
+from app.store import init_db, seed_builtin_tools
 from app.workflow_templates import default_workflow_templates, normalize_workflow_template, resolve_workflow_template, workflow_template_to_dict
 
 
@@ -88,3 +92,21 @@ class WorkflowTemplateTests(TestCase):
         self.assertEqual(data["name"], "scan_workflow")
         self.assertEqual(data["steps"][1]["kind"], "execute")
         self.assertEqual(data["steps"][1]["tool_name"], "python_local")
+
+    def test_build_execution_plan_prefers_workflow_template_context(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(db_path=str(Path(tmpdir) / "app.db"))
+            init_db(settings)
+            seed_builtin_tools(settings)
+
+            plan = build_execution_plan(
+                settings,
+                goal="Scan vendor listings",
+                context={"workflow_template_name": "scan_workflow"},
+            )
+
+        self.assertEqual(plan.source, "workflow_template")
+        self.assertEqual(plan.summary, "Scan a source set and normalize the items for downstream workflows.")
+        self.assertEqual(plan.steps[1].tool_name, "python_local")
+        self.assertIn("Resolved workflow template 'scan_workflow'", plan.notes)
+        self.assertEqual(plan.metadata["workflow_template"]["name"], "scan_workflow")
