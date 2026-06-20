@@ -27,6 +27,7 @@ from .memory import (
     touch_memory_record,
     upsert_memory_record,
 )
+from .memory_graph import build_memory_record_provenance, build_runtime_run_provenance
 from .memory_links import (
     add_memory_link,
     init_memory_links_schema,
@@ -36,6 +37,7 @@ from .memory_links import (
 from .model_adapter import ModelAdapterError
 from .model_runtime import chat_model, model_health as runtime_model_health
 from .planner import build_execution_plan
+from .provenance_api import router as provenance_router
 from .runtime_events import group_runtime_events, runtime_events_for_step
 from .settings import get_settings
 from .store import (
@@ -55,6 +57,7 @@ from .store import (
 
 settings = get_settings()
 app = FastAPI(title=settings.app_name)
+app.include_router(provenance_router)
 
 
 class ToolRegisterRequest(BaseModel):
