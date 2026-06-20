@@ -65,15 +65,24 @@ def format_memory_record_row(record: dict[str, Any]) -> str:
     scope = f"{record.get('scope_type', '')}:{record.get('scope_id', '')}"
     pinned = "yes" if record.get("pinned") else "no"
     depth = record.get("depth", 0)
+    section = record.get("section")
+    section_text = f" section={section}" if section else ""
     title = _truncate(str(record.get("title") or ""), 48)
-    return f"{record.get('id', ''):<36} {record.get('kind', ''):<16} {scope:<24} depth={depth:<2} pinned={pinned:<3} {title}"
+    return f"{record.get('id', ''):<36} {record.get('kind', ''):<16} {scope:<24} depth={depth:<2} pinned={pinned:<3}{section_text} {title}"
 
 
 def format_memory_artifact_row(artifact: dict[str, Any]) -> str:
     label = artifact.get("label") or ""
+    sources = artifact.get("sources") or []
+    origin = ""
+    if sources:
+        source = sources[0]
+        origin = f" {source.get('section')}:{source.get('record_id')}"
+        if len(sources) > 1:
+            origin += f" (+{len(sources) - 1})"
     return (
-        f"{artifact.get('id', ''):<6} {artifact.get('artifact_type', ''):<20} "
-        f"{_truncate(str(artifact.get('artifact_ref') or ''), 34):<34} {label}"
+        f"{artifact.get('artifact_type', ''):<20} "
+        f"{_truncate(str(artifact.get('artifact_ref') or ''), 34):<34} {label}{origin}"
     )
 
 
@@ -103,64 +112,79 @@ def _print_record_section(title: str, records: list[dict[str, Any]]) -> None:
         print(f"  - {format_memory_record_row(record)}")
         if record.get("summary"):
             print(f"    summary: {_truncate(str(record.get('summary')), 72)}")
-        via = record.get("via") or {}
-        if via:
+        if record.get("via"):
+            via = record.get("via") or {}
             print(
                 f"    via: {via.get('direction')} {via.get('relation_type')} "
                 f"from {record.get('via_record_id')}"
             )
-        if record.get("artifacts"):
-            print(f"    artifacts: {len(record.get('artifacts') or [])}")
+        if record.get("artifact_count") is not None:
+            print(f"    artifacts: {int(record.get('artifact_count') or 0)}")
+
+
+def _print_artifact_only_section(artifact_only: dict[str, Any]) -> None:
+    artifacts = artifact_only.get("artifacts") or []
+    links = artifact_only.get("links") or []
+    refs = artifact_only.get("refs") or []
+
+    print("artifact-only:")
+    if artifacts:
+        print("  artifacts:")
+        for artifact in artifacts:
+            print(f"    - {format_memory_artifact_row(artifact)}")
+            sources = artifact.get("sources") or []
+            for source in sources:
+                print(
+                    f"      source: {source.get('section')} {source.get('record_id')} "
+                    f"depth={source.get('depth')}"
+                )
+    if links:
+        print("  links:")
+        for link in links:
+            print(f"    - {format_memory_link_row(link)}")
+    if refs:
+        print("  refs:")
+        for artifact_ref in refs:
+            print(f"    - {artifact_ref}")
 
 
 def cmd_memory_provenance(args: argparse.Namespace) -> int:
     data = build_provenance(args)
-    record = data.get("record") or {}
-    summary = data.get("summary") or {}
+    root = data.get("root") or data.get("record") or {}
+    one_hop = data.get("one_hop") or data.get("related_records") or []
+    transitive = data.get("transitive") or data.get("transitive_records") or []
+    artifact_only = data.get("artifact_only") or {}
     traversal = data.get("traversal") or {}
-    direct_artifacts = data.get("direct_artifacts") or []
-    related_records = data.get("related_records") or []
-    transitive_records = data.get("transitive_records") or []
-    artifact_links = data.get("artifact_links") or []
-    artifact_refs = data.get("artifact_refs") or []
+    summary = data.get("summary") or {}
+    artifact_refs = artifact_only.get("refs") or data.get("artifact_refs") or []
 
     if args.json:
         print_json(data)
         return 0
 
-    print(format_memory_record_row(record))
-    metadata = record.get("metadata") or {}
+    print("root:")
+    print(f"  {format_memory_record_row(root)}")
+    if root.get("summary"):
+        print(f"  summary: {_truncate(str(root.get('summary')), 72)}")
+    print(f"  artifacts: {int(root.get('artifact_count') or len(root.get('artifacts') or []))}")
+    metadata = root.get("metadata") or {}
     if metadata.get("runtime_run_id"):
-        print(f"runtime_run_id: {metadata.get('runtime_run_id')}")
-    if record.get("source_ref"):
-        print(f"source_ref: {record.get('source_ref')}")
-    if record.get("summary"):
-        print(f"summary: {record.get('summary')}")
-    if record.get("tags"):
-        print(f"tags: {record.get('tags')}")
-    print(f"links: {len(data.get('links') or [])}")
-    print(f"related_records: {summary.get('related_record_count', len(related_records))}")
-    print(f"transitive_records: {summary.get('transitive_record_count', len(transitive_records))}")
-    print(f"visited_records: {traversal.get('visited_record_count', len(related_records) + len(transitive_records))}")
-    print(f"direct_artifacts: {summary.get('direct_artifact_count', len(direct_artifacts))}")
-    print(f"artifact_links: {summary.get('artifact_link_count', len(artifact_links))}")
+        print(f"  runtime_run_id: {metadata.get('runtime_run_id')}")
+    if root.get("source_ref"):
+        print(f"  source_ref: {root.get('source_ref')}")
+    if root.get("tags"):
+        print(f"  tags: {root.get('tags')}")
+
+    print(f"one_hop_records: {summary.get('one_hop_record_count', len(one_hop))}")
+    print(f"transitive_records: {summary.get('transitive_record_count', len(transitive))}")
+    print(f"artifact_only_count: {summary.get('artifact_only_count', len(artifact_only.get('artifacts') or []))}")
+    print(f"visited_records: {traversal.get('visited_record_count', len(one_hop) + len(transitive))}")
+    print(f"artifact_links: {summary.get('artifact_link_count', len(artifact_only.get('links') or []))}")
     print(f"artifact_refs: {summary.get('artifact_ref_count', len(artifact_refs))}")
 
-    if direct_artifacts:
-        print("direct artifacts:")
-        for artifact in direct_artifacts:
-            print(f"  - {format_memory_artifact_row(artifact)}")
-    _print_record_section("related records:", related_records)
-    _print_record_section("transitive records:", transitive_records)
-
-    if artifact_links:
-        print("artifact links:")
-        for link in artifact_links:
-            print(f"  - {format_memory_link_row(link)}")
-    if artifact_refs:
-        print("artifact refs:")
-        for artifact_ref in artifact_refs:
-            print(f"  - {artifact_ref}")
+    _print_record_section("1-hop records:", one_hop)
+    _print_record_section("transitive records:", transitive)
+    _print_artifact_only_section(artifact_only)
     return 0
 
 
