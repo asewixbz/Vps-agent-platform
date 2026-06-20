@@ -11,6 +11,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from .memory_provenance import cmd_memory_provenance as cmd_memory_provenance_view
+from .runtime_provenance import cmd_runtime_provenance as cmd_runtime_provenance_view
 
 DEFAULT_BASE_URL = os.getenv("VPS_AGENT_API_URL", os.getenv("APP_API_URL", "http://localhost:8000"))
 
@@ -769,6 +770,10 @@ def build_parser() -> argparse.ArgumentParser:
     memory_provenance_parser.add_argument("memory_record_id", help="memory record id")
     memory_provenance_parser.add_argument("--limit", type=int, default=100, help="maximum number of links to inspect")
 
+    runtime_provenance_parser = subparsers.add_parser("run-provenance", help="inspect provenance for a runtime run")
+    runtime_provenance_parser.add_argument("runtime_run_id", help="runtime run id")
+    runtime_provenance_parser.add_argument("--json", action="store_true", help="print JSON output")
+
     return parser
 
 
@@ -801,6 +806,7 @@ def dispatch(args: argparse.Namespace) -> int:
         "memory-link-add": cmd_memory_link_add,
         "memory-record-links": cmd_memory_record_links,
         "memory-provenance": cmd_memory_provenance_view,
+        "run-provenance": cmd_runtime_provenance_view,
     }
     try:
         return handlers[command](args)
