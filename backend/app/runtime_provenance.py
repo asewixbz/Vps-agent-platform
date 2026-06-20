@@ -81,8 +81,13 @@ def print_json(data: Any) -> None:
     print(json.dumps(data, indent=2, ensure_ascii=False))
 
 
+def _provenance_depth(args: argparse.Namespace) -> int:
+    return int(getattr(args, "depth", 2))
+
+
 def cmd_runtime_provenance(args: argparse.Namespace) -> int:
-    data = request_json("GET", args.base_url, f"/agent/runs/{args.runtime_run_id}/provenance?limit={args.limit}&depth={args.depth}")
+    depth = _provenance_depth(args)
+    data = request_json("GET", args.base_url, f"/agent/runs/{args.runtime_run_id}/provenance?limit={args.limit}&depth={depth}")
     runtime_run = data.get("runtime_run") or {}
     snapshot = data.get("memory_snapshot") or {}
     provenance = data.get("provenance") or {}
