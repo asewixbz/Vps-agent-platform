@@ -43,6 +43,7 @@ The project should be treated as an execution platform first, and a UI product s
 - project/contact dossier helpers
 - durable memory links between runtime snapshots, dossiers, and artifact refs
 - durable memory provenance views
+- runtime and memory provenance API routes
 
 ### What exists but is still early
 
@@ -263,6 +264,7 @@ Deliverables:
 - artifact indexing
 - memory links between snapshots, dossiers, and artifacts
 - provenance views for durable memory graphs
+- runtime provenance views
 - dossier helpers for recurring workflows
 
 Acceptance criteria:
@@ -305,11 +307,13 @@ Acceptance criteria:
 
 ## Current code map
 
-- `backend/app/main.py` — API endpoints for tools, tasks, approvals, planning, runtime, run history, memory, dossiers, event logs, links, and queue status
+- `backend/app/main.py` — API endpoints for tools, tasks, approvals, planning, runtime, run history, memory, dossiers, event logs, links, provenance, and queue status
 - `backend/app/dossiers.py` — project/contact dossier helpers built on top of durable memory
 - `backend/app/memory.py` — durable memory storage, artifact indexing, and runtime snapshot helpers
+- `backend/app/memory_graph.py` — server-side memory and runtime provenance graph helpers
 - `backend/app/memory_links.py` — durable memory link storage and query helpers
-- `backend/app/memory_provenance.py` — provenance inspector for durable memory graphs
+- `backend/app/memory_provenance.py` — CLI provenance inspector for durable memory graphs
+- `backend/app/provenance_api.py` — FastAPI provenance routes for memory records and runtime runs
 - `backend/app/store.py` — SQLite schema and CRUD for core control-plane data
 - `backend/app/policy.py` — trust and safety checks
 - `backend/app/job_queue.py` — Redis queue wrapper
@@ -339,4 +343,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, and provenance views are now present; the next useful step is richer artifact handling and link traversal on top of them.
+The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present; the next useful step is richer artifact handling and link traversal on top of them.
