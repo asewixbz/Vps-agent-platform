@@ -267,6 +267,7 @@ Deliverables:
 - runtime provenance views
 - dossier helpers for recurring workflows
 - configurable provenance traversal depth for memory and runtime inspection
+- sectioned provenance payloads with explicit root, one-hop, transitive, and artifact-only views
 
 Acceptance criteria:
 
