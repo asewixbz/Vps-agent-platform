@@ -57,9 +57,11 @@ def _truncate(text: str, limit: int = 84) -> str:
 def _record_row(record: dict[str, Any]) -> str:
     scope = f"{record.get('scope_type', '')}:{record.get('scope_id', '')}"
     depth = record.get("depth", 0)
+    section = record.get("section")
+    section_text = f" section={section}" if section else ""
     return (
         f"{record.get('id', ''):<36} {record.get('kind', ''):<16} {scope:<24} depth={depth:<2} "
-        f"{_truncate(str(record.get('title') or ''), 40)}"
+        f"{_truncate(str(record.get('title') or ''), 40)}{section_text}"
     )
 
 
@@ -71,9 +73,16 @@ def _link_row(link: dict[str, Any]) -> str:
 
 
 def _artifact_row(artifact: dict[str, Any]) -> str:
+    sources = artifact.get("sources") or []
+    origin = ""
+    if sources:
+        source = sources[0]
+        origin = f" {source.get('section')}:{source.get('record_id')}"
+        if len(sources) > 1:
+            origin += f" (+{len(sources) - 1})"
     return (
         f"{artifact.get('artifact_type', ''):<20} "
-        f"{_truncate(str(artifact.get('artifact_ref') or ''), 40):<40} {artifact.get('label') or ''}"
+        f"{_truncate(str(artifact.get('artifact_ref') or ''), 40):<40} {artifact.get('label') or ''}{origin}"
     )
 
 
@@ -89,8 +98,11 @@ def cmd_runtime_provenance(args: argparse.Namespace) -> int:
     depth = _provenance_depth(args)
     data = request_json("GET", args.base_url, f"/agent/runs/{args.runtime_run_id}/provenance?limit={args.limit}&depth={depth}")
     runtime_run = data.get("runtime_run") or {}
-    snapshot = data.get("memory_snapshot") or {}
     provenance = data.get("provenance") or {}
+    root = provenance.get("root") or provenance.get("record") or {}
+    one_hop = provenance.get("one_hop") or provenance.get("related_records") or []
+    transitive = provenance.get("transitive") or provenance.get("transitive_records") or []
+    artifact_only = provenance.get("artifact_only") or {}
     traversal = provenance.get("traversal") or {}
 
     if args.json:
@@ -104,53 +116,63 @@ def cmd_runtime_provenance(args: argparse.Namespace) -> int:
         print(f"summary: {runtime_run.get('summary')}")
     if runtime_run.get("blocked_reason"):
         print(f"blocked_reason: {runtime_run.get('blocked_reason')}")
+    print("root:")
+    print(f"  {_record_row(root)}")
+    if root.get("summary"):
+        print(f"  summary: {_truncate(str(root.get('summary')), 72)}")
+    print(f"  artifacts: {int(root.get('artifact_count') or len(root.get('artifacts') or []))}")
+    snapshot = data.get("memory_snapshot") or {}
     print(f"memory_snapshot: {snapshot.get('id')}")
-    if snapshot.get("summary"):
-        print(f"snapshot_summary: {snapshot.get('summary')}")
-    print(f"related_records: {len(provenance.get('related_records') or [])}")
-    print(f"transitive_records: {len(provenance.get('transitive_records') or [])}")
+    print(f"one_hop_records: {len(one_hop)}")
+    print(f"transitive_records: {len(transitive)}")
+    print(f"artifact_only_count: {int(artifact_only.get('artifact_count') or len(artifact_only.get('artifacts') or []))}")
     print(f"visited_records: {traversal.get('visited_record_count', 0)}")
-    print(f"direct_artifacts: {len(provenance.get('direct_artifacts') or [])}")
-    print(f"artifact_links: {len(provenance.get('artifact_links') or [])}")
-    print(f"artifact_refs: {len(provenance.get('artifact_refs') or [])}")
+    print(f"artifact_links: {len(artifact_only.get('links') or [])}")
+    print(f"artifact_refs: {len(artifact_only.get('refs') or [])}")
 
-    if snapshot:
-        print("snapshot:")
-        print(f"  {_record_row(snapshot)}")
-    if provenance.get("direct_artifacts"):
-        print("direct artifacts:")
-        for artifact in provenance.get("direct_artifacts") or []:
+    if root.get("artifacts"):
+        print("root artifacts:")
+        for artifact in root.get("artifacts") or []:
             print(f"  - {_artifact_row(artifact)}")
-    if provenance.get("related_records"):
-        print("related records:")
-        for related in provenance.get("related_records") or []:
+    if one_hop:
+        print("1-hop records:")
+        for related in one_hop:
             print(f"  - {_record_row(related)}")
             if related.get("summary"):
                 print(f"    summary: {_truncate(str(related.get('summary')), 72)}")
             if related.get("via"):
                 via = related.get("via") or {}
                 print(f"    via: {via.get('direction')} {via.get('relation_type')} from {related.get('via_record_id')}")
-            if related.get("artifacts"):
-                print(f"    artifacts: {len(related.get('artifacts') or [])}")
-    if provenance.get("transitive_records"):
+            print(f"    artifacts: {int(related.get('artifact_count') or len(related.get('artifacts') or []))}")
+    if transitive:
         print("transitive records:")
-        for related in provenance.get("transitive_records") or []:
+        for related in transitive:
             print(f"  - {_record_row(related)}")
             if related.get("summary"):
                 print(f"    summary: {_truncate(str(related.get('summary')), 72)}")
             if related.get("via"):
                 via = related.get("via") or {}
                 print(f"    via: {via.get('direction')} {via.get('relation_type')} from {related.get('via_record_id')}")
-            if related.get("artifacts"):
-                print(f"    artifacts: {len(related.get('artifacts') or [])}")
-    if provenance.get("artifact_links"):
-        print("artifact links:")
-        for link in provenance.get("artifact_links") or []:
-            print(f"  - {_link_row(link)}")
-    if provenance.get("artifact_refs"):
-        print("artifact refs:")
-        for artifact_ref in provenance.get("artifact_refs") or []:
-            print(f"  - {artifact_ref}")
+            print(f"    artifacts: {int(related.get('artifact_count') or len(related.get('artifacts') or []))}")
+    print("artifact-only:")
+    if artifact_only.get("artifacts"):
+        print("  artifacts:")
+        for artifact in artifact_only.get("artifacts") or []:
+            print(f"    - {_artifact_row(artifact)}")
+            sources = artifact.get("sources") or []
+            for source in sources:
+                print(
+                    f"      source: {source.get('section')} {source.get('record_id')} "
+                    f"depth={source.get('depth')}"
+                )
+    if artifact_only.get("links"):
+        print("  links:")
+        for link in artifact_only.get("links") or []:
+            print(f"    - {_link_row(link)}")
+    if artifact_only.get("refs"):
+        print("  refs:")
+        for artifact_ref in artifact_only.get("refs") or []:
+            print(f"    - {artifact_ref}")
     return 0
 
 
