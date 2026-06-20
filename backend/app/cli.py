@@ -772,6 +772,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     runtime_provenance_parser = subparsers.add_parser("run-provenance", help="inspect provenance for a runtime run")
     runtime_provenance_parser.add_argument("runtime_run_id", help="runtime run id")
+    runtime_provenance_parser.add_argument("--limit", type=int, default=100, help="maximum number of links to inspect")
     runtime_provenance_parser.add_argument("--json", action="store_true", help="print JSON output")
 
     return parser
