@@ -17,6 +17,7 @@ from app.workflow_templates import (
     resolve_workflow_template,
     workflow_template_to_dict,
 )
+from app.workflow_templates_api import compare_workflow_template_runs, summarize_workflow_template_run
 
 
 class WorkflowTemplateTests(TestCase):
@@ -151,6 +152,57 @@ class WorkflowTemplateTests(TestCase):
         self.assertIn("ranking.json", script)
         self.assertIn("_score_candidate", script)
         self.assertIn("required_fields", script)
+
+    def test_summarize_and_compare_workflow_template_runs(self) -> None:
+        left_run = {
+            "id": "run-left",
+            "goal": "Generate report",
+            "status": "completed",
+            "summary": "Report summary A",
+            "attempts": 1,
+            "checkpoint": {"next_step_index": 4},
+            "context": {
+                "workflow_template_name": "report_workflow",
+                "workflow_inputs": {"audience": "ops", "source_data": ["alpha"]},
+            },
+            "steps": [
+                {"status": "observed", "result": {}},
+                {
+                    "status": "completed",
+                    "result": {"artifacts": {"workdir": "/tmp/run-left", "script_path": "/tmp/run-left/main.py"}},
+                },
+            ],
+        }
+        right_run = {
+            "id": "run-right",
+            "goal": "Generate report",
+            "status": "completed",
+            "summary": "Report summary B",
+            "attempts": 2,
+            "checkpoint": {"next_step_index": 4},
+            "context": {
+                "workflow_template_name": "report_workflow",
+                "workflow_inputs": {"audience": "finance", "source_data": ["beta"]},
+            },
+            "steps": [
+                {"status": "observed", "result": {}},
+                {
+                    "status": "failed",
+                    "result": {"artifacts": {"workdir": "/tmp/run-right", "script_path": "/tmp/run-right/main.py"}},
+                },
+            ],
+        }
+
+        left_snapshot = summarize_workflow_template_run(left_run)
+        comparison = compare_workflow_template_runs(left_run, right_run)
+
+        self.assertEqual(left_snapshot["workflow_template_name"], "report_workflow")
+        self.assertEqual(left_snapshot["artifact_paths"], ["/tmp/run-left", "/tmp/run-left/main.py"])
+        self.assertIn("status", comparison["differences"])
+        self.assertIn("workflow_inputs", comparison["differences"])
+        self.assertIn("artifact_paths", comparison["differences"])
+        self.assertEqual(comparison["left"]["runtime_run_id"], "run-left")
+        self.assertEqual(comparison["right"]["runtime_run_id"], "run-right")
 
     def test_build_execution_plan_prefers_workflow_template_context(self) -> None:
         with TemporaryDirectory() as tmpdir:
