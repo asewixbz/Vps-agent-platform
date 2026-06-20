@@ -173,6 +173,15 @@ Use `--base-url` if the API is not running on `http://localhost:8000`.
 - `GET /memory/records/{memory_record_id}/links`
 - `GET /memory/records/{memory_record_id}/provenance?limit=100&depth=2`
 
+The provenance payload is sectioned so it is easier to inspect and parse:
+
+- `root`
+- `one_hop`
+- `transitive`
+- `artifact_only`
+
+`artifact_only` aggregates artifact refs and the source records that contributed them.
+
 The `memory-provenance` CLI command is the easiest way to inspect a record together with its linked memory records and artifact refs. Use `--limit` to cap traversal breadth and `--depth` to control how far the graph expands.
 The `run-provenance` CLI command does the same for a runtime run, starting from its stored snapshot. Use `--limit` and `--depth` the same way.
 
