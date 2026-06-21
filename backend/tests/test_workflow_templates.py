@@ -86,9 +86,14 @@ class WorkflowTemplateTests(TestCase):
     def test_default_workflow_templates_cover_phase_five_workflows(self) -> None:
         templates = default_workflow_templates()
 
-        self.assertEqual(set(templates.keys()), {"scan_workflow", "rank_workflow", "report_workflow"})
+        self.assertEqual(
+            set(templates.keys()),
+            {"scan_workflow", "rank_workflow", "report_workflow", "compare_workflow"},
+        )
         self.assertEqual(templates["scan_workflow"].steps[1].tool_name, "python_local")
         self.assertEqual(templates["report_workflow"].metadata["phase"], 5)
+        self.assertEqual(templates["compare_workflow"].kind, "compare")
+        self.assertEqual(templates["compare_workflow"].steps[1].tool_name, "python_local")
 
     def test_workflow_template_to_dict_is_serializable(self) -> None:
         template = resolve_workflow_template({"workflow_template_name": "scan_workflow"})
@@ -153,6 +158,36 @@ class WorkflowTemplateTests(TestCase):
         self.assertIn("ranking.json", script)
         self.assertIn("_score_candidate", script)
         self.assertIn("required_fields", script)
+
+    def test_build_workflow_template_context_materializes_compare_payloads(self) -> None:
+        template = resolve_workflow_template({"workflow_template_name": "compare_workflow"})
+        self.assertIsNotNone(template)
+        assert template is not None
+
+        context = build_workflow_template_context(
+            template,
+            workflow_inputs={
+                "left_label": "baseline",
+                "right_label": "candidate",
+                "left_items": [
+                    {"id": "a", "name": "alpha"},
+                    {"id": "b", "name": "beta"},
+                ],
+                "right_items": [
+                    {"id": "b", "name": "beta"},
+                    {"id": "c", "name": "gamma"},
+                ],
+            },
+        )
+
+        self.assertEqual(context["workflow_template_name"], "compare_workflow")
+        script = context["payload_by_tool"]["python_local"]["script"]
+        self.assertIn("compare.json", script)
+        self.assertIn("compare.md", script)
+        self.assertIn("_compare_result", script)
+        self.assertIn("shared_items", script)
+        self.assertIn("unique_left_items", script)
+        self.assertIn("unique_right_items", script)
 
     def test_summarize_and_compare_workflow_template_runs(self) -> None:
         left_run = {
