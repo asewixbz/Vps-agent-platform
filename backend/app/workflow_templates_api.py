@@ -8,12 +8,7 @@ from pydantic import BaseModel, Field
 from .agent_runtime import run_agent_runtime, runtime_execution_to_dict
 from .settings import get_settings
 from .store import get_runtime_run
-from .workflow_template_registry import (
-    delete_custom_workflow_template,
-    get_custom_workflow_template,
-    list_custom_workflow_templates,
-    upsert_custom_workflow_template,
-)
+from .workflow_template_registry import delete_custom_workflow_template, list_custom_workflow_templates, upsert_custom_workflow_template
 from .workflow_templates import (
     build_workflow_template_context,
     default_workflow_templates,
@@ -65,8 +60,20 @@ def _registered_workflow_templates() -> dict[str, dict[str, Any]]:
 
 def _workflow_template_context(template_name: str, base_context: dict[str, Any] | None = None) -> dict[str, Any]:
     context = dict(base_context or {})
+    registry: dict[str, Any] = {}
+    raw_registry = context.get("workflow_templates")
+    if isinstance(raw_registry, dict):
+        registry.update(raw_registry)
+    elif isinstance(raw_registry, list):
+        for item in raw_registry:
+            if isinstance(item, dict) and str(item.get("name") or ""):
+                registry[str(item["name"])] = item
+
+    for name, template in _registered_workflow_templates().items():
+        registry.setdefault(name, template)
+
     context["workflow_template_name"] = template_name
-    context["workflow_templates"] = _registered_workflow_templates()
+    context["workflow_templates"] = registry
     return context
 
 
