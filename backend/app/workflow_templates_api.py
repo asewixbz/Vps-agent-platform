@@ -8,15 +8,41 @@ from pydantic import BaseModel, Field
 from .agent_runtime import run_agent_runtime, runtime_execution_to_dict
 from .settings import get_settings
 from .store import get_runtime_run
+from .workflow_template_registry import (
+    delete_custom_workflow_template,
+    get_custom_workflow_template,
+    list_custom_workflow_templates,
+    upsert_custom_workflow_template,
+)
 from .workflow_templates import (
     build_workflow_template_context,
     default_workflow_templates,
+    normalize_workflow_template,
     resolve_workflow_template,
     workflow_template_to_dict,
 )
 
 router = APIRouter()
 settings = get_settings()
+
+
+class WorkflowTemplateStepPayload(BaseModel):
+    title: str
+    kind: str
+    description: str
+    tool_name: str | None = None
+    requires_approval: bool = False
+
+
+class WorkflowTemplateUpsertRequest(BaseModel):
+    name: str
+    kind: str = "workflow"
+    summary: str | None = None
+    steps: list[WorkflowTemplateStepPayload] = Field(default_factory=list)
+    recommended_tool: str | None = None
+    requires_approval: bool = False
+    notes: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class WorkflowTemplateRunRequest(BaseModel):
@@ -28,17 +54,53 @@ class WorkflowTemplateRunRequest(BaseModel):
     runtime_run_id: str | None = None
 
 
+def _registered_workflow_templates() -> dict[str, dict[str, Any]]:
+    templates = {name: workflow_template_to_dict(template) for name, template in default_workflow_templates().items()}
+    for template in list_custom_workflow_templates(settings):
+        normalized = normalize_workflow_template(template)
+        if normalized is not None:
+            templates[normalized.name] = workflow_template_to_dict(normalized)
+    return templates
+
+
+def _workflow_template_context(template_name: str, base_context: dict[str, Any] | None = None) -> dict[str, Any]:
+    context = dict(base_context or {})
+    context["workflow_template_name"] = template_name
+    context["workflow_templates"] = _registered_workflow_templates()
+    return context
+
+
 @router.get("/workflow-templates")
 def list_workflow_templates() -> list[dict[str, object]]:
-    return [workflow_template_to_dict(template) for template in default_workflow_templates().values()]
+    return list(_registered_workflow_templates().values())
 
 
 @router.get("/workflow-templates/{template_name}")
 def get_workflow_template(template_name: str) -> dict[str, object]:
-    template = resolve_workflow_template({"workflow_template_name": template_name})
+    template = resolve_workflow_template(_workflow_template_context(template_name))
     if template is None:
         raise HTTPException(status_code=404, detail="workflow template not found")
     return workflow_template_to_dict(template)
+
+
+@router.post("/workflow-templates")
+def upsert_workflow_template(request: WorkflowTemplateUpsertRequest) -> dict[str, object]:
+    template = normalize_workflow_template(request.model_dump())
+    if template is None:
+        raise HTTPException(status_code=422, detail="invalid workflow template payload")
+    saved = upsert_custom_workflow_template(settings, workflow_template_to_dict(template))
+    normalized = normalize_workflow_template(saved)
+    if normalized is None:
+        raise HTTPException(status_code=500, detail="workflow template could not be saved")
+    return workflow_template_to_dict(normalized)
+
+
+@router.delete("/workflow-templates/{template_name}")
+def delete_workflow_template(template_name: str) -> dict[str, object]:
+    deleted = delete_custom_workflow_template(settings, name=template_name)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="workflow template not found")
+    return {"deleted": True, "template_name": template_name}
 
 
 def summarize_workflow_template_run(run: dict[str, Any] | None) -> dict[str, Any]:
@@ -98,7 +160,7 @@ def compare_workflow_template_runs(left_run: dict[str, Any] | None, right_run: d
 
 @router.post("/workflow-templates/{template_name}/run")
 def run_workflow_template(template_name: str, request: WorkflowTemplateRunRequest) -> dict[str, object]:
-    template = resolve_workflow_template({"workflow_template_name": template_name})
+    template = resolve_workflow_template(_workflow_template_context(template_name, request.context))
     if template is None:
         raise HTTPException(status_code=404, detail="workflow template not found")
 
@@ -128,7 +190,7 @@ def compare_workflow_template_runs_route(
     left_runtime_run_id: str,
     right_runtime_run_id: str,
 ) -> dict[str, object]:
-    template = resolve_workflow_template({"workflow_template_name": template_name})
+    template = resolve_workflow_template(_workflow_template_context(template_name))
     if template is None:
         raise HTTPException(status_code=404, detail="workflow template not found")
 
