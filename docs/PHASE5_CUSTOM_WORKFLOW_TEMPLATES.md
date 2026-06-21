@@ -1,8 +1,8 @@
-# Phase 5 handoff — persistent custom workflow templates
+# Phase 5 complete — persistent custom workflow templates
 
 - **Task name:** Persistent custom workflow template registry
 - **Goal:** Let Phase 5 workflows use custom templates stored in SQLite instead of only the built-in scan/rank/report/compare/schedule set.
-- **Current status:** Implemented in the API, planner path, CLI surface, worker-triggered schedule dispatch, and README usage examples.
+- **Current status:** Phase 5 is complete. Persistent custom workflow templates and recurring schedule dispatch are implemented in the API, planner path, CLI surface, worker-triggered schedule dispatch, and README usage examples.
 - **What changed:**
   - Added `backend/app/workflow_template_registry.py` for SQLite-backed template storage.
   - Added `POST /workflow-templates` and `DELETE /workflow-templates/{template_name}`.
