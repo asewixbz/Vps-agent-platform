@@ -488,6 +488,7 @@ def _build_schedule_workflow_script(template: WorkflowTemplate, workflow_inputs:
         ('            {"heading": "Overview", "body": f"{title} for {audience}"},', '            {"heading": "Overview", "body": f"{title} for {audience}"},\n            {"heading": "Schedule", "body": f"Cadence: {cadence}\\nTimezone: {timezone}\\nTarget workflow: {target_workflow}\\nTarget goal: {target_goal}\\nTarget inputs: {_stringify(target_inputs)}"},'),
         ('        f"Audience: {audience}",', '        f"Audience: {audience}",\n        f"Cadence: {cadence}",\n        f"Timezone: {timezone}",\n        f"Target workflow: {target_workflow}",\n        f"Target goal: {target_goal}",\n        f"Target inputs: {_stringify(target_inputs)}",'),
         ('    report = {', '    schedule = {'),
+        ('    report["artifact_paths"] = [str(json_path), str(md_path)]', '    schedule["artifact_paths"] = [str(json_path), str(md_path)]'),
         ('    json_path = WORKDIR / "report.json"', '    json_path = WORKDIR / "schedule.json"'),
         ('    md_path = WORKDIR / "report.md"', '    md_path = WORKDIR / "schedule.md"'),
         ('    _write_json(json_path, report)', '    _write_json(json_path, schedule)'),
