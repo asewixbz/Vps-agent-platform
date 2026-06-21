@@ -1,0 +1,26 @@
+# Phase 5 handoff — persistent custom workflow templates
+
+- **Task name:** Persistent custom workflow template registry
+- **Goal:** Let Phase 5 workflows use custom templates stored in SQLite instead of only the built-in scan/rank/report/compare/schedule set.
+- **Current status:** Implemented in the API and planner path.
+- **What changed:**
+  - Added `backend/app/workflow_template_registry.py` for SQLite-backed template storage.
+  - Added `POST /workflow-templates` and `DELETE /workflow-templates/{template_name}`.
+  - Updated template listing and template resolution to include persisted custom templates.
+  - Updated execution planning so `workflow_template_name` can resolve against persisted templates.
+  - Added tests covering persistence and planner resolution.
+- **What remains:**
+  - Optional CLI commands for saving and deleting custom templates.
+  - Optional docs updates in the main project handoff/README.
+- **Dependencies:** SQLite database access via the existing settings/store layer.
+- **Risks or blockers:** No blocker for the current implementation; custom templates are resolved only when the planner/API path includes the registered template registry.
+- **Decisions already made:**
+  - Keep built-in templates as defaults.
+  - Persist custom templates separately so built-ins can still remain stable.
+  - Prefer API/planner integration first; CLI can follow later.
+- **Acceptance criteria:**
+  - A custom template can be saved.
+  - The saved template is listed later.
+  - `build_execution_plan(...)` can resolve a custom template by name.
+- **Owner:** asewilock@duck.com
+- **Priority:** Phase 5 follow-through
