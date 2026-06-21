@@ -134,6 +134,11 @@ def summarize_workflow_template_run(run: dict[str, Any] | None) -> dict[str, Any
                 path = artifacts.get(key)
                 if isinstance(path, str) and path not in artifact_paths:
                     artifact_paths.append(path)
+            extra_artifact_paths = artifacts.get("artifact_paths")
+            if isinstance(extra_artifact_paths, list):
+                for path in extra_artifact_paths:
+                    if isinstance(path, str) and path not in artifact_paths:
+                        artifact_paths.append(path)
 
     return {
         "runtime_run_id": str(normalized_run.get("id") or ""),
@@ -206,31 +211,4 @@ def run_workflow_template(template_name: str, request: WorkflowTemplateRunReques
         "execution": runtime_execution_to_dict(execution),
         "schedule": schedule,
         "schedule_registration_error": schedule_registration_error,
-    }
-
-
-@router.get("/workflow-templates/{template_name}/compare")
-def compare_workflow_template_runs_route(
-    template_name: str,
-    left_runtime_run_id: str,
-    right_runtime_run_id: str,
-) -> dict[str, object]:
-    template = resolve_workflow_template(_workflow_template_context(template_name))
-    if template is None:
-        raise HTTPException(status_code=404, detail="workflow template not found")
-
-    left_run = get_runtime_run(settings, runtime_run_id=left_runtime_run_id)
-    right_run = get_runtime_run(settings, runtime_run_id=right_runtime_run_id)
-    if left_run is None or right_run is None:
-        raise HTTPException(status_code=404, detail="runtime run not found")
-
-    comparison = compare_workflow_template_runs(left_run, right_run)
-    if comparison["left"]["workflow_template_name"] != template_name or comparison["right"]["workflow_template_name"] != template_name:
-        raise HTTPException(status_code=409, detail="runtime runs do not match the requested workflow template")
-
-    return {
-        "workflow_template": workflow_template_to_dict(template),
-        "left_runtime_run_id": left_runtime_run_id,
-        "right_runtime_run_id": right_runtime_run_id,
-        "comparison": comparison,
     }
