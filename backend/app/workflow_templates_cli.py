@@ -143,6 +143,34 @@ def cmd_workflow_template_run(args: Any) -> int:
     return 0
 
 
+def cmd_workflow_template_save(args: Any) -> int:
+    from .cli import load_payload, print_json, request_json
+
+    payload = load_payload(args.payload, args.payload_file)
+    data = request_json("POST", args.base_url, "/workflow-templates", payload)
+    if args.json:
+        print_json(data)
+    else:
+        print(f"workflow template saved: {data.get('name')}")
+        print(f"kind: {data.get('kind')}")
+        print(f"summary: {data.get('summary')}")
+        print(f"recommended_tool: {data.get('recommended_tool') or '-'}")
+        print(f"requires_approval: {bool(data.get('requires_approval'))}")
+    return 0
+
+
+def cmd_workflow_template_delete(args: Any) -> int:
+    from .cli import print_json, request_json
+
+    data = request_json("DELETE", args.base_url, f"/workflow-templates/{args.template_name}")
+    if args.json:
+        print_json(data)
+    else:
+        print(f"workflow template deleted: {data.get('template_name')}")
+        print(f"deleted: {bool(data.get('deleted'))}")
+    return 0
+
+
 def cmd_workflow_template_compare(args: Any) -> int:
     from .cli import _build_path, print_json, request_json
 
@@ -196,6 +224,15 @@ def register_workflow_template_cli(subparsers: Any) -> None:
     workflow_template_run_parser.add_argument("--runtime-run-id", help="reuse or continue a persisted runtime run")
     workflow_template_run_parser.set_defaults(func=cmd_workflow_template_run)
 
+    workflow_template_save_parser = subparsers.add_parser("workflow-template-save", help="save a custom workflow template")
+    workflow_template_save_parser.add_argument("--payload", help="JSON payload string")
+    workflow_template_save_parser.add_argument("--payload-file", help="path to a JSON payload file, or - for stdin")
+    workflow_template_save_parser.set_defaults(func=cmd_workflow_template_save)
+
+    workflow_template_delete_parser = subparsers.add_parser("workflow-template-delete", help="delete a custom workflow template")
+    workflow_template_delete_parser.add_argument("template_name", help="workflow template name")
+    workflow_template_delete_parser.set_defaults(func=cmd_workflow_template_delete)
+
     workflow_template_compare_parser = subparsers.add_parser("workflow-template-compare", help="compare two workflow template runs")
     workflow_template_compare_parser.add_argument("template_name", help="workflow template name")
     workflow_template_compare_parser.add_argument("left_runtime_run_id", help="left runtime run id")
@@ -207,6 +244,8 @@ def register_workflow_template_cli(subparsers: Any) -> None:
             "workflow-templates": cmd_workflow_templates,
             "workflow-template": cmd_workflow_template,
             "workflow-template-run": cmd_workflow_template_run,
+            "workflow-template-save": cmd_workflow_template_save,
+            "workflow-template-delete": cmd_workflow_template_delete,
             "workflow-template-compare": cmd_workflow_template_compare,
         }
     )
