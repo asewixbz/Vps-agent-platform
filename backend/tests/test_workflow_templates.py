@@ -88,12 +88,14 @@ class WorkflowTemplateTests(TestCase):
 
         self.assertEqual(
             set(templates.keys()),
-            {"scan_workflow", "rank_workflow", "report_workflow", "compare_workflow"},
+            {"scan_workflow", "rank_workflow", "report_workflow", "compare_workflow", "schedule_workflow"},
         )
         self.assertEqual(templates["scan_workflow"].steps[1].tool_name, "python_local")
         self.assertEqual(templates["report_workflow"].metadata["phase"], 5)
         self.assertEqual(templates["compare_workflow"].kind, "compare")
         self.assertEqual(templates["compare_workflow"].steps[1].tool_name, "python_local")
+        self.assertEqual(templates["schedule_workflow"].kind, "schedule")
+        self.assertEqual(templates["schedule_workflow"].steps[1].tool_name, "python_local")
 
     def test_workflow_template_to_dict_is_serializable(self) -> None:
         template = resolve_workflow_template({"workflow_template_name": "scan_workflow"})
@@ -158,6 +160,30 @@ class WorkflowTemplateTests(TestCase):
         self.assertIn("ranking.json", script)
         self.assertIn("_score_candidate", script)
         self.assertIn("required_fields", script)
+
+    def test_build_workflow_template_context_materializes_schedule_payloads(self) -> None:
+        template = resolve_workflow_template({"workflow_template_name": "schedule_workflow"})
+        self.assertIsNotNone(template)
+        assert template is not None
+
+        context = build_workflow_template_context(
+            template,
+            workflow_inputs={
+                "cadence": "daily",
+                "timezone": "UTC",
+                "target_workflow": "report_workflow",
+                "target_goal": "Daily summary",
+                "target_inputs": {"source_data": ["alpha", "beta"]},
+            },
+        )
+
+        self.assertEqual(context["workflow_template_name"], "schedule_workflow")
+        script = context["payload_by_tool"]["python_local"]["script"]
+        self.assertIn("schedule.json", script)
+        self.assertIn("schedule.md", script)
+        self.assertIn("_schedule_result", script)
+        self.assertIn("cadence", script)
+        self.assertIn("target_workflow", script)
 
     def test_build_workflow_template_context_materializes_compare_payloads(self) -> None:
         template = resolve_workflow_template({"workflow_template_name": "compare_workflow"})
