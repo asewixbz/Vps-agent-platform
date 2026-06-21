@@ -11,6 +11,11 @@ from app.cli import build_parser
 from app.planner import build_execution_plan
 from app.settings import Settings
 from app.store import init_db, seed_builtin_tools
+from app.workflow_template_registry import (
+    delete_custom_workflow_template,
+    list_custom_workflow_templates,
+    upsert_custom_workflow_template,
+)
 from app.workflow_templates import (
     build_workflow_template_context,
     default_workflow_templates,
@@ -214,6 +219,58 @@ class WorkflowTemplateTests(TestCase):
         self.assertIn("shared_items", script)
         self.assertIn("unique_left_items", script)
         self.assertIn("unique_right_items", script)
+
+    def test_custom_workflow_templates_persist_and_power_planning(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(db_path=str(Path(tmpdir) / "app.db"))
+            init_db(settings)
+            seed_builtin_tools(settings)
+
+            saved = upsert_custom_workflow_template(
+                settings,
+                {
+                    "name": "custom_rank_workflow",
+                    "kind": "rank",
+                    "summary": "Custom ranking workflow",
+                    "recommended_tool": "python_local",
+                    "steps": [
+                        {
+                            "title": "Collect ranking inputs",
+                            "kind": "inspect",
+                            "description": "Collect the candidates and ranking rules.",
+                        },
+                        {
+                            "title": "Score the candidates",
+                            "kind": "execute",
+                            "description": "Apply the custom ranking rules.",
+                            "tool_name": "python_local",
+                        },
+                        {
+                            "title": "Verify the ranking",
+                            "kind": "verify",
+                            "description": "Check the result for gaps.",
+                        },
+                    ],
+                    "notes": ["stored in sqlite"],
+                    "metadata": {"owner": "team-a"},
+                },
+            )
+
+            self.assertEqual(saved["name"], "custom_rank_workflow")
+            self.assertEqual(list_custom_workflow_templates(settings)[0]["name"], "custom_rank_workflow")
+
+            plan = build_execution_plan(
+                settings,
+                goal="Rank vendor proposals",
+                context={"workflow_template_name": "custom_rank_workflow"},
+            )
+
+            self.assertEqual(plan.source, "workflow_template")
+            self.assertEqual(plan.summary, "Custom ranking workflow")
+            self.assertEqual(plan.recommended_tool, "python_local")
+            self.assertEqual(plan.metadata["workflow_template"]["name"], "custom_rank_workflow")
+            self.assertEqual(delete_custom_workflow_template(settings, name="custom_rank_workflow"), True)
+            self.assertEqual(list_custom_workflow_templates(settings), [])
 
     def test_summarize_and_compare_workflow_template_runs(self) -> None:
         left_run = {
