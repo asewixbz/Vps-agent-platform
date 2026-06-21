@@ -53,9 +53,11 @@ from .store import (
     register_tool,
     seed_builtin_tools,
 )
+from .workflow_schedules import router as workflow_schedules_router
 from .workflow_templates_api import router as workflow_templates_router
 
 settings = get_settings()
 app = FastAPI(title=settings.app_name)
 app.include_router(provenance_router)
 app.include_router(workflow_templates_router)
+app.include_router(workflow_schedules_router)
