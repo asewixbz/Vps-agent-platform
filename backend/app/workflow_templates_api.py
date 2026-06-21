@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from .agent_runtime import run_agent_runtime, runtime_execution_to_dict
 from .settings import get_settings
 from .store import get_runtime_run
+from .workflow_schedules import register_workflow_schedule
 from .workflow_template_registry import delete_custom_workflow_template, list_custom_workflow_templates, upsert_custom_workflow_template
 from .workflow_templates import (
     build_workflow_template_context,
@@ -184,10 +185,27 @@ def run_workflow_template(template_name: str, request: WorkflowTemplateRunReques
         resume_from_step_index=request.resume_from_step_index,
         runtime_run_id=request.runtime_run_id,
     )
+
+    schedule = None
+    schedule_registration_error = None
+    if template.kind == "schedule" and execution.status == "completed":
+        try:
+            schedule = register_workflow_schedule(
+                settings,
+                source_runtime_run_id=execution.runtime_run_id,
+                source_template_name=template.name,
+                source_goal=request.goal or template.summary,
+                workflow_inputs=workflow_context.get("workflow_inputs", {}),
+            )
+        except ValueError as exc:
+            schedule_registration_error = str(exc)
+
     return {
         "workflow_template": workflow_template_to_dict(template),
         "workflow_inputs": workflow_context.get("workflow_inputs", {}),
         "execution": runtime_execution_to_dict(execution),
+        "schedule": schedule,
+        "schedule_registration_error": schedule_registration_error,
     }
 
 
