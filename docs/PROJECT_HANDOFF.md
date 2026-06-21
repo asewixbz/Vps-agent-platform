@@ -352,7 +352,7 @@ Acceptance criteria:
 
 ## Immediate next work
 
-1. Connect schedule manifests to a real recurring trigger if scheduling becomes a priority.
+1. Phase 6 hardening: sandboxing, observability, and safer promotion.
 
 ## Working rules for future contributors
 
@@ -364,4 +364,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present and locked down with sectioned provenance contract tests. Phase 4 is complete; workflow templates are now wired into the planner/runtime/API/CLI surface and the built-in template set now includes scan/rank/report/compare/schedule workflows. The next work is expanding them further and adding schedule-trigger hooks when needed. The Python runner now materializes schedule artifacts for schedule-style workflows and also accepts optional `artifacts.json` manifests, which gives workflow templates a standard way to publish extra artifact paths.
+The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present and locked down with sectioned provenance contract tests. Phase 4 is complete; workflow templates are now wired into the planner/runtime/API/CLI surface and the built-in template set now includes scan/rank/report/compare/schedule workflows. The next work is Phase 6 hardening; the worker loop now dispatches due schedules on a timed tick. The Python runner now materializes schedule artifacts for schedule-style workflows and also accepts optional artifacts.json manifests, which gives workflow templates a standard way to publish extra artifact paths.
