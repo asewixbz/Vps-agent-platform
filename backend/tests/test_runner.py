@@ -1,0 +1,44 @@
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest import TestCase
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from app.runner import run_python_script
+from app.settings import Settings
+
+
+class RunnerArtifactManifestTests(TestCase):
+    def test_python_runner_merges_artifacts_manifest(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+            )
+
+            result = run_python_script(
+                settings,
+                task_id="task-123",
+                script=(
+                    "from pathlib import Path\n"
+                    "import json\n"
+                    "manifest = {\n"
+                    '    "schedule_manifest_path": str(Path("schedule_manifest.json").resolve()),\n'
+                    '    "extra_note": "hello",\n'
+                    "}\n"
+                    'Path("schedule_manifest.json").write_text("{}", encoding="utf-8")\n'
+                    'Path("artifacts.json").write_text(json.dumps(manifest), encoding="utf-8")\n'
+                    'print("done")\n'
+                ),
+                timeout_seconds=5,
+            )
+
+            self.assertTrue(result.ok)
+            self.assertIn("workdir", result.artifacts)
+            self.assertIn("script_path", result.artifacts)
+            self.assertIn("schedule_manifest_path", result.artifacts)
+            self.assertIn("extra_note", result.artifacts)
+            self.assertTrue(str(result.artifacts["schedule_manifest_path"]).endswith("schedule_manifest.json"))
