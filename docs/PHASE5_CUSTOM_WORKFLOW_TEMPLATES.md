@@ -2,23 +2,25 @@
 
 - **Task name:** Persistent custom workflow template registry
 - **Goal:** Let Phase 5 workflows use custom templates stored in SQLite instead of only the built-in scan/rank/report/compare/schedule set.
-- **Current status:** Implemented in the API, planner path, and CLI surface.
+- **Current status:** Implemented in the API, planner path, CLI surface, and worker-triggered schedule dispatch.
 - **What changed:**
   - Added `backend/app/workflow_template_registry.py` for SQLite-backed template storage.
   - Added `POST /workflow-templates` and `DELETE /workflow-templates/{template_name}`.
   - Updated template listing and template resolution to include persisted custom templates.
   - Updated execution planning so `workflow_template_name` can resolve against persisted templates.
   - Added CLI commands for saving, deleting, listing, showing, running, and comparing workflow templates.
-  - Added tests covering persistence, planner resolution, and CLI registration.
+  - Added recurring workflow schedule storage and a worker loop hook that dispatches due schedule templates from SQLite.
+  - Added CLI commands for listing schedules, inspecting a schedule, and dispatching due schedules on demand.
+  - Added tests covering persistence, planner resolution, CLI registration, and recurring schedule dispatch.
 - **What remains:**
-  - Optional scheduling trigger hooks for recurring workflow templates.
-  - Optional docs updates in the main project handoff or README if the workflow template CLI needs more examples.
+  - Optional docs/examples updates in the main project handoff or README if you want more schedule usage examples.
 - **Dependencies:** SQLite database access via the existing settings/store layer.
-- **Risks or blockers:** No blocker for the current implementation; custom templates are resolved only when the planner/API path includes the registered template registry.
+- **Risks or blockers:** No blocker for the current implementation; custom templates and recurring schedules are resolved only when the planner/API path includes the registered template registry.
 - **Decisions already made:**
   - Keep built-in templates as defaults.
   - Persist custom templates separately so built-ins can still remain stable.
   - Prefer API/planner integration first; CLI now follows for save/delete management.
+  - Use the worker loop as the recurring trigger hook for schedule templates, rather than introducing a separate external scheduler service.
 - **Acceptance criteria:**
   - A custom template can be saved.
   - The saved template is listed later.
