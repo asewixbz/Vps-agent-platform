@@ -48,6 +48,7 @@ The project should be treated as an execution platform first, and a UI product s
 - sectioned provenance contract tests
 - Python runner support for optional `artifacts.json` manifests so workflow templates can publish extra artifact paths
 - Python runner materialization of schedule artifacts so schedule-style workflows can surface `schedule_manifest.json` automatically
+- Phase 5 workflow templates, including built-in scan/rank/report/compare/schedule templates, persisted custom templates, and recurring schedule dispatch through the worker loop
 
 ### Phase status
 
@@ -55,14 +56,17 @@ The project should be treated as an execution platform first, and a UI product s
 - Phase 2 complete
 - Phase 3 complete
 - Phase 4 complete
+- Phase 5 complete
 
 ### What exists but is still early
 
 - browser execution is behind a feature flag
 - model execution is only a placeholder for broader orchestration use
 - shell execution is intentionally restricted
-- Phase 5 workflow templates are wired into the planner/runtime/API/CLI surface and include built-in scan/rank/report/compare/schedule templates
 - there is no production-grade sandboxing
+- execution still relies on local subprocesses inside the shared backend container
+- artifact retention is still local-volume based
+- observability exists through runtime events and provenance, but it is not yet the stronger audit surface planned for Phase 6
 
 ## Technical direction
 
@@ -289,7 +293,7 @@ Status:
 
 - Phase 4 is complete
 - the sectioned provenance contract is locked in with tests
-- the next active phase is Phase 5 workflow templates
+- the next active phase is Phase 6 runtime hardening
 
 ### Phase 5 — Workflow templates
 
@@ -309,6 +313,10 @@ Acceptance criteria:
 - repeated jobs can run through a fixed template instead of a fully open-ended agent loop
 - the results are reproducible and easier to debug
 
+Status:
+
+- complete, including built-in templates, custom template persistence, and recurring schedule dispatch
+
 ### Phase 6 — Runtime hardening
 
 Goal: make execution safer and more production-ready.
@@ -325,6 +333,10 @@ Acceptance criteria:
 
 - tasks are isolated better than the current basic runner setup
 - execution is traceable and easier to audit
+
+Status:
+
+- not ready yet; the current code still runs tasks through local subprocesses in the shared backend container, without a production sandbox boundary or stronger audit pipeline
 
 ## Current code map
 
@@ -347,6 +359,10 @@ Acceptance criteria:
 - `backend/app/planner.py` — conservative planning bridge that can work with or without the model runner
 - `backend/app/agent_runtime.py` — multi-step runtime loop that executes planned steps conservatively and returns checkpoints for resuming
 - `backend/app/runtime_events.py` — runtime event normalization and replay helpers
+- `backend/app/runtime_provenance.py` — CLI provenance inspector for runtime runs
+- `backend/app/workflow_template_registry.py` — SQLite-backed custom workflow template registry
+- `backend/app/workflow_schedules.py` — workflow schedule storage, inspection, and dispatch
+- `backend/app/workflow_templates.py` — built-in workflow template definitions and helpers
 - `backend/app/workflow_templates_api.py` — workflow template API routes
 - `backend/app/workflow_templates_cli.py` — workflow template CLI commands
 
@@ -364,4 +380,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present and locked down with sectioned provenance contract tests. Phase 4 is complete; workflow templates are now wired into the planner/runtime/API/CLI surface and the built-in template set now includes scan/rank/report/compare/schedule workflows. The next work is Phase 6 hardening; the worker loop now dispatches due schedules on a timed tick. The Python runner now materializes schedule artifacts for schedule-style workflows and also accepts optional artifacts.json manifests, which gives workflow templates a standard way to publish extra artifact paths.
+The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, but the runtime still lacks per-task sandbox boundaries, stronger audit logging, and production artifact retention.
