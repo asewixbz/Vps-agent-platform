@@ -59,7 +59,7 @@ The project should be treated as an execution platform first, and a UI product s
 - browser execution is behind a feature flag
 - model execution is only a placeholder for broader orchestration use
 - shell execution is intentionally restricted
-- Phase 5 workflow templates are wired into the planner/runtime/API/CLI surface and include built-in scan/rank/report/compare templates
+- Phase 5 workflow templates are wired into the planner/runtime/API/CLI surface and include built-in scan/rank/report/compare/schedule templates
 - there is no production-grade sandboxing
 
 ## Technical direction
@@ -299,6 +299,7 @@ Deliverables:
 - ranking workflows
 - report generation workflows
 - compare workflows
+- schedule workflows
 - scheduling hooks later if needed
 
 Acceptance criteria:
@@ -349,9 +350,8 @@ Acceptance criteria:
 
 ## Immediate next work
 
-1. Expand Phase 5 workflow templates beyond the built-in scan/rank/report/compare set and add scheduling hooks later if needed.
-2. Strengthen browser and artifact handling once the runtime loop is stable.
-3. Add stronger sandboxing and observability before broader tool synthesis.
+1. Expand Phase 5 workflow templates beyond the built-in scan/rank/report/compare/schedule set with persistent custom template registration.
+2. Connect schedule manifests to a real recurring trigger if scheduling becomes a priority.
 
 ## Working rules for future contributors
 
@@ -363,4 +363,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present and locked down with sectioned provenance contract tests. Phase 4 is complete; workflow templates are now wired into the planner/runtime/API/CLI surface and the built-in template set now includes scan/rank/report/compare workflows. The next work is expanding them and adding scheduling hooks.
+The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present and locked down with sectioned provenance contract tests. Phase 4 is complete; workflow templates are now wired into the planner/runtime/API/CLI surface and the built-in template set now includes scan/rank/report/compare/schedule workflows. The next work is expanding them further and adding schedule-trigger hooks when needed.
