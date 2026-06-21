@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.settings import Settings
 from app.store import init_db, seed_builtin_tools
+from app.workflow_schedule_registry import upsert_custom_workflow_template
 from app.workflow_schedules import dispatch_due_workflow_schedules, register_workflow_schedule
 
 
@@ -65,3 +66,70 @@ class WorkflowScheduleTests(TestCase):
             self.assertEqual(dispatched_item["schedule"]["target_workflow_name"], "report_workflow")
             self.assertEqual(dispatched_item["schedule"]["target_goal"], "Daily report")
             self.assertEqual(dispatched_item["workflow_inputs"]["report_title"], "Daily report")
+
+    def test_dispatch_due_workflow_schedules_resolves_custom_templates(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                db_path=str(Path(tmpdir) / "app.db"),
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+            )
+            init_db(settings)
+            seed_builtin_tools(settings)
+            upsert_custom_workflow_template(
+                settings,
+                {
+                    "name": "custom_report_workflow",
+                    "kind": "report",
+                    "summary": "Custom report workflow",
+                    "recommended_tool": "python_local",
+                    "steps": [
+                        {
+                            "title": "Collect reporting inputs",
+                            "kind": "inspect",
+                            "description": "Collect the reporting inputs.",
+                        },
+                        {
+                            "title": "Generate the report",
+                            "kind": "execute",
+                            "description": "Generate the report with Python.",
+                            "tool_name": "python_local",
+                        },
+                        {
+                            "title": "Verify the report",
+                            "kind": "verify",
+                            "description": "Check the generated report.",
+                        },
+                    ],
+                },
+            )
+
+            schedule = register_workflow_schedule(
+                settings,
+                source_runtime_run_id="schedule-run-2",
+                source_template_name="schedule_workflow",
+                source_goal="Plan a custom recurring report",
+                workflow_inputs={
+                    "cadence": "every 12 hours",
+                    "timezone": "UTC",
+                    "target_workflow": "custom_report_workflow",
+                    "target_goal": "Custom recurring report",
+                    "target_inputs": {
+                        "report_title": "Custom recurring report",
+                        "audience": "finance",
+                        "source_data": ["gamma", "delta"],
+                        "output_constraints": ["cited"],
+                    },
+                },
+            )
+
+            dispatched = dispatch_due_workflow_schedules(
+                settings,
+                now=datetime.now(timezone.utc) + timedelta(days=1),
+            )
+
+            self.assertEqual(len(dispatched), 1)
+            self.assertEqual(dispatched[0]["schedule"]["target_workflow_name"], "custom_report_workflow")
+            self.assertEqual(dispatched[0]["execution"]["status"], "completed")
+            self.assertEqual(dispatched[0]["schedule"]["last_run_status"], "completed")
+            self.assertEqual(schedule["target_workflow_name"], "custom_report_workflow")
