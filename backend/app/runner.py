@@ -76,6 +76,35 @@ def _materialize_schedule_artifacts(workdir: Path) -> dict[str, Any]:
     return materialized
 
 
+def _materialize_workflow_artifacts(workdir: Path) -> dict[str, Any]:
+    artifact_candidates = (
+        ("report_path", workdir / "report.json"),
+        ("report_md_path", workdir / "report.md"),
+        ("ranking_path", workdir / "ranking.json"),
+        ("ranking_md_path", workdir / "ranking.md"),
+        ("scan_path", workdir / "scan.json"),
+        ("scan_md_path", workdir / "scan.md"),
+        ("compare_path", workdir / "compare.json"),
+        ("compare_md_path", workdir / "compare.md"),
+    )
+
+    materialized: dict[str, Any] = {}
+    for key, path in artifact_candidates:
+        if path.exists():
+            materialized[key] = str(path)
+
+    if not materialized:
+        return {}
+
+    manifest_path = workdir / "artifacts.json"
+    if not manifest_path.exists():
+        manifest_payload = dict(materialized)
+        manifest_payload["artifact_paths"] = list(dict.fromkeys(materialized.values()))
+        _write_json_file(manifest_path, manifest_payload)
+
+    return materialized
+
+
 def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_seconds: int | None = None) -> RunResult:
     workdir = _prepare_workdir(settings, task_id)
     script_path = workdir / "main.py"
@@ -93,6 +122,7 @@ def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_
         )
         duration_ms = int((time.monotonic() - started) * 1000)
         artifacts.update(_materialize_schedule_artifacts(workdir))
+        artifacts.update(_materialize_workflow_artifacts(workdir))
         artifacts.update(_load_python_artifact_manifest(workdir))
         return RunResult(
             ok=proc.returncode == 0,
@@ -106,6 +136,7 @@ def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_
     except subprocess.TimeoutExpired as exc:
         duration_ms = int((time.monotonic() - started) * 1000)
         artifacts.update(_materialize_schedule_artifacts(workdir))
+        artifacts.update(_materialize_workflow_artifacts(workdir))
         artifacts.update(_load_python_artifact_manifest(workdir))
         return RunResult(
             ok=False,
