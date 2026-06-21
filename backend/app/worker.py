@@ -4,6 +4,7 @@ from .executor import execute_task
 from .job_queue import get_queue
 from .settings import get_settings
 from .store import init_db, seed_builtin_tools
+from .workflow_schedules import dispatch_due_workflow_schedules
 
 
 def main() -> None:
@@ -16,6 +17,11 @@ def main() -> None:
     while True:
         task_id = queue.dequeue()
         if task_id is None:
+            dispatched = dispatch_due_workflow_schedules(settings)
+            if dispatched:
+                print(f"[worker] dispatched {len(dispatched)} due workflow schedule(s)")
+            if settings.worker_once:
+                break
             continue
 
         print(f"[worker] executing task_id={task_id}")
