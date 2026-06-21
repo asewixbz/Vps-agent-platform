@@ -11,7 +11,14 @@ from fastapi import APIRouter, HTTPException
 from .agent_runtime import run_agent_runtime, runtime_execution_to_dict
 from .settings import Settings, get_settings
 from .store import connect, utc_now
-from .workflow_templates import build_workflow_template_context, resolve_workflow_template, workflow_template_to_dict
+from .workflow_template_registry import list_custom_workflow_templates
+from .workflow_templates import (
+    build_workflow_template_context,
+    default_workflow_templates,
+    normalize_workflow_template,
+    resolve_workflow_template,
+    workflow_template_to_dict,
+)
 
 router = APIRouter()
 settings = get_settings()
@@ -125,6 +132,24 @@ def _next_run_at_for_cadence(cadence: str, base_time: datetime | None = None) ->
     return _format_datetime(base + delta)
 
 
+def _registered_workflow_templates(settings: Settings) -> dict[str, dict[str, Any]]:
+    templates = {name: workflow_template_to_dict(template) for name, template in default_workflow_templates().items()}
+    for template in list_custom_workflow_templates(settings):
+        normalized = normalize_workflow_template(template)
+        if normalized is not None:
+            templates[normalized.name] = workflow_template_to_dict(normalized)
+    return templates
+
+
+def _resolve_registered_workflow_template(settings: Settings, template_name: str):
+    return resolve_workflow_template(
+        {
+            "workflow_template_name": template_name,
+            "workflow_templates": _registered_workflow_templates(settings),
+        }
+    )
+
+
 def _row_to_schedule(row: Any) -> dict[str, Any] | None:
     if row is None:
         return None
@@ -182,7 +207,7 @@ def register_workflow_schedule(
     if not target_workflow_name:
         raise ValueError("target_workflow is required to register a recurring schedule")
 
-    template = resolve_workflow_template({"workflow_template_name": target_workflow_name})
+    template = _resolve_registered_workflow_template(settings, target_workflow_name)
     target_goal = str(normalized_inputs.get("target_goal") or normalized_inputs.get("goal") or source_goal or "").strip()
     if not target_goal:
         target_goal = template.summary if template is not None else target_workflow_name
@@ -352,7 +377,7 @@ def dispatch_due_workflow_schedules(
             continue
 
         template_name = str(schedule.get("target_workflow_name") or "").strip()
-        template = resolve_workflow_template({"workflow_template_name": template_name}) if template_name else None
+        template = _resolve_registered_workflow_template(settings, template_name) if template_name else None
         if template is None:
             _finalize_workflow_schedule(
                 settings,
@@ -424,15 +449,15 @@ def list_workflow_schedules_route() -> list[dict[str, object]]:
     return list_workflow_schedules(settings)
 
 
+@router.post("/workflow-schedules/dispatch-due")
+def dispatch_due_workflow_schedules_route(limit: int = 10) -> dict[str, object]:
+    dispatched = dispatch_due_workflow_schedules(settings, limit=limit)
+    return {"count": len(dispatched), "dispatched": dispatched}
+
+
 @router.get("/workflow-schedules/{schedule_id}")
 def get_workflow_schedule_route(schedule_id: str) -> dict[str, object]:
     schedule = get_workflow_schedule(settings, schedule_id=schedule_id)
     if schedule is None:
         raise HTTPException(status_code=404, detail="workflow schedule not found")
     return schedule
-
-
-@router.post("/workflow-schedules/dispatch-due")
-def dispatch_due_workflow_schedules_route(limit: int = 10) -> dict[str, object]:
-    dispatched = dispatch_due_workflow_schedules(settings, limit=limit)
-    return {"count": len(dispatched), "dispatched": dispatched}
