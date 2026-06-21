@@ -12,7 +12,7 @@ from app.settings import Settings
 
 
 class RunnerArtifactManifestTests(TestCase):
-    def test_python_runner_merges_artifacts_manifest(self) -> None:
+    def test_python_runner_materializes_schedule_artifacts(self) -> None:
         with TemporaryDirectory() as tmpdir:
             settings = Settings(
                 work_dir=str(Path(tmpdir) / "work"),
@@ -24,21 +24,23 @@ class RunnerArtifactManifestTests(TestCase):
                 task_id="task-123",
                 script=(
                     "from pathlib import Path\n"
-                    "import json\n"
-                    "manifest = {\n"
-                    '    "schedule_manifest_path": str(Path("schedule_manifest.json").resolve()),\n'
-                    '    "extra_note": "hello",\n'
-                    "}\n"
-                    'Path("schedule_manifest.json").write_text("{}", encoding="utf-8")\n'
-                    'Path("artifacts.json").write_text(json.dumps(manifest), encoding="utf-8")\n'
+                    'Path("schedule.json").write_text("{}", encoding="utf-8")\n'
+                    'Path("schedule.md").write_text("# schedule\n", encoding="utf-8")\n'
                     'print("done")\n'
                 ),
                 timeout_seconds=5,
             )
 
+            workdir = Path(result.artifacts["workdir"])
+            manifest_path = workdir / "schedule_manifest.json"
+            artifacts_path = workdir / "artifacts.json"
+
             self.assertTrue(result.ok)
             self.assertIn("workdir", result.artifacts)
             self.assertIn("script_path", result.artifacts)
             self.assertIn("schedule_manifest_path", result.artifacts)
-            self.assertIn("extra_note", result.artifacts)
+            self.assertIn("schedule_json_path", result.artifacts)
+            self.assertIn("schedule_md_path", result.artifacts)
             self.assertTrue(str(result.artifacts["schedule_manifest_path"]).endswith("schedule_manifest.json"))
+            self.assertTrue(manifest_path.exists())
+            self.assertTrue(artifacts_path.exists())
