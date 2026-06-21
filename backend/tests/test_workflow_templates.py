@@ -323,6 +323,40 @@ class WorkflowTemplateTests(TestCase):
         self.assertEqual(comparison["left"]["runtime_run_id"], "run-left")
         self.assertEqual(comparison["right"]["runtime_run_id"], "run-right")
 
+    def test_summarize_workflow_template_run_includes_extra_artifact_paths(self) -> None:
+        snapshot = summarize_workflow_template_run(
+            {
+                "id": "run-artifacts",
+                "goal": "Generate report",
+                "status": "completed",
+                "summary": "Report summary",
+                "attempts": 1,
+                "checkpoint": {"next_step_index": 2},
+                "context": {
+                    "workflow_template_name": "report_workflow",
+                    "workflow_inputs": {"audience": "ops"},
+                },
+                "steps": [
+                    {
+                        "status": "completed",
+                        "result": {
+                            "artifacts": {
+                                "workdir": "/tmp/run-artifacts",
+                                "script_path": "/tmp/run-artifacts/main.py",
+                                "report_path": "/tmp/run-artifacts/report.json",
+                                "report_md_path": "/tmp/run-artifacts/report.md",
+                                "artifact_paths": ["/tmp/run-artifacts/report.json", "/tmp/run-artifacts/report.md"],
+                            }
+                        },
+                    }
+                ],
+            }
+        )
+
+        self.assertIn("/tmp/run-artifacts/report.json", snapshot["artifact_paths"])
+        self.assertIn("/tmp/run-artifacts/report.md", snapshot["artifact_paths"])
+        self.assertIn("/tmp/run-artifacts/main.py", snapshot["artifact_paths"])
+
     def test_build_execution_plan_prefers_workflow_template_context(self) -> None:
         with TemporaryDirectory() as tmpdir:
             settings = Settings(db_path=str(Path(tmpdir) / "app.db"))
