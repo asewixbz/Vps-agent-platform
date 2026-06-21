@@ -2,22 +2,23 @@
 
 - **Task name:** Persistent custom workflow template registry
 - **Goal:** Let Phase 5 workflows use custom templates stored in SQLite instead of only the built-in scan/rank/report/compare/schedule set.
-- **Current status:** Implemented in the API and planner path.
+- **Current status:** Implemented in the API, planner path, and CLI surface.
 - **What changed:**
   - Added `backend/app/workflow_template_registry.py` for SQLite-backed template storage.
   - Added `POST /workflow-templates` and `DELETE /workflow-templates/{template_name}`.
   - Updated template listing and template resolution to include persisted custom templates.
   - Updated execution planning so `workflow_template_name` can resolve against persisted templates.
-  - Added tests covering persistence and planner resolution.
+  - Added CLI commands for saving, deleting, listing, showing, running, and comparing workflow templates.
+  - Added tests covering persistence, planner resolution, and CLI registration.
 - **What remains:**
-  - Optional CLI commands for saving and deleting custom templates.
-  - Optional docs updates in the main project handoff/README.
+  - Optional scheduling trigger hooks for recurring workflow templates.
+  - Optional docs updates in the main project handoff or README if the workflow template CLI needs more examples.
 - **Dependencies:** SQLite database access via the existing settings/store layer.
 - **Risks or blockers:** No blocker for the current implementation; custom templates are resolved only when the planner/API path includes the registered template registry.
 - **Decisions already made:**
   - Keep built-in templates as defaults.
   - Persist custom templates separately so built-ins can still remain stable.
-  - Prefer API/planner integration first; CLI can follow later.
+  - Prefer API/planner integration first; CLI now follows for save/delete management.
 - **Acceptance criteria:**
   - A custom template can be saved.
   - The saved template is listed later.
