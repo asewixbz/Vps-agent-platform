@@ -8,6 +8,7 @@ from .model_adapter import ModelAdapterError
 from .model_runtime import chat_model
 from .settings import Settings
 from .store import list_tools
+from .workflow_template_registry import list_custom_workflow_templates
 from .workflow_templates import resolve_workflow_template, workflow_template_to_dict
 
 RISKY_GOAL_SNIPPETS = (
@@ -144,6 +145,24 @@ def _build_template_plan(goal: str, context: dict[str, Any], tools: list[dict[st
             "workflow_template": workflow_template_to_dict(template),
         },
     )
+
+
+def _workflow_template_registry(context: dict[str, Any], settings: Settings) -> dict[str, Any]:
+    registry: dict[str, Any] = {}
+    raw_registry = context.get("workflow_templates")
+    if isinstance(raw_registry, dict):
+        for key, value in raw_registry.items():
+            registry[str(key)] = value
+    elif isinstance(raw_registry, list):
+        for item in raw_registry:
+            if isinstance(item, dict) and str(item.get("name") or ""):
+                registry[str(item["name"])] = item
+
+    for template in list_custom_workflow_templates(settings):
+        name = str(template.get("name") or "").strip()
+        if name:
+            registry.setdefault(name, template)
+    return registry
 
 
 def _build_heuristic_plan(goal: str, context: dict[str, Any], tools: list[dict[str, Any]]) -> AgentPlan:
@@ -312,6 +331,9 @@ def _model_plan(settings: Settings, goal: str, context: dict[str, Any], tools: l
 def build_execution_plan(settings: Settings, *, goal: str, context: dict[str, Any] | None = None) -> AgentPlan:
     normalized_context = dict(context or {})
     tools = list_tools(settings)
+    workflow_template_registry = _workflow_template_registry(normalized_context, settings)
+    if workflow_template_registry:
+        normalized_context["workflow_templates"] = workflow_template_registry
     workflow_template = resolve_workflow_template(normalized_context)
     if workflow_template is not None:
         return _build_template_plan(goal, normalized_context, tools, workflow_template)
