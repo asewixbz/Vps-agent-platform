@@ -32,12 +32,26 @@ def _prepare_workdir(settings: Settings, task_id: str) -> Path:
     return task_dir
 
 
+def _load_python_artifact_manifest(workdir: Path) -> dict[str, Any]:
+    manifest_path = workdir / "artifacts.json"
+    if not manifest_path.exists():
+        return {}
+
+    try:
+        raw = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+    return raw if isinstance(raw, dict) else {}
+
+
 def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_seconds: int | None = None) -> RunResult:
     workdir = _prepare_workdir(settings, task_id)
     script_path = workdir / "main.py"
     script_path.write_text(script, encoding="utf-8")
     started = time.monotonic()
     timeout = timeout_seconds or settings.default_timeout_seconds
+    artifacts: dict[str, Any] = {"workdir": str(workdir), "script_path": str(script_path)}
     try:
         proc = subprocess.run(
             [sys.executable, str(script_path)],
@@ -47,6 +61,7 @@ def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_
             timeout=timeout,
         )
         duration_ms = int((time.monotonic() - started) * 1000)
+        artifacts.update(_load_python_artifact_manifest(workdir))
         return RunResult(
             ok=proc.returncode == 0,
             stdout=proc.stdout,
@@ -54,10 +69,11 @@ def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_
             exit_code=proc.returncode,
             timed_out=False,
             duration_ms=duration_ms,
-            artifacts={"workdir": str(workdir), "script_path": str(script_path)},
+            artifacts=artifacts,
         )
     except subprocess.TimeoutExpired as exc:
         duration_ms = int((time.monotonic() - started) * 1000)
+        artifacts.update(_load_python_artifact_manifest(workdir))
         return RunResult(
             ok=False,
             stdout=exc.stdout or "",
@@ -65,7 +81,7 @@ def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_
             exit_code=124,
             timed_out=True,
             duration_ms=duration_ms,
-            artifacts={"workdir": str(workdir), "script_path": str(script_path)},
+            artifacts=artifacts,
         )
 
 
