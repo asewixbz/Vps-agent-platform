@@ -63,4 +63,5 @@ class WorkflowScheduleTests(TestCase):
             self.assertEqual(dispatched_item["schedule"]["last_run_status"], "completed")
             self.assertGreater(dispatched_item["schedule"]["next_run_at"], original_next_run_at)
             self.assertEqual(dispatched_item["schedule"]["target_workflow_name"], "report_workflow")
-            self.assertEqual(dispatched_item["workflow_inputs"]["target_goal"], "Daily report")
+            self.assertEqual(dispatched_item["schedule"]["target_goal"], "Daily report")
+            self.assertEqual(dispatched_item["workflow_inputs"]["report_title"], "Daily report")
