@@ -293,7 +293,7 @@ Status:
 
 - Phase 4 is complete
 - the sectioned provenance contract is locked in with tests
-- the next active phase is Phase 5 workflow templates
+- the next active phase is Phase 6 runtime hardening
 
 ### Phase 5 — Workflow templates
 
