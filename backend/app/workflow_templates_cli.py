@@ -47,6 +47,40 @@ def _print_template_details(template: dict[str, Any]) -> None:
                 print(f"     {step.get('description')}")
 
 
+def _format_schedule_row(schedule: dict[str, Any]) -> str:
+    schedule_id = str(schedule.get("id") or "")
+    status = str(schedule.get("status") or "")
+    cadence = str(schedule.get("cadence") or "")
+    next_run_at = str(schedule.get("next_run_at") or "-")
+    target_workflow = str(schedule.get("target_workflow_name") or "")
+    target_goal = str(schedule.get("target_goal") or "")
+    return f"{schedule_id:<36} {status:<10} cadence={cadence:<16} next={next_run_at:<30} {target_workflow} :: {target_goal}"
+
+
+def _print_schedule_details(schedule: dict[str, Any]) -> None:
+    print(f"id: {schedule.get('id')}")
+    print(f"status: {schedule.get('status')}")
+    print(f"source_runtime_run_id: {schedule.get('source_runtime_run_id')}")
+    print(f"source_template_name: {schedule.get('source_template_name')}")
+    print(f"source_goal: {schedule.get('source_goal')}")
+    print(f"cadence: {schedule.get('cadence')}")
+    print(f"timezone: {schedule.get('timezone')}")
+    print(f"target_workflow_name: {schedule.get('target_workflow_name')}")
+    print(f"target_goal: {schedule.get('target_goal')}")
+    print(f"next_run_at: {schedule.get('next_run_at') or '-'}")
+    print(f"last_triggered_at: {schedule.get('last_triggered_at') or '-'}")
+    print(f"last_runtime_run_id: {schedule.get('last_runtime_run_id') or '-'}")
+    print(f"last_run_status: {schedule.get('last_run_status') or '-'}")
+    if schedule.get("last_run_summary"):
+        print(f"last_run_summary: {schedule.get('last_run_summary')}")
+    target_inputs = schedule.get("target_inputs") if isinstance(schedule.get("target_inputs"), dict) else {}
+    if target_inputs:
+        import json
+
+        print("target_inputs:")
+        print(json.dumps(target_inputs, indent=2, ensure_ascii=False))
+
+
 def _print_execution_details(execution: dict[str, Any]) -> None:
     print(f"runtime_run_id: {execution.get('runtime_run_id')}")
     print(f"status: {execution.get('status')}")
@@ -139,6 +173,11 @@ def cmd_workflow_template_run(args: Any) -> int:
         if template:
             print(f"workflow_template: {template.get('name')}")
         print(f"goal: {execution.get('goal')}")
+        if data.get("schedule"):
+            schedule = data.get("schedule") if isinstance(data.get("schedule"), dict) else {}
+            print(f"schedule: {schedule.get('id')}")
+        if data.get("schedule_registration_error"):
+            print(f"schedule_registration_error: {data.get('schedule_registration_error')}")
         _print_execution_details(execution)
     return 0
 
@@ -204,6 +243,51 @@ def cmd_workflow_template_compare(args: Any) -> int:
     return 0
 
 
+def cmd_workflow_schedules(args: Any) -> int:
+    from .cli import print_json, request_json
+
+    data = request_json("GET", args.base_url, "/workflow-schedules")
+    if args.json:
+        print_json(data)
+    else:
+        for schedule in data:
+            if isinstance(schedule, dict):
+                print(_format_schedule_row(schedule))
+    return 0
+
+
+def cmd_workflow_schedule(args: Any) -> int:
+    from .cli import print_json, request_json
+
+    data = request_json("GET", args.base_url, f"/workflow-schedules/{args.schedule_id}")
+    if args.json:
+        print_json(data)
+    else:
+        _print_schedule_details(data)
+    return 0
+
+
+def cmd_workflow_schedule_dispatch_due(args: Any) -> int:
+    from .cli import print_json, request_json
+
+    data = request_json("POST", args.base_url, f"/workflow-schedules/dispatch-due?limit={args.limit}")
+    if args.json:
+        print_json(data)
+    else:
+        print(f"count: {data.get('count')}")
+        for item in data.get("dispatched") or []:
+            if not isinstance(item, dict):
+                continue
+            schedule = item.get("schedule") if isinstance(item.get("schedule"), dict) else {}
+            execution = item.get("execution") if isinstance(item.get("execution"), dict) else {}
+            print(f"schedule: {schedule.get('id')}")
+            print(f"  status: {schedule.get('status')}")
+            print(f"  next_run_at: {schedule.get('next_run_at') or '-'}")
+            print(f"  runtime_run_id: {execution.get('runtime_run_id')}")
+            print(f"  runtime_status: {execution.get('status')}")
+    return 0
+
+
 def register_workflow_template_cli(subparsers: Any) -> None:
     workflow_templates_parser = subparsers.add_parser("workflow-templates", help="list workflow templates")
     workflow_templates_parser.set_defaults(func=cmd_workflow_templates)
@@ -239,6 +323,17 @@ def register_workflow_template_cli(subparsers: Any) -> None:
     workflow_template_compare_parser.add_argument("right_runtime_run_id", help="right runtime run id")
     workflow_template_compare_parser.set_defaults(func=cmd_workflow_template_compare)
 
+    workflow_schedules_parser = subparsers.add_parser("workflow-schedules", help="list workflow schedules")
+    workflow_schedules_parser.set_defaults(func=cmd_workflow_schedules)
+
+    workflow_schedule_parser = subparsers.add_parser("workflow-schedule", help="show a workflow schedule")
+    workflow_schedule_parser.add_argument("schedule_id", help="workflow schedule id")
+    workflow_schedule_parser.set_defaults(func=cmd_workflow_schedule)
+
+    workflow_schedule_dispatch_due_parser = subparsers.add_parser("workflow-schedule-dispatch-due", help="dispatch due workflow schedules")
+    workflow_schedule_dispatch_due_parser.add_argument("--limit", type=int, default=10, help="maximum number of due schedules to dispatch")
+    workflow_schedule_dispatch_due_parser.set_defaults(func=cmd_workflow_schedule_dispatch_due)
+
     WORKFLOW_TEMPLATE_HANDLERS.update(
         {
             "workflow-templates": cmd_workflow_templates,
@@ -247,5 +342,8 @@ def register_workflow_template_cli(subparsers: Any) -> None:
             "workflow-template-save": cmd_workflow_template_save,
             "workflow-template-delete": cmd_workflow_template_delete,
             "workflow-template-compare": cmd_workflow_template_compare,
+            "workflow-schedules": cmd_workflow_schedules,
+            "workflow-schedule": cmd_workflow_schedule,
+            "workflow-schedule-dispatch-due": cmd_workflow_schedule_dispatch_due,
         }
     )
