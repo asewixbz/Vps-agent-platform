@@ -47,6 +47,7 @@ The project should be treated as an execution platform first, and a UI product s
 - sectioned provenance payloads with explicit root, one-hop, transitive, and artifact-only views
 - sectioned provenance contract tests
 - Python runner support for optional `artifacts.json` manifests so workflow templates can publish extra artifact paths
+- Python runner materialization of schedule artifacts so schedule-style workflows can surface `schedule_manifest.json` automatically
 
 ### Phase status
 
@@ -351,8 +352,7 @@ Acceptance criteria:
 
 ## Immediate next work
 
-1. Emit `artifacts.json` and schedule manifest files from the schedule workflow template so runtime provenance can surface recurring schedule artifacts.
-2. Connect schedule manifests to a real recurring trigger if scheduling becomes a priority.
+1. Connect schedule manifests to a real recurring trigger if scheduling becomes a priority.
 
 ## Working rules for future contributors
 
@@ -364,4 +364,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present and locked down with sectioned provenance contract tests. Phase 4 is complete; workflow templates are now wired into the planner/runtime/API/CLI surface and the built-in template set now includes scan/rank/report/compare/schedule workflows. The next work is expanding them further and adding schedule-trigger hooks when needed. The Python runner now accepts optional `artifacts.json` manifests, which gives workflow templates a standard way to publish extra artifact paths.
+The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present and locked down with sectioned provenance contract tests. Phase 4 is complete; workflow templates are now wired into the planner/runtime/API/CLI surface and the built-in template set now includes scan/rank/report/compare/schedule workflows. The next work is expanding them further and adding schedule-trigger hooks when needed. The Python runner now materializes schedule artifacts for schedule-style workflows and also accepts optional `artifacts.json` manifests, which gives workflow templates a standard way to publish extra artifact paths.
