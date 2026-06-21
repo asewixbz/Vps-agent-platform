@@ -46,6 +46,7 @@ The project should be treated as an execution platform first, and a UI product s
 - runtime and memory provenance API routes
 - sectioned provenance payloads with explicit root, one-hop, transitive, and artifact-only views
 - sectioned provenance contract tests
+- Python runner support for optional `artifacts.json` manifests so workflow templates can publish extra artifact paths
 
 ### Phase status
 
@@ -350,7 +351,7 @@ Acceptance criteria:
 
 ## Immediate next work
 
-1. Expand Phase 5 workflow templates beyond the built-in scan/rank/report/compare/schedule set with persistent custom template registration.
+1. Emit `artifacts.json` and schedule manifest files from the schedule workflow template so runtime provenance can surface recurring schedule artifacts.
 2. Connect schedule manifests to a real recurring trigger if scheduling becomes a priority.
 
 ## Working rules for future contributors
@@ -363,4 +364,4 @@ Acceptance criteria:
 
 ## Current project status summary
 
-The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present and locked down with sectioned provenance contract tests. Phase 4 is complete; workflow templates are now wired into the planner/runtime/API/CLI surface and the built-in template set now includes scan/rank/report/compare/schedule workflows. The next work is expanding them further and adding schedule-trigger hooks when needed.
+The repository is already a usable execution backbone. Durable memory, dossier helpers, memory links, provenance views, and runtime provenance routes are now present and locked down with sectioned provenance contract tests. Phase 4 is complete; workflow templates are now wired into the planner/runtime/API/CLI surface and the built-in template set now includes scan/rank/report/compare/schedule workflows. The next work is expanding them further and adding schedule-trigger hooks when needed. The Python runner now accepts optional `artifacts.json` manifests, which gives workflow templates a standard way to publish extra artifact paths.
