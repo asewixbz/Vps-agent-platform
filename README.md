@@ -150,6 +150,20 @@ python -m app.cli approve <task-id> --note "approved for run"
 
 Use `--base-url` if the API is not running on `http://localhost:8000`.
 
+### Workflow template and schedule helpers
+
+```bash
+python -m app.cli workflow-templates
+python -m app.cli workflow-template scan_workflow
+python -m app.cli workflow-template-run report_workflow "Write a weekly summary" --inputs '{"report_title":"Weekly summary","audience":"ops"}'
+python -m app.cli workflow-template-run schedule_workflow "Prepare a weekly schedule" --inputs '{"cadence":"weekly","timezone":"UTC","target_workflow":"report_workflow","target_goal":"Generate the weekly report","target_inputs":{"report_title":"Weekly report","audience":"ops"}}'
+python -m app.cli workflow-schedules
+python -m app.cli workflow-schedule <schedule-id>
+python -m app.cli workflow-schedule-dispatch-due --limit 10
+```
+
+Schedule templates can register recurring schedules when a successful run includes cadence and target workflow inputs such as `target_workflow`, `target_goal`, `target_inputs`, `cadence`, and `timezone`.
+
 ## Model endpoints
 
 - `GET /model/health`
