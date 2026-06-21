@@ -25,14 +25,12 @@ class WorkerScheduleDispatchTests(TestCase):
             queue = Mock()
             queue.dequeue.return_value = "task-1"
 
-            with (
-                patch.object(worker, "get_settings", return_value=settings) as get_settings_mock,
-                patch.object(worker, "init_db") as init_db_mock,
-                patch.object(worker, "seed_builtin_tools") as seed_builtin_tools_mock,
-                patch.object(worker, "get_queue", return_value=queue) as get_queue_mock,
-                patch.object(worker, "dispatch_due_workflow_schedules", return_value=[{"schedule": {"id": "schedule-1"}}]) as dispatch_mock,
-                patch.object(worker, "execute_task", return_value={"status": "completed"}) as execute_task_mock,
-            ):
+            with patch.object(worker, "get_settings", return_value=settings) as get_settings_mock, \
+                patch.object(worker, "init_db") as init_db_mock, \
+                patch.object(worker, "seed_builtin_tools") as seed_builtin_tools_mock, \
+                patch.object(worker, "get_queue", return_value=queue) as get_queue_mock, \
+                patch.object(worker, "dispatch_due_workflow_schedules", return_value=[{"schedule": {"id": "schedule-1"}}]) as dispatch_mock, \
+                patch.object(worker, "execute_task", return_value={"status": "completed"}) as execute_task_mock:
                 worker.main()
 
             get_settings_mock.assert_called_once()
