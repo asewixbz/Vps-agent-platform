@@ -478,6 +478,27 @@ def _build_report_workflow_script(template: WorkflowTemplate, workflow_inputs: d
     return "\n".join(lines) + "\n"
 
 
+def _build_schedule_workflow_script(template: WorkflowTemplate, workflow_inputs: dict[str, Any]) -> str:
+    script = _build_report_workflow_script(template, workflow_inputs)
+    replacements = (
+        ('def _report_result() -> dict[str, object]:', 'def _schedule_result() -> dict[str, object]:'),
+        ('    title = str(INPUTS.get("report_title") or INPUTS.get("title") or TEMPLATE["summary"])', '    title = str(INPUTS.get("schedule_title") or INPUTS.get("title") or TEMPLATE["summary"])'),
+        ('    audience = str(INPUTS.get("audience") or "general")\n    output_constraints = _as_list(INPUTS.get("output_constraints"))', '    audience = str(INPUTS.get("audience") or "general")\n    cadence = str(INPUTS.get("cadence") or INPUTS.get("schedule") or INPUTS.get("schedule_cadence") or "manual")\n    timezone = str(INPUTS.get("timezone") or INPUTS.get("schedule_timezone") or "UTC")\n    target_workflow = str(INPUTS.get("target_workflow") or INPUTS.get("target_workflow_name") or TEMPLATE["name"])\n    target_goal = str(INPUTS.get("target_goal") or INPUTS.get("goal") or TEMPLATE["summary"])\n    target_inputs = INPUTS.get("target_inputs")\n    if not isinstance(target_inputs, dict):\n        workflow_inputs = INPUTS.get("workflow_inputs")\n        target_inputs = workflow_inputs if isinstance(workflow_inputs, dict) else {}\n    output_constraints = _as_list(INPUTS.get("output_constraints"))'),
+        ('        "audience": audience,', '        "audience": audience,\n        "cadence": cadence,\n        "timezone": timezone,\n        "target_workflow": target_workflow,\n        "target_goal": target_goal,\n        "target_inputs": target_inputs,'),
+        ('            {"heading": "Overview", "body": f"{title} for {audience}"},', '            {"heading": "Overview", "body": f"{title} for {audience}"},\n            {"heading": "Schedule", "body": f"Cadence: {cadence}\\nTimezone: {timezone}\\nTarget workflow: {target_workflow}\\nTarget goal: {target_goal}\\nTarget inputs: {_stringify(target_inputs)}"},'),
+        ('        f"Audience: {audience}",', '        f"Audience: {audience}",\n        f"Cadence: {cadence}",\n        f"Timezone: {timezone}",\n        f"Target workflow: {target_workflow}",\n        f"Target goal: {target_goal}",\n        f"Target inputs: {_stringify(target_inputs)}",'),
+        ('    report = {', '    schedule = {'),
+        ('    json_path = WORKDIR / "report.json"', '    json_path = WORKDIR / "schedule.json"'),
+        ('    md_path = WORKDIR / "report.md"', '    md_path = WORKDIR / "schedule.md"'),
+        ('    _write_json(json_path, report)', '    _write_json(json_path, schedule)'),
+        ('    return report', '    return schedule'),
+        ('    if TEMPLATE["kind"] == "compare":\n        return _compare_result()\n    return _report_result()', '    if TEMPLATE["kind"] == "compare":\n        return _compare_result()\n    if TEMPLATE["kind"] == "schedule":\n        return _schedule_result()\n    return _report_result()'),
+    )
+    for old, new in replacements:
+        script = script.replace(old, new)
+    return script
+
+
 def _build_rank_workflow_script(template: WorkflowTemplate, workflow_inputs: dict[str, Any]) -> str:
     return _build_report_workflow_script(template, workflow_inputs) if template.kind == "report" else _build_report_workflow_script(template, workflow_inputs) if template.kind == "workflow" else _build_report_workflow_script(template, workflow_inputs)
 
@@ -502,6 +523,8 @@ def workflow_template_execution_payloads(template: WorkflowTemplate, workflow_in
                 script = _build_rank_workflow_script(template, normalized_inputs)
             elif template.kind == "scan":
                 script = _build_scan_workflow_script(template, normalized_inputs)
+            elif template.kind == "schedule":
+                script = _build_schedule_workflow_script(template, normalized_inputs)
             elif template.kind == "compare":
                 script = _build_report_workflow_script(template, normalized_inputs)
             else:
@@ -656,6 +679,32 @@ def default_workflow_templates() -> dict[str, WorkflowTemplate]:
             ],
             notes=["Phase 5 template for repeatable comparison workflows."],
             metadata={"phase": 5, "category": "compare"},
+        ),
+        WorkflowTemplate(
+            name="schedule_workflow",
+            kind="schedule",
+            summary="Plan a recurring run for a target workflow using cadence and timezone inputs.",
+            recommended_tool="python_local",
+            steps=[
+                WorkflowTemplateStep(
+                    title="Collect schedule inputs",
+                    kind="inspect",
+                    description="Collect the cadence, timezone, target workflow, and supporting inputs before building the schedule.",
+                ),
+                WorkflowTemplateStep(
+                    title="Build the schedule",
+                    kind="execute",
+                    description="Generate a schedule artifact for the requested workflow.",
+                    tool_name="python_local",
+                ),
+                WorkflowTemplateStep(
+                    title="Verify the schedule",
+                    kind="verify",
+                    description="Check the schedule for missing cadence, timezone, or target workflow details.",
+                ),
+            ],
+            notes=["Phase 5 template for repeatable scheduling workflows."],
+            metadata={"phase": 5, "category": "schedule"},
         ),
     ]
     return {template.name: template for template in templates}
