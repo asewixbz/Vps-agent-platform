@@ -37,6 +37,7 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - memory provenance inspection for durable memory graphs
 - runtime provenance inspection for runtime runs
 - runtime event replay filters by step or grouped view
+- built-in workflow template set for scan/rank/report/compare workflows
 
 ## What is not included yet
 
@@ -295,6 +296,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - scanning workflows
 - ranking workflows
 - report generation workflows
+- compare workflows
 
 ### Phase 6
 - automatic tool synthesis
