@@ -38,12 +38,15 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - runtime provenance inspection for runtime runs
 - runtime event replay filters by step or grouped view
 - built-in workflow template set for scan/rank/report/compare/schedule workflows
+- persisted custom workflow templates in SQLite
+- recurring workflow schedule dispatch from the worker loop
 
 ## What is not included yet
 
 - GPU/model runner
 - automatic code generation for arbitrary tools
 - full sandbox hardening with seccomp/AppArmor profiles
+- per-task container isolation and stronger runtime boundaries
 - production-grade distributed storage
 
 ## Folder layout
@@ -55,16 +58,19 @@ vps-agent-platform/
   docs/
     PROJECT_HANDOFF.md
     MODEL_ADAPTER.md
+    PHASE5_CUSTOM_WORKFLOW_TEMPLATES.md
   backend/
     Dockerfile
     requirements.txt
     app/
       __main__.py
       agent_runtime.py
+      browser_worker.py
       cli.py
       dossiers.py
       executor.py
       job_queue.py
+      kieai_adapter.py
       main.py
       memory.py
       memory_graph.py
@@ -76,10 +82,16 @@ vps-agent-platform/
       policy.py
       provenance_api.py
       runner.py
+      runtime_events.py
+      runtime_provenance.py
       settings.py
       store.py
       worker.py
-      kieai_adapter.py
+      workflow_schedules.py
+      workflow_template_registry.py
+      workflow_templates.py
+      workflow_templates_api.py
+      workflow_templates_cli.py
 ```
 
 ## Run locally
@@ -272,7 +284,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 
 ## Recommended rollout plan
 
-### Phase 1
+### Phase 1 — complete
 - control plane
 - local Python/shell execution
 - tool registry
@@ -282,7 +294,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - model API endpoints
 - first provider adapter
 
-### Phase 2
+### Phase 2 — complete
 - Redis queue
 - worker process
 - browser runner
@@ -290,7 +302,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - execution planning bridge
 - runtime loop scaffold
 
-### Phase 3
+### Phase 3 — complete
 - Postgres
 - stronger policy engine
 - trust scoring
@@ -298,26 +310,35 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - persistent runtime history
 - runtime event logs
 
-### Phase 4
+### Phase 4 — complete
 - durable memory records
 - project/contact dossiers
 - memory links
 - artifact indexing
 - long-lived workflow context
 
-### Phase 5
+### Phase 5 — complete
 - workflow templates
 - scanning workflows
 - ranking workflows
 - report generation workflows
 - compare workflows
 - schedule workflows
+- custom workflow template persistence
+- recurring workflow schedule dispatch
 
-### Phase 6
+### Phase 6 — next, but not ready yet
 - automatic tool synthesis
 - sandbox-first execution
 - human approval gates for risky actions
 - stronger observability and audit logs
+
+### Current Phase 6 blockers
+- execution still happens through local subprocesses in the shared backend container
+- there is no seccomp/AppArmor profile or equivalent per-task sandbox boundary
+- shell execution is still guarded only by a basic allowlist and heuristic policy checks
+- artifact retention is still local-volume based and does not yet have a production lifecycle policy
+- observability is still centered on SQLite runtime events and provenance views rather than a stronger audit pipeline
 
 ## Notes on safety
 
