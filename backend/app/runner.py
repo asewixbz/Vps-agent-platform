@@ -32,6 +32,10 @@ def _prepare_workdir(settings: Settings, task_id: str) -> Path:
     return task_dir
 
 
+def _write_json_file(path: Path, payload: dict[str, Any]) -> None:
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
 def _load_python_artifact_manifest(workdir: Path) -> dict[str, Any]:
     manifest_path = workdir / "artifacts.json"
     if not manifest_path.exists():
@@ -43,6 +47,33 @@ def _load_python_artifact_manifest(workdir: Path) -> dict[str, Any]:
         return {}
 
     return raw if isinstance(raw, dict) else {}
+
+
+def _materialize_schedule_artifacts(workdir: Path) -> dict[str, Any]:
+    schedule_json_path = workdir / "schedule.json"
+    schedule_md_path = workdir / "schedule.md"
+    if not schedule_json_path.exists() and not schedule_md_path.exists():
+        return {}
+
+    manifest_path = workdir / "schedule_manifest.json"
+    if not manifest_path.exists():
+        manifest_payload = {
+            "artifact_paths": [str(path) for path in (schedule_json_path, schedule_md_path) if path.exists()],
+            "template_kind": "schedule",
+            "workdir": str(workdir),
+        }
+        _write_json_file(manifest_path, manifest_payload)
+
+    artifacts_path = workdir / "artifacts.json"
+    if not artifacts_path.exists():
+        _write_json_file(artifacts_path, {"schedule_manifest_path": str(manifest_path)})
+
+    materialized: dict[str, Any] = {"schedule_manifest_path": str(manifest_path)}
+    if schedule_json_path.exists():
+        materialized["schedule_json_path"] = str(schedule_json_path)
+    if schedule_md_path.exists():
+        materialized["schedule_md_path"] = str(schedule_md_path)
+    return materialized
 
 
 def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_seconds: int | None = None) -> RunResult:
@@ -61,6 +92,7 @@ def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_
             timeout=timeout,
         )
         duration_ms = int((time.monotonic() - started) * 1000)
+        artifacts.update(_materialize_schedule_artifacts(workdir))
         artifacts.update(_load_python_artifact_manifest(workdir))
         return RunResult(
             ok=proc.returncode == 0,
@@ -73,6 +105,7 @@ def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_
         )
     except subprocess.TimeoutExpired as exc:
         duration_ms = int((time.monotonic() - started) * 1000)
+        artifacts.update(_materialize_schedule_artifacts(workdir))
         artifacts.update(_load_python_artifact_manifest(workdir))
         return RunResult(
             ok=False,
