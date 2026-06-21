@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.settings import Settings
 from app.store import init_db, seed_builtin_tools
-from app.workflow_schedule_registry import upsert_custom_workflow_template
+from app.workflow_template_registry import upsert_custom_workflow_template
 from app.workflow_schedules import dispatch_due_workflow_schedules, register_workflow_schedule
 
 
