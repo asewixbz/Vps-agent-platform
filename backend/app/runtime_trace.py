@@ -83,6 +83,8 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
     )
 
     steps_payload = runtime_run.get("steps") if isinstance(runtime_run.get("steps"), list) else []
+    if step_index is not None:
+        steps_payload = [step for step in steps_payload if isinstance(step, dict) and int(step.get("index") or 0) == step_index]
     steps: list[dict[str, Any]] = []
     artifact_map: dict[str, dict[str, Any]] = {}
     task_ids: list[str] = []
