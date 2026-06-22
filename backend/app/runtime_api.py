@@ -6,6 +6,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from .artifact_lifecycle import cleanup_artifact_roots
 from .agent_runtime import run_agent_runtime, runtime_execution_to_dict
 from .planner import build_execution_plan
 from .runtime_events import group_runtime_events, normalize_runtime_events, runtime_events_for_step
@@ -87,3 +88,8 @@ def agent_run_trace(runtime_run_id: str, step_index: int | None = None, limit: i
     if trace is None:
         raise HTTPException(status_code=404, detail="runtime run not found")
     return trace
+
+
+@router.post("/artifacts/cleanup")
+def cleanup_artifacts(dry_run: bool = False, compress_logs: bool = False) -> dict[str, object]:
+    return cleanup_artifact_roots(settings, dry_run=dry_run, compress_logs=compress_logs)
