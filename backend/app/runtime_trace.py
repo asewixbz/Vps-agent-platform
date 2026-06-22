@@ -78,7 +78,7 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
     provenance = build_runtime_run_provenance(settings, runtime_run_id=runtime_run_id, limit=limit, depth=depth)
     runtime_snapshot = provenance.get("memory_snapshot") if isinstance(provenance, dict) else None
     trace_context = build_trace_context(
-        correlation_id=str((runtime_run.get("context") or {}).get("correlation_id") or runtime_run.get("correlation_id") or ""),
+        correlation_id=str((runtime_run.get("context") or {}).get("correlation_id") or runtime_run.get("correlation_id") or runtime_run_id),
         runtime_run_id=runtime_run_id,
     )
 
