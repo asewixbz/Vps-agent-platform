@@ -48,7 +48,7 @@ The project should be treated as an execution platform first, and a UI product s
 - sectioned provenance contract tests
 - Python runner support for optional `artifacts.json` manifests so workflow templates can publish extra artifact paths
 - Python runner materialization of schedule artifacts so schedule-style workflows can surface `schedule_manifest.json` automatically
-- Phase 5 workflow templates, including built-in scan/rank/report/compare/schedule templates, persisted custom templates, and recurring schedule dispatch through the worker loop
+- Phase 5 workflow templates, including built-in scan/rank/report/compare/schedule templates, persisted custom templates, recurring schedule dispatch, and one-shot schedule completion through the worker loop
 
 ### Phase status
 
