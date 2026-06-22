@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from subprocess import CompletedProcess
 from tempfile import TemporaryDirectory
 from unittest import TestCase
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.runner import run_python_script
+from app.runner import run_python_script, run_shell_command
 from app.settings import Settings
 
 
@@ -76,3 +78,73 @@ class RunnerArtifactManifestTests(TestCase):
             self.assertIn(str(workdir / "report.json"), result.artifacts["artifact_paths"])
             self.assertIn(str(workdir / "report.md"), result.artifacts["artifact_paths"])
             self.assertTrue(artifacts_path.exists())
+
+    @patch("app.runner.subprocess.run")
+    def test_python_runner_uses_isolated_interpreter_and_task_workdir(self, run_mock) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+                task_sandbox_mode="rlimit",
+            )
+            run_mock.return_value = CompletedProcess(
+                args=[sys.executable, "-I", "-s", "-B", "main.py"],
+                returncode=0,
+                stdout="done\n",
+                stderr="",
+            )
+
+            result = run_python_script(
+                settings,
+                task_id="task-789",
+                script='print("done")\n',
+                timeout_seconds=5,
+            )
+
+            call = run_mock.call_args
+            self.assertIsNotNone(call)
+            self.assertEqual(call.args[0][0], sys.executable)
+            self.assertIn("-I", call.args[0])
+            self.assertIn("-s", call.args[0])
+            self.assertIn("-B", call.args[0])
+            self.assertEqual(call.kwargs["cwd"], str(Path(tmpdir) / "work" / "task-789"))
+            self.assertEqual(call.kwargs["env"]["HOME"], str(Path(tmpdir) / "work" / "task-789"))
+            self.assertEqual(call.kwargs["env"]["TMPDIR"], str(Path(tmpdir) / "work" / "task-789" / "tmp"))
+            self.assertIsNotNone(call.kwargs["preexec_fn"])
+            self.assertTrue(result.ok)
+            self.assertEqual(result.artifacts["sandbox_backend"], "rlimit")
+            self.assertEqual(result.artifacts["sandbox_file_policy"], "cwd-and-rlimit")
+
+    @patch("app.runner.subprocess.run")
+    def test_shell_runner_executes_parsed_command_without_bash(self, run_mock) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+                task_sandbox_mode="rlimit",
+            )
+            run_mock.return_value = CompletedProcess(
+                args=["echo", "hello world"],
+                returncode=0,
+                stdout="hello world\n",
+                stderr="",
+            )
+
+            result = run_shell_command(
+                settings,
+                task_id="task-999",
+                command='echo "hello world"',
+                timeout_seconds=5,
+            )
+
+            call = run_mock.call_args
+            self.assertIsNotNone(call)
+            self.assertEqual(call.args[0], ["echo", "hello world"])
+            self.assertNotEqual(call.args[0][0], "bash")
+            self.assertEqual(call.kwargs["cwd"], str(Path(tmpdir) / "work" / "task-999"))
+            self.assertEqual(call.kwargs["env"]["HOME"], str(Path(tmpdir) / "work" / "task-999"))
+            self.assertEqual(call.kwargs["env"]["TMPDIR"], str(Path(tmpdir) / "work" / "task-999" / "tmp"))
+            self.assertIsNotNone(call.kwargs["preexec_fn"])
+            self.assertTrue(result.ok)
+            self.assertEqual(result.artifacts["sandbox_backend"], "rlimit")
+            self.assertEqual(result.artifacts["command_argv"], ["echo", "hello world"])
