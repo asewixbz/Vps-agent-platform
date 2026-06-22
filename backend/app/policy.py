@@ -48,7 +48,10 @@ def evaluate(tool: dict[str, Any], payload: dict[str, Any], settings: Settings, 
         for snippet in DANGEROUS_SNIPPETS:
             if snippet in lowered:
                 return PolicyDecision(False, False, f"blocked shell snippet: {snippet}")
-        first_token = shlex.split(command)[0]
+        try:
+            first_token = shlex.split(command)[0]
+        except ValueError:
+            return PolicyDecision(False, False, "shell command could not be parsed safely")
         if first_token not in settings.allowed_shell_command_list:
             return PolicyDecision(
                 False,
