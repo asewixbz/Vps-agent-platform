@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
+from .artifact_lifecycle import cleanup_artifact_roots
 from .executor import execute_task
 from .job_queue import get_queue
 from .settings import get_settings
@@ -22,6 +23,21 @@ def _dispatch_due_workflow_schedules_if_needed(settings, *, last_dispatch_at: da
     return now
 
 
+def _cleanup_artifacts_if_needed(settings, *, last_cleanup_at: datetime | None) -> datetime:
+    now = datetime.now(timezone.utc)
+    if last_cleanup_at is not None:
+        elapsed_seconds = (now - last_cleanup_at).total_seconds()
+        if elapsed_seconds < max(30, settings.worker_poll_seconds * 6):
+            return last_cleanup_at
+
+    summary = cleanup_artifact_roots(settings, now=now, compress_logs=False)
+    if summary["deleted"] or summary["empty_dirs_removed"]:
+        print(
+            f"[worker] artifact cleanup deleted={summary['deleted']} empty_dirs_removed={summary['empty_dirs_removed']} skipped={summary['skipped']}"
+        )
+    return now
+
+
 def main() -> None:
     settings = get_settings()
     init_db(settings)
@@ -30,11 +46,13 @@ def main() -> None:
 
     print(f"[worker] started queue={settings.task_queue_name} redis={settings.redis_url}")
     last_schedule_dispatch_at: datetime | None = None
+    last_artifact_cleanup_at: datetime | None = None
     while True:
         last_schedule_dispatch_at = _dispatch_due_workflow_schedules_if_needed(
             settings,
             last_dispatch_at=last_schedule_dispatch_at,
         )
+        last_artifact_cleanup_at = _cleanup_artifacts_if_needed(settings, last_cleanup_at=last_artifact_cleanup_at)
 
         task_id = queue.dequeue()
         if task_id is None:
