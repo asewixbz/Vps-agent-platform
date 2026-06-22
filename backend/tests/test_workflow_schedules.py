@@ -133,3 +133,44 @@ class WorkflowScheduleTests(TestCase):
             self.assertEqual(dispatched[0]["execution"]["status"], "completed")
             self.assertEqual(dispatched[0]["schedule"]["last_run_status"], "completed")
             self.assertEqual(schedule["target_workflow_name"], "custom_report_workflow")
+
+    def test_register_and_dispatch_one_shot_workflow_schedule_completes(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                db_path=str(Path(tmpdir) / "app.db"),
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+            )
+            init_db(settings)
+            seed_builtin_tools(settings)
+
+            schedule = register_workflow_schedule(
+                settings,
+                source_runtime_run_id="schedule-run-3",
+                source_template_name="schedule_workflow",
+                source_goal="Plan a one-shot report",
+                workflow_inputs={
+                    "cadence": "once",
+                    "timezone": "UTC",
+                    "target_workflow": "report_workflow",
+                    "target_goal": "One-shot report",
+                    "target_inputs": {
+                        "report_title": "One-shot report",
+                        "audience": "ops",
+                    },
+                },
+            )
+
+            self.assertEqual(schedule["status"], "active")
+            self.assertIsNotNone(schedule["next_run_at"])
+
+            dispatched = dispatch_due_workflow_schedules(
+                settings,
+                now=datetime.now(timezone.utc) + timedelta(days=1),
+            )
+
+            self.assertEqual(len(dispatched), 1)
+            self.assertEqual(dispatched[0]["execution"]["status"], "completed")
+            self.assertEqual(dispatched[0]["schedule"]["status"], "completed")
+            self.assertIsNone(dispatched[0]["schedule"]["next_run_at"])
+            self.assertEqual(dispatched[0]["schedule"]["last_run_status"], "completed")
