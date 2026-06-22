@@ -282,7 +282,7 @@ def cleanup_artifact_roots(settings: Settings, *, now: datetime | None = None, d
     for root in roots:
         if not root.exists():
             continue
-        for entry in root.iterdir():
+        for entry in list(root.iterdir()):
             if not entry.is_dir():
                 continue
             scanned += 1
