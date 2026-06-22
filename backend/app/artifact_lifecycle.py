@@ -9,7 +9,6 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from .observability import build_trace_context
 from .settings import Settings
 
 ARTIFACT_RETENTION_POLICIES: dict[str, timedelta | None] = {
@@ -53,20 +52,6 @@ class CleanupSummary:
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
-
-
-def _load_json(raw: Any, default: Any) -> Any:
-    if raw is None or raw == "":
-        return default
-    if isinstance(raw, (dict, list)):
-        return raw
-    if isinstance(raw, str):
-        try:
-            parsed = json.loads(raw)
-        except json.JSONDecodeError:
-            return default
-        return parsed if isinstance(parsed, (dict, list)) else default
-    return default
 
 
 def classify_retention_class(artifact_type: str | None, artifact_ref: str | None = None) -> str:
@@ -317,7 +302,7 @@ def cleanup_artifact_roots(settings: Settings, *, now: datetime | None = None, d
                 if current < deadline:
                     kept += 1
                     continue
-            elif any(child.is_file() for child in entry.iterdir()):
+            elif any(True for _ in entry.iterdir()):
                 kept += 1
                 continue
 
