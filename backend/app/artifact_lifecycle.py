@@ -3,6 +3,7 @@ from __future__ import annotations
 import gzip
 import json
 import shutil
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -77,7 +78,8 @@ def classify_retention_class(artifact_type: str | None, artifact_ref: str | None
     if normalized_type in {"report", "ranking", "scan", "compare", "schedule"}:
         return "run-scoped"
     if normalized_type in _DEFAULT_RETENTION_BY_TYPE:
-        return _DEFAULT_RETENTION_BY_TYPE[normalized_type]
+        default_retention = _DEFAULT_RETENTION_BY_TYPE[normalized_type]
+        return default_retention or "run-scoped"
     ref = str(artifact_ref or "").lower()
     if any(ref.endswith(suffix) for suffix in (".log", ".txt")):
         return "transient"
@@ -141,7 +143,7 @@ def build_artifact_manifest(
         "schema_version": 1,
         "scope_type": scope_type,
         "scope_id": scope_id,
-        "correlation_id": correlation_id or str(build_trace_context()["correlation_id"]),
+        "correlation_id": correlation_id or str(uuid.uuid4()),
         "runtime_run_id": runtime_run_id,
         "task_id": task_id,
         "source": source or "artifact_lifecycle",
