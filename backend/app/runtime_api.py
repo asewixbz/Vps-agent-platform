@@ -46,7 +46,8 @@ def agent_run(request: AgentRunRequest) -> dict[str, object]:
     )
     execution_context = dict(request.context)
     execution_context.setdefault("correlation_id", trace_context["correlation_id"])
-    execution_context.setdefault("runtime_run_id", request.runtime_run_id or trace_context.get("runtime_run_id"))
+    if trace_context.get("runtime_run_id") is not None:
+        execution_context.setdefault("runtime_run_id", trace_context["runtime_run_id"])
     execution = run_agent_runtime(
         settings,
         goal=request.goal,
