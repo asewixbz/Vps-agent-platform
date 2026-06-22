@@ -12,6 +12,7 @@
 - workflow templates are in place
 - recurring workflow schedule dispatch is working
 - runtime history, checkpoints, provenance, and durable memory are already wired in
+- the repo currently has two open PRs for small follow-up work
 - the shell policy branch rejects malformed commands safely and is covered by a regression test
 - the repo currently has one open PR for small follow-up work
 - the repo currently has two open draft PRs for small follow-up work
@@ -26,8 +27,8 @@
 
 ## Open PRs noted in this snapshot
 
-- #12 docs: note one-shot workflow schedule completion
 - #13 harden shell policy parsing for malformed commands
+- #15 docs: sync Phase 6 state with current open PRs
 
 ## Recommended next step
 
