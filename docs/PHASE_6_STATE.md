@@ -5,6 +5,7 @@
 - Last reviewed: 2026-06-22
 - Current phase: Phase 5 is complete; Phase 6 is next but not ready yet
 - Current focus: shell policy hardening branch is ready for review, then sandbox-boundary prototyping
+- Current focus: Phase 6 runtime hardening in small, reviewable steps
 
 ## What is already true
 
@@ -13,18 +14,22 @@
 - runtime history, checkpoints, provenance, and durable memory are already wired in
 - the shell policy branch rejects malformed commands safely and is covered by a regression test
 - the repo currently has one open PR for small follow-up work
+- the repo currently has two open draft PRs for small follow-up work
 
 ## Current blockers
 
 - tasks still execute through local subprocesses in the shared backend container
 - there is no per-task sandbox boundary such as seccomp/AppArmor
+- shell parsing can still fail on malformed quoted commands unless the policy layer handles them defensively
 - artifact retention is still local-volume based
 - observability is still mostly SQLite runtime events and provenance views
 
 ## Open PRs noted in this snapshot
 
+- #12 docs: note one-shot workflow schedule completion
 - #13 harden shell policy parsing for malformed commands
 
 ## Recommended next step
 
 Review and land the shell policy hardening work, then define the smallest sandbox-boundary prototype that can be tested in isolation.
+Review and land the shell policy hardening work, then continue with sandbox boundary and audit/logging hardening.
