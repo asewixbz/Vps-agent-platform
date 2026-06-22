@@ -60,7 +60,7 @@ def _record_row(record: dict[str, Any]) -> str:
     section = record.get("section")
     section_text = f" section={section}" if section else ""
     return (
-        f"{record.get('id', ''):<36} {record.get('kind', ''):<16} {scope:<24} depth={depth:<2} "
+        f"{record.get('id', ''):<36} {str(record.get('kind') or ''):<16} {scope:<24} depth={depth:<2} "
         f"{_truncate(str(record.get('title') or ''), 40)}{section_text}"
     )
 
@@ -71,25 +71,27 @@ def _event_row(event: dict[str, Any]) -> str:
     reason_code = event.get("reason_code") or "unknown_error"
     trace = event.get("trace") or {}
     correlation_id = trace.get("correlation_id") or event.get("correlation_id") or ""
+    event_name = str(event.get("event_name") or event.get("event_type") or "")
     return (
-        f"{event.get('id', ''):<6} {event.get('event_name', event.get('event_type', '')):<10} {step_label:<10} "
+        f"{event.get('id', ''):<6} {event_name:<10} {step_label:<10} "
         f"reason={reason_code:<20} correlation={_truncate(str(correlation_id), 24)} {_truncate(str(event.get('message') or ''), 48)}"
     )
 
 
 def _artifact_row(artifact: dict[str, Any]) -> str:
     return (
-        f"{artifact.get('artifact_type', ''):<20} "
+        f"{str(artifact.get('artifact_type') or ''):<20} "
         f"{_truncate(str(artifact.get('artifact_ref') or ''), 40):<40} "
         f"{artifact.get('label') or ''} retention={artifact.get('retention_class') or 'run-scoped'}"
     )
 
 
 def _step_row(step: dict[str, Any]) -> str:
-    return (
-        f"[{step.get('index')}] {step.get('status'):<14} {_truncate(str(step.get('title') or ''), 40)}"
-        f" tool={step.get('tool_name') or '-'} task={step.get('task_id') or '-'}"
-    )
+    status = str(step.get("status") or "")
+    title = _truncate(str(step.get("title") or ""), 40)
+    tool_name = str(step.get("tool_name") or "-")
+    task_id = str(step.get("task_id") or "-")
+    return f"[{step.get('index')}] {status:<14} {title} tool={tool_name} task={task_id}"
 
 
 def print_json(data: Any) -> None:
