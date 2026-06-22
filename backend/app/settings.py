@@ -25,6 +25,12 @@ class Settings(BaseSettings):
     model_default_alias: str = "general"
     model_request_timeout_seconds: int = 120
     model_adapter_options_json: str = "{}"
+    task_sandbox_mode: str = "auto"
+    task_sandbox_allow_network: bool = False
+    task_sandbox_memory_mb: int = 256
+    task_sandbox_max_processes: int = 8
+    task_sandbox_max_open_files: int = 64
+    task_sandbox_max_file_size_mb: int = 16
 
     @property
     def allowed_shell_command_list(self) -> list[str]:
