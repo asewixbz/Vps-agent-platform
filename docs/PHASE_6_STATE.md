@@ -11,7 +11,7 @@
 - workflow templates are in place
 - recurring workflow schedule dispatch is working
 - runtime history, checkpoints, provenance, and durable memory are already wired in
-- the repo currently has two open draft PRs for small follow-up work
+- the repo currently has one open PR for small follow-up work
 
 ## Current blockers
 
@@ -23,7 +23,6 @@
 
 ## Open PRs noted in this snapshot
 
-- #12 docs: note one-shot workflow schedule completion
 - #13 harden shell policy parsing for malformed commands
 
 ## Recommended next step
