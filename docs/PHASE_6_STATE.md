@@ -4,7 +4,6 @@
 
 - Last reviewed: 2026-06-22
 - Current phase: Phase 5 is complete; Phase 6 is next but not ready yet
-- Current focus: shell policy hardening branch is ready for review, then sandbox-boundary prototyping
 - Current focus: Phase 6 runtime hardening in small, reviewable steps
 
 ## What is already true
@@ -12,10 +11,9 @@
 - workflow templates are in place
 - recurring workflow schedule dispatch is working
 - runtime history, checkpoints, provenance, and durable memory are already wired in
-- the repo currently has two open PRs for small follow-up work
-- the shell policy branch rejects malformed commands safely and is covered by a regression test
-- the repo currently has one open PR for small follow-up work
-- the repo currently has two open draft PRs for small follow-up work
+- shell policy parsing rejects malformed commands safely and is covered by a regression test
+- the docs sync and shell hardening PRs (#15 and #13) are merged
+- the current docs snapshot should match the codebase
 
 ## Current blockers
 
@@ -27,10 +25,8 @@
 
 ## Open PRs noted in this snapshot
 
-- #13 harden shell policy parsing for malformed commands
-- #15 docs: sync Phase 6 state with current open PRs
+- none
 
 ## Recommended next step
 
-Review and land the shell policy hardening work, then define the smallest sandbox-boundary prototype that can be tested in isolation.
-Review and land the shell policy hardening work, then continue with sandbox boundary and audit/logging hardening.
+Define the smallest sandbox-boundary prototype that can be tested in isolation.
