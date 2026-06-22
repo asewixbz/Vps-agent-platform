@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import shlex
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Sequence
 
 from .settings import Settings
 
@@ -23,12 +23,58 @@ DANGEROUS_SNIPPETS = (
     "scp ",
 )
 
+SHELL_CONTROL_SNIPPETS = (
+    "&&",
+    "||",
+    ";",
+    "|",
+    "`",
+    "$(",
+    ">",
+    "<",
+)
+
 
 @dataclass
 class PolicyDecision:
     allowed: bool
     requires_approval: bool
     reason: str
+
+
+class ShellPolicyError(ValueError):
+    pass
+
+
+def parse_shell_command(command: str, allowed_commands: Sequence[str]) -> list[str]:
+    normalized = (command or "").strip()
+    if not normalized:
+        raise ShellPolicyError("shell payload is missing the command field")
+
+    lowered = normalized.lower()
+    for snippet in DANGEROUS_SNIPPETS:
+        if snippet in lowered:
+            raise ShellPolicyError(f"blocked shell snippet: {snippet}")
+
+    for operator in SHELL_CONTROL_SNIPPETS:
+        if operator in normalized:
+            raise ShellPolicyError(f"blocked shell operator: {operator}")
+
+    if "\n" in normalized or "\r" in normalized:
+        raise ShellPolicyError("blocked shell operator: multiline input")
+
+    try:
+        argv = shlex.split(normalized)
+    except ValueError as exc:
+        raise ShellPolicyError("shell command could not be parsed safely") from exc
+
+    if not argv:
+        raise ShellPolicyError("shell payload is missing the command field")
+
+    if argv[0] not in allowed_commands:
+        raise ShellPolicyError(f'shell command "{argv[0]}" is not in the allowlist')
+
+    return argv
 
 
 def evaluate(tool: dict[str, Any], payload: dict[str, Any], settings: Settings, *, approved: bool = False) -> PolicyDecision:
@@ -41,23 +87,11 @@ def evaluate(tool: dict[str, Any], payload: dict[str, Any], settings: Settings, 
 
     kind = tool["kind"]
     if kind == "shell":
-        command = (payload.get("command") or "").strip()
-        if not command:
-            return PolicyDecision(False, False, "shell payload is missing the command field")
-        lowered = command.lower()
-        for snippet in DANGEROUS_SNIPPETS:
-            if snippet in lowered:
-                return PolicyDecision(False, False, f"blocked shell snippet: {snippet}")
+        command = payload.get("command") or ""
         try:
-            first_token = shlex.split(command)[0]
-        except ValueError:
-            return PolicyDecision(False, False, "shell command could not be parsed safely")
-        if first_token not in settings.allowed_shell_command_list:
-            return PolicyDecision(
-                False,
-                False,
-                f'shell command "{first_token}" is not in the allowlist',
-            )
+            parse_shell_command(command, settings.allowed_shell_command_list)
+        except ShellPolicyError as exc:
+            return PolicyDecision(False, False, str(exc))
 
     if kind == "browser":
         if not settings.browser_runner_enabled:

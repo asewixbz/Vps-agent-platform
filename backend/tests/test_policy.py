@@ -30,3 +30,22 @@ class PolicyTests(TestCase):
             self.assertFalse(decision.allowed)
             self.assertFalse(decision.requires_approval)
             self.assertEqual(decision.reason, "shell command could not be parsed safely")
+
+    def test_shell_policy_blocks_control_operators_before_runner(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                db_path=str(Path(tmpdir) / "app.db"),
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+                require_approval_for_draft=False,
+            )
+
+            decision = evaluate(
+                {"name": "local_shell", "kind": "shell", "status": "trusted"},
+                {"command": "echo hello && whoami"},
+                settings,
+            )
+
+            self.assertFalse(decision.allowed)
+            self.assertFalse(decision.requires_approval)
+            self.assertEqual(decision.reason, "blocked shell operator: &&")

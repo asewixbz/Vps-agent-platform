@@ -10,6 +10,8 @@ from typing import Any
 
 from .model_runtime import chat_model
 from .model_adapter import ModelAdapterError
+from .policy import ShellPolicyError, parse_shell_command
+from .sandbox import SubprocessSandbox, build_subprocess_sandbox
 from .settings import Settings
 
 
@@ -29,6 +31,16 @@ def _prepare_workdir(settings: Settings, task_id: str) -> Path:
     work_root.mkdir(parents=True, exist_ok=True)
     task_dir = work_root / task_id
     task_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        task_dir.chmod(0o700)
+    except OSError:
+        pass
+    tmp_dir = task_dir / "tmp"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        tmp_dir.chmod(0o700)
+    except OSError:
+        pass
     return task_dir
 
 
@@ -105,36 +117,88 @@ def _materialize_workflow_artifacts(workdir: Path) -> dict[str, Any]:
     return materialized
 
 
+def _run_subprocess(
+    *,
+    settings: Settings,
+    workdir: Path,
+    argv: list[str],
+    timeout_seconds: int | None,
+) -> tuple[subprocess.CompletedProcess[str], SubprocessSandbox]:
+    sandbox = build_subprocess_sandbox(
+        settings,
+        workdir=workdir,
+        argv=argv,
+        timeout_seconds=timeout_seconds,
+    )
+    timeout = timeout_seconds or settings.default_timeout_seconds
+    completed = subprocess.run(
+        sandbox.argv,
+        cwd=sandbox.cwd,
+        env=sandbox.env,
+        preexec_fn=sandbox.preexec_fn,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        start_new_session=True,
+    )
+    return completed, sandbox
+
+
+def _sandbox_artifacts(workdir: Path, sandbox: SubprocessSandbox, *, command_argv: list[str] | None = None) -> dict[str, Any]:
+    artifacts: dict[str, Any] = {
+        "workdir": str(workdir),
+        "sandbox_backend": sandbox.backend,
+        "sandbox_cwd": sandbox.cwd,
+        "sandbox_file_policy": sandbox.file_policy,
+        "sandbox_network_policy": sandbox.network_policy,
+    }
+    if command_argv is not None:
+        artifacts["command_argv"] = command_argv
+    return artifacts
+
+
+def _prepare_python_argv(script_path: Path) -> list[str]:
+    return [sys.executable, "-I", "-s", "-B", script_path.name]
+
+
+def _prepare_shell_argv(command_argv: list[str]) -> list[str]:
+    if command_argv and Path(command_argv[0]).name.startswith("python") and "-I" not in command_argv[1:]:
+        return [command_argv[0], "-I", "-s", "-B", *command_argv[1:]]
+    return command_argv
+
+
 def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_seconds: int | None = None) -> RunResult:
     workdir = _prepare_workdir(settings, task_id)
     script_path = workdir / "main.py"
     script_path.write_text(script, encoding="utf-8")
     started = time.monotonic()
     timeout = timeout_seconds or settings.default_timeout_seconds
-    artifacts: dict[str, Any] = {"workdir": str(workdir), "script_path": str(script_path)}
     try:
-        proc = subprocess.run(
-            [sys.executable, str(script_path)],
-            cwd=str(workdir),
-            capture_output=True,
-            text=True,
-            timeout=timeout,
+        completed, sandbox = _run_subprocess(
+            settings=settings,
+            workdir=workdir,
+            argv=_prepare_python_argv(script_path),
+            timeout_seconds=timeout,
         )
         duration_ms = int((time.monotonic() - started) * 1000)
+        artifacts = _sandbox_artifacts(workdir, sandbox, command_argv=[sys.executable, "-I", "-s", "-B", "main.py"])
+        artifacts.update({"script_path": str(script_path)})
         artifacts.update(_materialize_schedule_artifacts(workdir))
         artifacts.update(_materialize_workflow_artifacts(workdir))
         artifacts.update(_load_python_artifact_manifest(workdir))
         return RunResult(
-            ok=proc.returncode == 0,
-            stdout=proc.stdout,
-            stderr=proc.stderr,
-            exit_code=proc.returncode,
+            ok=completed.returncode == 0,
+            stdout=completed.stdout,
+            stderr=completed.stderr,
+            exit_code=completed.returncode,
             timed_out=False,
             duration_ms=duration_ms,
             artifacts=artifacts,
         )
     except subprocess.TimeoutExpired as exc:
         duration_ms = int((time.monotonic() - started) * 1000)
+        artifacts = {"script_path": str(script_path)}
+        artifacts.update({"workdir": str(workdir)})
         artifacts.update(_materialize_schedule_artifacts(workdir))
         artifacts.update(_materialize_workflow_artifacts(workdir))
         artifacts.update(_load_python_artifact_manifest(workdir))
@@ -147,6 +211,17 @@ def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_
             duration_ms=duration_ms,
             artifacts=artifacts,
         )
+    except Exception as exc:  # pragma: no cover - defensive safety net
+        duration_ms = int((time.monotonic() - started) * 1000)
+        return RunResult(
+            ok=False,
+            stdout="",
+            stderr=f"sandbox setup failed: {exc}",
+            exit_code=126,
+            timed_out=False,
+            duration_ms=duration_ms,
+            artifacts={"workdir": str(workdir), "script_path": str(script_path)},
+        )
 
 
 def run_shell_command(settings: Settings, *, task_id: str, command: str, timeout_seconds: int | None = None) -> RunResult:
@@ -154,19 +229,31 @@ def run_shell_command(settings: Settings, *, task_id: str, command: str, timeout
     started = time.monotonic()
     timeout = timeout_seconds or settings.default_timeout_seconds
     try:
-        proc = subprocess.run(
-            ["bash", "-lc", command],
-            cwd=str(workdir),
-            capture_output=True,
-            text=True,
-            timeout=timeout,
+        command_argv = parse_shell_command(command, settings.allowed_shell_command_list)
+        command_argv = _prepare_shell_argv(command_argv)
+        completed, sandbox = _run_subprocess(
+            settings=settings,
+            workdir=workdir,
+            argv=command_argv,
+            timeout_seconds=timeout,
         )
         duration_ms = int((time.monotonic() - started) * 1000)
         return RunResult(
-            ok=proc.returncode == 0,
-            stdout=proc.stdout,
-            stderr=proc.stderr,
-            exit_code=proc.returncode,
+            ok=completed.returncode == 0,
+            stdout=completed.stdout,
+            stderr=completed.stderr,
+            exit_code=completed.returncode,
+            timed_out=False,
+            duration_ms=duration_ms,
+            artifacts=_sandbox_artifacts(workdir, sandbox, command_argv=command_argv),
+        )
+    except ShellPolicyError as exc:
+        duration_ms = int((time.monotonic() - started) * 1000)
+        return RunResult(
+            ok=False,
+            stdout="",
+            stderr=str(exc),
+            exit_code=2,
             timed_out=False,
             duration_ms=duration_ms,
             artifacts={"workdir": str(workdir)},
@@ -179,6 +266,17 @@ def run_shell_command(settings: Settings, *, task_id: str, command: str, timeout
             stderr=exc.stderr or f"shell task timed out after {timeout} seconds",
             exit_code=124,
             timed_out=True,
+            duration_ms=duration_ms,
+            artifacts={"workdir": str(workdir)},
+        )
+    except Exception as exc:  # pragma: no cover - defensive safety net
+        duration_ms = int((time.monotonic() - started) * 1000)
+        return RunResult(
+            ok=False,
+            stdout="",
+            stderr=f"sandbox setup failed: {exc}",
+            exit_code=126,
+            timed_out=False,
             duration_ms=duration_ms,
             artifacts={"workdir": str(workdir)},
         )

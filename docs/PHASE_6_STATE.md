@@ -3,23 +3,22 @@
 ## Snapshot
 
 - Last reviewed: 2026-06-22
-- Current phase: Phase 5 is complete; Phase 6 is next but not ready yet
-- Current focus: Phase 6 runtime hardening in small, reviewable steps
+- Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
+- Current focus: runtime boundary hardening with sandboxed task execution and shell policy tightening
 
 ## What is already true
 
 - workflow templates are in place
 - recurring workflow schedule dispatch is working
 - runtime history, checkpoints, provenance, and durable memory are already wired in
-- shell policy parsing rejects malformed commands safely and is covered by a regression test
+- shell policy parsing rejects malformed commands safely and now blocks basic shell control operators before the runner
+- task execution now goes through a sandbox helper with cwd isolation, restricted env, explicit resource limits, and a bubblewrap-backed prototype when available
 - the docs sync and shell hardening PRs (#15 and #13) are merged
 - the current docs snapshot should match the codebase
 
 ## Current blockers
 
-- tasks still execute through local subprocesses in the shared backend container
-- there is no per-task sandbox boundary such as seccomp/AppArmor
-- shell parsing can still fail on malformed quoted commands unless the policy layer handles them defensively
+- tasks still need stronger filesystem confinement guarantees beyond the current best-effort sandbox fallback
 - artifact retention is still local-volume based
 - observability is still mostly SQLite runtime events and provenance views
 
@@ -29,4 +28,4 @@
 
 ## Recommended next step
 
-Define the smallest sandbox-boundary prototype that can be tested in isolation.
+Exercise the sandbox prototype on shell/python tasks and then tighten any remaining boundary gaps that show up in smoke tests.
