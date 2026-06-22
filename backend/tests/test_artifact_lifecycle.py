@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
@@ -87,7 +88,7 @@ class ArtifactLifecycleTests(TestCase):
                 artifact_dir=str(artifact_dir),
             )
 
-            summary = cleanup_artifact_roots(settings, now=Path("2026-01-01").resolve().stat() if False else None)  # type: ignore[arg-type]
+            summary = cleanup_artifact_roots(settings, now=datetime(2026, 1, 1, tzinfo=timezone.utc))
 
             self.assertGreaterEqual(summary["scanned"], 1)
             self.assertEqual(summary["deleted"], 1)
