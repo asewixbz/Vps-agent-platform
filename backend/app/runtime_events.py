@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any
 
-from .observability import build_trace_context, normalize_reason_code, normalize_runtime_event_name
+from .observability import normalize_reason_code, normalize_runtime_event_name
 
 
 def normalize_runtime_event(event: dict[str, Any]) -> dict[str, Any]:
@@ -19,14 +19,25 @@ def normalize_runtime_event(event: dict[str, Any]) -> dict[str, Any]:
 
     trace = payload.get("trace") if isinstance(payload.get("trace"), dict) else {}
     if not trace:
-        trace = build_trace_context(
-            correlation_id=str(payload.get("correlation_id") or normalized.get("correlation_id") or ""),
-            runtime_run_id=str(payload.get("runtime_run_id") or normalized.get("runtime_run_id") or normalized.get("runtime_run_id") or "") or None,
-            task_id=str(payload.get("task_id") or normalized.get("task_id") or "") or None,
-            step_index=normalized.get("step_index") if isinstance(normalized.get("step_index"), int) else payload.get("step_index") if isinstance(payload.get("step_index"), int) else None,
-        )
+        trace = {}
+        correlation_id = str(payload.get("correlation_id") or normalized.get("correlation_id") or "").strip()
+        if correlation_id:
+            trace["correlation_id"] = correlation_id
+        runtime_run_id = str(payload.get("runtime_run_id") or normalized.get("runtime_run_id") or "").strip()
+        if runtime_run_id:
+            trace["runtime_run_id"] = runtime_run_id
+        task_id = str(payload.get("task_id") or normalized.get("task_id") or "").strip()
+        if task_id:
+            trace["task_id"] = task_id
+        step_index = normalized.get("step_index") if isinstance(normalized.get("step_index"), int) else payload.get("step_index") if isinstance(payload.get("step_index"), int) else None
+        if step_index is not None:
+            trace["step_index"] = step_index
+        step_id = str(payload.get("step_id") or normalized.get("step_id") or "").strip()
+        if step_id:
+            trace["step_id"] = step_id
     normalized["trace"] = trace
-    normalized["correlation_id"] = trace.get("correlation_id") or normalized.get("correlation_id")
+    if trace.get("correlation_id") is not None:
+        normalized["correlation_id"] = trace.get("correlation_id")
     if trace.get("runtime_run_id") is not None:
         normalized["runtime_run_id"] = trace.get("runtime_run_id")
     if trace.get("task_id") is not None:
