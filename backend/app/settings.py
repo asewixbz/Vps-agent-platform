@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", env_prefix="APP_", extra="ignore")
 
     app_name: str = "vps-agent-control-plane"
     db_path: str = "/data/app.db"
