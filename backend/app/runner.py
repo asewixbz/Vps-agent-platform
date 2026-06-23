@@ -8,6 +8,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+from .artifact_lifecycle import build_artifact_manifest, normalize_artifact_entry, normalize_artifact_manifest, write_artifact_manifest
 from .model_runtime import chat_model
 from .model_adapter import ModelAdapterError
 from .policy import ShellPolicyError, parse_shell_command
@@ -48,6 +49,90 @@ def _write_json_file(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _artifact_manifest_key(manifest_name: str) -> str:
+    if Path(manifest_name).stem == "artifacts":
+        return "artifact_manifest_path"
+    return f"{Path(manifest_name).stem}_path"
+
+
+def _artifact_type_for_path(path: Path) -> str:
+    suffix = path.suffix.lower()
+    if suffix in {".md", ".markdown"}:
+        return "markdown"
+    if suffix in {".html", ".htm"}:
+        return "html"
+    if suffix in {".txt", ".log"}:
+        return "text"
+    if suffix == ".py":
+        return "script"
+    if suffix == ".json":
+        return "json"
+    return "file"
+
+
+def _discover_artifact_paths(workdir: Path) -> list[Path]:
+    excluded_names = {"artifacts.json", "artifact_manifest.json", "schedule_manifest.json"}
+    discovered: list[Path] = []
+    for path in sorted(workdir.rglob("*")):
+        if not path.is_file():
+            continue
+        try:
+            relative_parts = path.relative_to(workdir).parts
+        except ValueError:
+            continue
+        if any(part == "tmp" for part in relative_parts):
+            continue
+        if path.name in excluded_names:
+            continue
+        discovered.append(path)
+    return discovered
+
+
+def _artifact_entries_from_paths(paths: list[Path]) -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for path in paths:
+        artifact_ref = str(path)
+        if artifact_ref in seen:
+            continue
+        seen.add(artifact_ref)
+        entry = normalize_artifact_entry(
+            {
+                "artifact_type": _artifact_type_for_path(path),
+                "artifact_ref": artifact_ref,
+                "label": path.name,
+            }
+        )
+        if entry is not None:
+            entries.append(entry)
+    return entries
+
+
+def _persist_artifact_manifests(
+    workdir: Path,
+    *,
+    task_id: str,
+    source: str,
+    manifest_names: tuple[str, ...],
+) -> dict[str, Any]:
+    discovered_paths = _discover_artifact_paths(workdir)
+    if not discovered_paths:
+        return {}
+
+    manifest = build_artifact_manifest(
+        scope_type="task",
+        scope_id=task_id,
+        artifacts=_artifact_entries_from_paths(discovered_paths),
+        source=source,
+    )
+    materialized: dict[str, Any] = {}
+    for manifest_name in manifest_names:
+        manifest_path = workdir / manifest_name
+        write_artifact_manifest(manifest_path, manifest)
+        materialized[_artifact_manifest_key(manifest_name)] = str(manifest_path)
+    return materialized
+
+
 def _load_python_artifact_manifest(workdir: Path) -> dict[str, Any]:
     manifest_path = workdir / "artifacts.json"
     if not manifest_path.exists():
@@ -58,37 +143,34 @@ def _load_python_artifact_manifest(workdir: Path) -> dict[str, Any]:
     except (OSError, json.JSONDecodeError):
         return {}
 
-    return raw if isinstance(raw, dict) else {}
+    normalized = normalize_artifact_manifest(raw, source="artifacts.json")
+    return normalized if isinstance(normalized, dict) else {}
 
 
-def _materialize_schedule_artifacts(workdir: Path) -> dict[str, Any]:
+def _materialize_schedule_artifacts(workdir: Path, *, task_id: str) -> dict[str, Any]:
     schedule_json_path = workdir / "schedule.json"
     schedule_md_path = workdir / "schedule.md"
     if not schedule_json_path.exists() and not schedule_md_path.exists():
         return {}
 
-    manifest_path = workdir / "schedule_manifest.json"
-    if not manifest_path.exists():
-        manifest_payload = {
-            "artifact_paths": [str(path) for path in (schedule_json_path, schedule_md_path) if path.exists()],
-            "template_kind": "schedule",
-            "workdir": str(workdir),
-        }
-        _write_json_file(manifest_path, manifest_payload)
-
-    artifacts_path = workdir / "artifacts.json"
-    if not artifacts_path.exists():
-        _write_json_file(artifacts_path, {"schedule_manifest_path": str(manifest_path)})
-
-    materialized: dict[str, Any] = {"schedule_manifest_path": str(manifest_path)}
+    materialized: dict[str, Any] = {}
     if schedule_json_path.exists():
         materialized["schedule_json_path"] = str(schedule_json_path)
     if schedule_md_path.exists():
         materialized["schedule_md_path"] = str(schedule_md_path)
+
+    materialized.update(
+        _persist_artifact_manifests(
+            workdir,
+            task_id=task_id,
+            source="schedule_runner",
+            manifest_names=("artifacts.json", "schedule_manifest.json"),
+        )
+    )
     return materialized
 
 
-def _materialize_workflow_artifacts(workdir: Path) -> dict[str, Any]:
+def _materialize_workflow_artifacts(workdir: Path, *, task_id: str) -> dict[str, Any]:
     artifact_candidates = (
         ("report_path", workdir / "report.json"),
         ("report_md_path", workdir / "report.md"),
@@ -108,12 +190,14 @@ def _materialize_workflow_artifacts(workdir: Path) -> dict[str, Any]:
     if not materialized:
         return {}
 
-    manifest_path = workdir / "artifacts.json"
-    if not manifest_path.exists():
-        manifest_payload = dict(materialized)
-        manifest_payload["artifact_paths"] = list(dict.fromkeys(materialized.values()))
-        _write_json_file(manifest_path, manifest_payload)
-
+    materialized.update(
+        _persist_artifact_manifests(
+            workdir,
+            task_id=task_id,
+            source="workflow_runner",
+            manifest_names=("artifacts.json",),
+        )
+    )
     return materialized
 
 
@@ -183,8 +267,8 @@ def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_
         duration_ms = int((time.monotonic() - started) * 1000)
         artifacts = _sandbox_artifacts(workdir, sandbox, command_argv=[sys.executable, "-I", "-s", "-B", "main.py"])
         artifacts.update({"script_path": str(script_path)})
-        artifacts.update(_materialize_schedule_artifacts(workdir))
-        artifacts.update(_materialize_workflow_artifacts(workdir))
+        artifacts.update(_materialize_schedule_artifacts(workdir, task_id=task_id))
+        artifacts.update(_materialize_workflow_artifacts(workdir, task_id=task_id))
         artifacts.update(_load_python_artifact_manifest(workdir))
         return RunResult(
             ok=completed.returncode == 0,
@@ -199,8 +283,8 @@ def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_
         duration_ms = int((time.monotonic() - started) * 1000)
         artifacts = {"script_path": str(script_path)}
         artifacts.update({"workdir": str(workdir)})
-        artifacts.update(_materialize_schedule_artifacts(workdir))
-        artifacts.update(_materialize_workflow_artifacts(workdir))
+        artifacts.update(_materialize_schedule_artifacts(workdir, task_id=task_id))
+        artifacts.update(_materialize_workflow_artifacts(workdir, task_id=task_id))
         artifacts.update(_load_python_artifact_manifest(workdir))
         return RunResult(
             ok=False,
@@ -238,6 +322,8 @@ def run_shell_command(settings: Settings, *, task_id: str, command: str, timeout
             timeout_seconds=timeout,
         )
         duration_ms = int((time.monotonic() - started) * 1000)
+        artifacts = _sandbox_artifacts(workdir, sandbox, command_argv=command_argv)
+        artifacts.update(_persist_artifact_manifests(workdir, task_id=task_id, source="shell_runner", manifest_names=("artifacts.json",)))
         return RunResult(
             ok=completed.returncode == 0,
             stdout=completed.stdout,
@@ -245,7 +331,7 @@ def run_shell_command(settings: Settings, *, task_id: str, command: str, timeout
             exit_code=completed.returncode,
             timed_out=False,
             duration_ms=duration_ms,
-            artifacts=_sandbox_artifacts(workdir, sandbox, command_argv=command_argv),
+            artifacts=artifacts,
         )
     except ShellPolicyError as exc:
         duration_ms = int((time.monotonic() - started) * 1000)
@@ -260,6 +346,8 @@ def run_shell_command(settings: Settings, *, task_id: str, command: str, timeout
         )
     except subprocess.TimeoutExpired as exc:
         duration_ms = int((time.monotonic() - started) * 1000)
+        artifacts = {"workdir": str(workdir)}
+        artifacts.update(_persist_artifact_manifests(workdir, task_id=task_id, source="shell_runner", manifest_names=("artifacts.json",)))
         return RunResult(
             ok=False,
             stdout=exc.stdout or "",
@@ -267,7 +355,7 @@ def run_shell_command(settings: Settings, *, task_id: str, command: str, timeout
             exit_code=124,
             timed_out=True,
             duration_ms=duration_ms,
-            artifacts={"workdir": str(workdir)},
+            artifacts=artifacts,
         )
     except Exception as exc:  # pragma: no cover - defensive safety net
         duration_ms = int((time.monotonic() - started) * 1000)
@@ -392,6 +480,21 @@ def run_browser_task(
             browser.close()
             duration_ms = int((time.monotonic() - started) * 1000)
             summary = body_text[:5000]
+            artifacts = {
+                "workdir": str(workdir),
+                "html_path": str(html_path),
+                "text_path": str(text_path),
+                "title": title,
+                "url": page.url,
+            }
+            artifacts.update(
+                _persist_artifact_manifests(
+                    workdir,
+                    task_id=task_id,
+                    source="browser_runner",
+                    manifest_names=("artifacts.json",),
+                )
+            )
             return RunResult(
                 ok=True,
                 stdout=f"TITLE: {title}\nURL: {page.url}\nBODY:\n{summary}",
@@ -399,16 +502,19 @@ def run_browser_task(
                 exit_code=0,
                 timed_out=False,
                 duration_ms=duration_ms,
-                artifacts={
-                    "workdir": str(workdir),
-                    "html_path": str(html_path),
-                    "text_path": str(text_path),
-                    "title": title,
-                    "url": page.url,
-                },
+                artifacts=artifacts,
             )
     except PlaywrightTimeoutError as exc:
         duration_ms = int((time.monotonic() - started) * 1000)
+        artifacts = {"workdir": str(workdir), "html_path": str(html_path), "text_path": str(text_path)}
+        artifacts.update(
+            _persist_artifact_manifests(
+                workdir,
+                task_id=task_id,
+                source="browser_runner",
+                manifest_names=("artifacts.json",),
+            )
+        )
         return RunResult(
             ok=False,
             stdout="",
@@ -416,7 +522,7 @@ def run_browser_task(
             exit_code=124,
             timed_out=True,
             duration_ms=duration_ms,
-            artifacts={"workdir": str(workdir), "html_path": str(html_path), "text_path": str(text_path)},
+            artifacts=artifacts,
         )
     except Exception as exc:  # pragma: no cover - defensive safety net
         duration_ms = int((time.monotonic() - started) * 1000)
