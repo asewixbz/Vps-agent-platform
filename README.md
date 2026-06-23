@@ -31,15 +31,19 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - conservative execution planner API and CLI
 - conservative multi-step runtime loop API and CLI
 - persistent runtime run history, checkpoint/resume markers, and event logs
+- runtime trace API that stitches runtime events, provenance, memory snapshots, tasks, and artifacts into one inspection view
 - durable memory records with artifact indexing
 - project and contact dossier helpers
 - durable memory links between runtime snapshots, dossiers, and artifact refs
 - memory provenance inspection for durable memory graphs
 - runtime provenance inspection for runtime runs
 - runtime event replay filters by step or grouped view
+- canonical artifact manifests from Python, shell, browser, and workflow runners
+- artifact cleanup helpers for expired workdirs and log/report compaction
 - built-in workflow template set for scan/rank/report/compare/schedule workflows
 - persisted custom workflow templates in SQLite
 - recurring workflow schedule dispatch from the worker loop
+- worker-driven artifact lifecycle cleanup
 
 ## What is not included yet
 
@@ -65,6 +69,7 @@ vps-agent-platform/
     app/
       __main__.py
       agent_runtime.py
+      artifact_lifecycle.py
       browser_worker.py
       cli.py
       dossiers.py
@@ -78,12 +83,15 @@ vps-agent-platform/
       memory_provenance.py
       model_adapter.py
       model_runtime.py
+      observability.py
       planner.py
       policy.py
       provenance_api.py
       runner.py
+      runtime_api.py
       runtime_events.py
       runtime_provenance.py
+      runtime_trace.py
       settings.py
       store.py
       worker.py
@@ -185,7 +193,9 @@ Schedule templates can register recurring schedules when a successful run includ
 - `GET /agent/runs`
 - `GET /agent/runs/{runtime_run_id}`
 - `GET /agent/runs/{runtime_run_id}/events`
+- `GET /agent/runs/{runtime_run_id}/trace`
 - `GET /agent/runs/{runtime_run_id}/provenance`
+- `POST /artifacts/cleanup`
 
 ## Memory endpoints
 
@@ -284,7 +294,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 
 ## Recommended rollout plan
 
-### Phase 1 — complete
+### Phase 1  complete
 - control plane
 - local Python/shell execution
 - tool registry
@@ -294,7 +304,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - model API endpoints
 - first provider adapter
 
-### Phase 2 — complete
+### Phase 2  complete
 - Redis queue
 - worker process
 - browser runner
@@ -302,7 +312,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - execution planning bridge
 - runtime loop scaffold
 
-### Phase 3 — complete
+### Phase 3  complete
 - Postgres
 - stronger policy engine
 - trust scoring
@@ -310,14 +320,14 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - persistent runtime history
 - runtime event logs
 
-### Phase 4 — complete
+### Phase 4  complete
 - durable memory records
 - project/contact dossiers
 - memory links
 - artifact indexing
 - long-lived workflow context
 
-### Phase 5 — complete
+### Phase 5  complete
 - workflow templates
 - scanning workflows
 - ranking workflows
@@ -325,9 +335,9 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - compare workflows
 - schedule workflows
 - custom workflow template persistence
-- recurring workflow schedule dispatch
+- recurring schedule dispatch
 
-### Phase 6 — next, but not ready yet
+### Phase 6  next, but not ready yet
 - automatic tool synthesis
 - sandbox-first execution
 - human approval gates for risky actions
@@ -337,7 +347,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - execution still happens through local subprocesses in the shared backend container
 - there is no seccomp/AppArmor profile or equivalent per-task sandbox boundary
 - shell execution is still guarded only by a basic allowlist and heuristic policy checks
-- artifact retention is still local-volume based and does not yet have a production lifecycle policy
+- artifact retention is still local-volume based, although canonical manifests and cleanup helpers are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger audit pipeline
 
 ## Notes on safety
