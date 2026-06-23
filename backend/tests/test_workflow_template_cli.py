@@ -10,6 +10,14 @@ from app.cli import build_parser
 
 
 class WorkflowTemplateCliTests(TestCase):
+    def test_public_cli_commands_are_registered(self) -> None:
+        parser = build_parser()
+
+        for command in ("health", "queue", "tools", "tasks", "model-health"):
+            parsed = parser.parse_args([command])
+            self.assertEqual(parsed.command, command)
+            self.assertTrue(callable(parsed.func))
+
     def test_workflow_template_save_command_is_registered(self) -> None:
         parser = build_parser()
 
