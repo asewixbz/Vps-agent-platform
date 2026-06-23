@@ -50,6 +50,8 @@ def _write_json_file(path: Path, payload: dict[str, Any]) -> None:
 
 
 def _artifact_manifest_key(manifest_name: str) -> str:
+    if Path(manifest_name).stem == "artifacts":
+        return "artifact_manifest_path"
     return f"{Path(manifest_name).stem}_path"
 
 
