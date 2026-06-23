@@ -4,7 +4,6 @@ from dataclasses import asdict
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
 
 from .model_runtime import chat_model, model_health
 from .settings import get_settings
@@ -13,21 +12,21 @@ router = APIRouter()
 settings = get_settings()
 
 
-class ModelChatRequest(BaseModel):
-    payload: dict[str, Any] = Field(default_factory=dict)
-
-
 @router.get("/model/health")
 def model_health_route() -> dict[str, Any]:
     return model_health(settings)
 
 
 @router.post("/model/chat")
-def model_chat_route(request: ModelChatRequest) -> dict[str, Any]:
+def model_chat_route(request: dict[str, Any]) -> dict[str, Any]:
     if not settings.model_runner_enabled:
         raise HTTPException(status_code=400, detail="model runner is not enabled")
 
-    response = chat_model(settings, request.payload)
+    payload = request.get("payload") if isinstance(request.get("payload"), dict) and set(request.keys()) == {"payload"} else request
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=422, detail="model chat payload must be a JSON object")
+
+    response = chat_model(settings, payload)
     return {
         "text": response.text,
         "structured_data": response.structured_data,
