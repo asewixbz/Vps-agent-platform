@@ -2,15 +2,16 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
+from .memory import init_memory_schema
+from .memory_links import init_memory_links_schema
 from .provenance_api import router as provenance_router
+from .persistence_api import router as persistence_router
 from .runtime_api import router as runtime_router
 from .settings import get_settings
+from .store import init_db, seed_builtin_tools
 from .workflow_schedules import ensure_workflow_schedule_registry, router as workflow_schedules_router
 from .workflow_template_registry import ensure_workflow_template_registry
 from .workflow_templates_api import router as workflow_templates_router
-from .memory import init_memory_schema
-from .memory_links import init_memory_links_schema
-from .store import init_db, seed_builtin_tools
 
 settings = get_settings()
 app = FastAPI(title=settings.app_name)
@@ -28,5 +29,6 @@ def startup() -> None:
 
 app.include_router(runtime_router)
 app.include_router(provenance_router)
+app.include_router(persistence_router)
 app.include_router(workflow_templates_router)
 app.include_router(workflow_schedules_router)

@@ -39,6 +39,8 @@ The project should be treated as an execution platform first, and a UI product s
 - explicit runtime event logs in SQLite
 - runtime event replay filters for step-scoped and grouped inspection
 - runtime trace API that joins runtime events, provenance, memory snapshots, tasks, steps, and artifacts into one recoverable story
+- persistence-layer boundary map exposed at `/persistence/layers`
+- schema/versioning strategy documented for a future SQLite → Postgres migration path
 - durable memory records with artifact indexing
 - runtime run snapshots persisted into durable memory
 - project/contact dossier helpers
@@ -70,6 +72,7 @@ The project should be treated as an execution platform first, and a UI product s
 - execution still relies on local subprocesses inside the shared backend container
 - artifact retention is still local-volume based, but canonical manifests and cleanup jobs are now in place
 - observability exists through runtime events, provenance, and trace navigation, but it is not yet the stronger audit surface planned for Phase 6
+- durable state still lives in SQLite, even though the persistence boundary and candidate Postgres path are now documented
 
 ## Technical direction
 
@@ -90,6 +93,7 @@ The project should evolve in three layers:
    - stores task history
    - stores experiment results and artifacts
    - stores long-lived context for projects, contacts, and recurring workflows
+   - keeps the local vs durable split explicit so backend migration does not require domain rewrites
 
 ## Primary usage model
 
@@ -340,6 +344,7 @@ Acceptance criteria:
 Status:
 
 - not ready yet; the current code still runs tasks through local subprocesses in the shared backend container, without a production sandbox boundary or stronger audit pipeline
+- the Phase 6D persistence hardening path is now defined, but the SQLite → Postgres migration still needs runtime exercise
 
 ## Current code map
 
@@ -348,6 +353,8 @@ Status:
 - `backend/app/runtime_trace.py` — trace assembly that joins runtime events, provenance, tasks, steps, artifacts, and memory snapshots
 - `backend/app/observability.py` — trace context helpers, normalized event names, reason codes, and structured errors
 - `backend/app/artifact_lifecycle.py` — artifact manifest contract, retention classes, and cleanup helpers
+- `backend/app/persistence_layers.py` — local vs durable persistence boundary map and Postgres migration path
+- `backend/app/persistence_api.py` — API route for inspecting the persistence boundary map
 - `backend/app/dossiers.py` — project/contact dossier helpers built on top of durable memory
 - `backend/app/memory.py` — durable memory storage, artifact indexing, and runtime snapshot helpers
 - `backend/app/memory_graph.py` — server-side memory and runtime provenance graph helpers
@@ -376,6 +383,7 @@ Status:
 ## Immediate next work
 
 1. Phase 6 hardening: sandboxing, observability, and safer promotion.
+2. Phase 6D: validate the persistence boundary, then start the SQLite → Postgres adapter work.
 
 ## Working rules for future contributors
 
@@ -384,7 +392,8 @@ Status:
 - Preserve the control plane and approval model; do not bypass them for convenience.
 - Prefer clear, inspectable state over hidden automation.
 - Separate open-ended agent work from fixed workflows.
+- Keep local scratch data local and durable state backend-agnostic.
 
 ## Current project status summary
 
-The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, and the codebase now includes runtime trace navigation plus canonical artifact manifests and cleanup helpers, but it still needs stronger sandbox boundaries and fuller production-grade retention policy before the phase is finished.
+The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, and the codebase now includes runtime trace navigation, canonical artifact manifests and cleanup helpers, plus an explicit persistence boundary map and migration path. The remaining work is to validate the boundary in smoke tests and then move durable state toward a backend that can handle more scale and less contention.
