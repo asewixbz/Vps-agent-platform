@@ -165,6 +165,7 @@ class ApiSurfaceContractTests(TestCase):
                 self.assertEqual(approved["status"], "queued")
                 self.assertTrue(approved["approved"])
                 self.assertEqual(fake_queue.enqueued, [created["id"]])
+                self.assertEqual(queue_info()["size"], 1)
 
                 fetched = get_task_route(created["id"])
                 self.assertEqual(fetched["id"], created["id"])
