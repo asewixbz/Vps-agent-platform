@@ -5,7 +5,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from .agent_runtime import run_agent_runtime, runtime_execution_to_dict
+from .agent_runtime import runtime_execution_to_dict
 from .settings import get_settings
 from .store import get_runtime_run
 from .workflow_schedules import register_workflow_schedule
@@ -18,6 +18,7 @@ from .workflow_templates import (
     resolve_workflow_template,
     workflow_template_to_dict,
 )
+from .runtime_execution import run_inline_runtime
 
 router = APIRouter()
 settings = get_settings()
@@ -209,7 +210,7 @@ def run_workflow_template(template_name: str, request: WorkflowTemplateRunReques
         workflow_inputs=request.inputs,
         context=request.context,
     )
-    execution = run_agent_runtime(
+    execution = run_inline_runtime(
         settings,
         goal=request.goal or template.summary,
         context=workflow_context,
