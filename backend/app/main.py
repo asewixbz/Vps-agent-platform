@@ -7,6 +7,7 @@ from .memory_links import init_memory_links_schema
 from .provenance_api import router as provenance_router
 from .persistence_api import router as persistence_router
 from .runtime_api import router as runtime_router
+from .security_api import router as security_router
 from .settings import get_settings
 from .store import init_db, seed_builtin_tools
 from .workflow_schedules import ensure_workflow_schedule_registry, router as workflow_schedules_router
@@ -30,5 +31,6 @@ def startup() -> None:
 app.include_router(runtime_router)
 app.include_router(provenance_router)
 app.include_router(persistence_router)
+app.include_router(security_router)
 app.include_router(workflow_templates_router)
 app.include_router(workflow_schedules_router)
