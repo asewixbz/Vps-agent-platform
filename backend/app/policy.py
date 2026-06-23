@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import shlex
 from typing import Any, Sequence
 
@@ -42,6 +43,25 @@ class ShellPolicyError(ValueError):
     pass
 
 
+def _slugify(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_") or "shell_error"
+
+
+def _shell_error_reason_code(message: str) -> str:
+    lowered = message.lower()
+    if lowered.startswith("blocked shell snippet:"):
+        return f"deny.shell.{_slugify(message.split(":", 1)[1].strip())}"
+    if lowered.startswith("blocked shell operator:"):
+        return f"deny.shell.operator.{_slugify(message.split(":", 1)[1].strip())}"
+    if "not in the allowlist" in lowered:
+        return "deny.shell.not_allowlisted"
+    if "missing the command field" in lowered:
+        return "deny.shell.missing_command"
+    if "could not be parsed safely" in lowered:
+        return "deny.shell.parse_error"
+    return "deny.shell.parse_error"
+
+
 def parse_shell_command(command: str, allowed_commands: Sequence[str]) -> list[str]:
     normalized = (command or "").strip()
     if not normalized:
@@ -79,12 +99,13 @@ def evaluate(tool: dict[str, Any], payload: dict[str, Any], settings: Settings, 
         try:
             parse_shell_command(command, settings.allowed_shell_command_list)
         except ShellPolicyError as exc:
+            reason = str(exc)
             return PolicyDecision(
                 allowed=False,
                 requires_approval=False,
                 decision="deny",
-                reason=str(exc),
-                reason_code="deny.shell_parse_error",
+                reason=reason,
+                reason_code=_shell_error_reason_code(reason),
                 trust_level=int(tool.get("trust_level") or 0),
                 details={"tool_name": tool.get("name"), "kind": "shell"},
             )
