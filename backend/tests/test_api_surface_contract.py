@@ -18,6 +18,7 @@ from app.workflow_templates_api import compare_workflow_template_runs_route
 
 import app.control_plane_api as control_plane_api
 import app.model_api as model_api
+import app.runtime_api as runtime_api
 import app.workflow_templates_api as workflow_templates_api
 
 
@@ -187,3 +188,42 @@ class ApiSurfaceContractTests(TestCase):
                 self.assertIn("comparison", comparison)
                 self.assertIn("differences", comparison["comparison"])
                 self.assertIn("goal", comparison["comparison"]["differences"])
+
+    def test_agent_run_injects_inline_execution_mode(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = self._settings(tmpdir)
+            init_db(settings)
+            seed_builtin_tools(settings)
+
+            fake_execution = SimpleNamespace(
+                runtime_run_id="runtime-run-1",
+                status="completed",
+                summary="completed",
+                context={"execution_mode": "inline"},
+            )
+
+            with (
+                patch.object(runtime_api, "settings", settings),
+                patch.object(runtime_api, "run_inline_runtime", return_value=fake_execution) as run_inline_runtime_mock,
+                patch.object(
+                    runtime_api,
+                    "runtime_execution_to_dict",
+                    side_effect=lambda execution: {
+                        "runtime_run_id": execution.runtime_run_id,
+                        "status": execution.status,
+                        "context": execution.context,
+                    },
+                ),
+            ):
+                response = runtime_api.agent_run(
+                    runtime_api.AgentRunRequest(
+                        goal="Inspect route execution",
+                        context={},
+                        max_steps=1,
+                    )
+                )
+
+            self.assertEqual(run_inline_runtime_mock.call_count, 1)
+            self.assertEqual(run_inline_runtime_mock.call_args.kwargs["context"]["execution_mode"], "inline")
+            self.assertEqual(response["context"]["execution_mode"], "inline")
+            self.assertEqual(response["runtime_run_id"], "runtime-run-1")
