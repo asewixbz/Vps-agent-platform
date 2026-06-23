@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
+from .control_plane_api import router as control_plane_router
 from .memory import init_memory_schema
 from .memory_links import init_memory_links_schema
-from .provenance_api import router as provenance_router
+from .model_api import router as model_router
 from .persistence_api import router as persistence_router
+from .provenance_api import router as provenance_router
 from .runtime_api import router as runtime_router
 from .security_api import router as security_router
 from .settings import get_settings
@@ -28,6 +30,8 @@ def startup() -> None:
     seed_builtin_tools(settings)
 
 
+app.include_router(control_plane_router)
+app.include_router(model_router)
 app.include_router(runtime_router)
 app.include_router(provenance_router)
 app.include_router(persistence_router)

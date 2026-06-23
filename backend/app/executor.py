@@ -107,6 +107,27 @@ def execute_task(settings: Settings, task_id: str, timeout_seconds: int | None =
                 timeout_seconds=effective_timeout_seconds,
             )
         elif kind == "browser":
+            if not settings.browser_runner_enabled:
+                return update_task(
+                    settings,
+                    task_id=task_id,
+                    status="blocked",
+                    reason="browser runner is not enabled",
+                    finished_at=utc_now(),
+                    result_json={
+                        "ok": False,
+                        "duration_ms": 0,
+                        "artifacts": {},
+                        "policy": {
+                            "decision": "deny",
+                            "allowed": False,
+                            "requires_approval": False,
+                            "reason": "browser runner is not enabled",
+                            "reason_code": "deny.browser_runner_disabled",
+                            "details": {"tool_name": tool.get("name"), "kind": "browser"},
+                        },
+                    },
+                ) or task
             result = run_browser_task(
                 settings,
                 task_id=task_id,

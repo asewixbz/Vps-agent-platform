@@ -12,6 +12,7 @@ from .workflow_schedules import register_workflow_schedule
 from .workflow_template_registry import delete_custom_workflow_template, list_custom_workflow_templates, upsert_custom_workflow_template
 from .workflow_templates import (
     build_workflow_template_context,
+    compare_workflow_template_runs,
     default_workflow_templates,
     normalize_workflow_template,
     resolve_workflow_template,
@@ -109,6 +110,32 @@ def delete_workflow_template(template_name: str) -> dict[str, object]:
     if not deleted:
         raise HTTPException(status_code=404, detail="workflow template not found")
     return {"deleted": True, "template_name": template_name}
+
+
+@router.get("/workflow-templates/{template_name}/compare")
+def compare_workflow_template_runs_route(
+    template_name: str,
+    left_runtime_run_id: str,
+    right_runtime_run_id: str,
+) -> dict[str, object]:
+    template = resolve_workflow_template(_workflow_template_context(template_name))
+    if template is None:
+        raise HTTPException(status_code=404, detail="workflow template not found")
+
+    left_run = get_runtime_run(settings, runtime_run_id=left_runtime_run_id)
+    if left_run is None:
+        raise HTTPException(status_code=404, detail=f"runtime run not found: {left_runtime_run_id}")
+
+    right_run = get_runtime_run(settings, runtime_run_id=right_runtime_run_id)
+    if right_run is None:
+        raise HTTPException(status_code=404, detail=f"runtime run not found: {right_runtime_run_id}")
+
+    return {
+        "workflow_template": workflow_template_to_dict(template),
+        "left_runtime_run_id": left_runtime_run_id,
+        "right_runtime_run_id": right_runtime_run_id,
+        "comparison": compare_workflow_template_runs(left_run, right_run),
+    }
 
 
 def summarize_workflow_template_run(run: dict[str, Any] | None) -> dict[str, Any]:
