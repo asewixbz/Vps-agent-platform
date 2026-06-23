@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 security-p polish branch is in progress
+- the Phase 6 security polish branch is in progress
 
 ## Recommended next step
 
