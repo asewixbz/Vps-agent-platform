@@ -3,7 +3,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 from unittest import TestCase
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -24,6 +26,8 @@ from app.workflow_templates import (
     workflow_template_to_dict,
 )
 from app.workflow_templates_api import compare_workflow_template_runs, summarize_workflow_template_run
+
+import app.workflow_templates_api as workflow_templates_api
 
 
 class WorkflowTemplateTests(TestCase):
@@ -219,6 +223,50 @@ class WorkflowTemplateTests(TestCase):
         self.assertIn("shared_items", script)
         self.assertIn("unique_left_items", script)
         self.assertIn("unique_right_items", script)
+
+    def test_run_workflow_template_injects_inline_execution_mode(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                db_path=str(Path(tmpdir) / "app.db"),
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+            )
+            init_db(settings)
+            seed_builtin_tools(settings)
+
+            fake_execution = SimpleNamespace(
+                runtime_run_id="runtime-run-1",
+                goal="Weekly report",
+                status="completed",
+                summary="Workflow run completed",
+                context={"execution_mode": "inline"},
+            )
+
+            with (
+                patch.object(workflow_templates_api, "settings", settings),
+                patch.object(workflow_templates_api, "run_inline_runtime", return_value=fake_execution) as run_inline_runtime_mock,
+                patch.object(
+                    workflow_templates_api,
+                    "runtime_execution_to_dict",
+                    side_effect=lambda execution: {
+                        "runtime_run_id": execution.runtime_run_id,
+                        "status": execution.status,
+                        "context": execution.context,
+                    },
+                ),
+            ):
+                response = workflow_templates_api.run_workflow_template(
+                    "report_workflow",
+                    workflow_templates_api.WorkflowTemplateRunRequest(
+                        goal="Weekly report",
+                        inputs={"report_title": "Weekly report", "audience": "ops"},
+                    ),
+                )
+
+            self.assertEqual(run_inline_runtime_mock.call_count, 1)
+            self.assertEqual(run_inline_runtime_mock.call_args.kwargs["context"]["execution_mode"], "inline")
+            self.assertEqual(response["execution"]["context"]["execution_mode"], "inline")
+            self.assertEqual(response["workflow_template"]["name"], "report_workflow")
 
     def test_custom_workflow_templates_persist_and_power_planning(self) -> None:
         with TemporaryDirectory() as tmpdir:
