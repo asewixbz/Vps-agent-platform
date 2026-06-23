@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import re
 import shlex
-from dataclasses import dataclass
 from typing import Any, Sequence
 
+from .security_controls import GuardrailDecision, evaluate_tool_policy
 from .settings import Settings
 
 DANGEROUS_SNIPPETS = (
@@ -35,15 +36,32 @@ SHELL_CONTROL_SNIPPETS = (
 )
 
 
-@dataclass
-class PolicyDecision:
-    allowed: bool
-    requires_approval: bool
-    reason: str
+PolicyDecision = GuardrailDecision
 
 
 class ShellPolicyError(ValueError):
     pass
+
+
+def _slugify(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_") or "shell_error"
+
+
+def _shell_error_reason_code(message: str) -> str:
+    lowered = message.lower()
+    if lowered.startswith("blocked shell snippet:"):
+        snippet = message.split(":", 1)[1].strip() if ":" in message else message
+        return f"deny.shell.{_slugify(snippet)}"
+    if lowered.startswith("blocked shell operator:"):
+        operator = message.split(":", 1)[1].strip() if ":" in message else message
+        return f"deny.shell.operator.{_slugify(operator)}"
+    if "not in the allowlist" in lowered:
+        return "deny.shell.not_allowlisted"
+    if "missing the command field" in lowered:
+        return "deny.shell.missing_command"
+    if "could not be parsed safely" in lowered:
+        return "deny.shell.parse_error"
+    return "deny.shell.parse_error"
 
 
 def parse_shell_command(command: str, allowed_commands: Sequence[str]) -> list[str]:
@@ -78,27 +96,19 @@ def parse_shell_command(command: str, allowed_commands: Sequence[str]) -> list[s
 
 
 def evaluate(tool: dict[str, Any], payload: dict[str, Any], settings: Settings, *, approved: bool = False) -> PolicyDecision:
-    if not approved and tool["status"] != "trusted" and settings.require_approval_for_draft:
-        return PolicyDecision(
-            allowed=False,
-            requires_approval=True,
-            reason=f'tool "{tool["name"]}" is not trusted yet ({tool["status"]})',
-        )
-
-    kind = tool["kind"]
-    if kind == "shell":
+    if tool.get("kind") == "shell":
         command = payload.get("command") or ""
         try:
             parse_shell_command(command, settings.allowed_shell_command_list)
         except ShellPolicyError as exc:
-            return PolicyDecision(False, False, str(exc))
-
-    if kind == "browser":
-        if not settings.browser_runner_enabled:
-            return PolicyDecision(False, False, "browser runner is not enabled in phase 1")
-
-    if kind == "model":
-        if not settings.model_runner_enabled:
-            return PolicyDecision(False, False, "model runner is not enabled in phase 1")
-
-    return PolicyDecision(True, False, "policy passed")
+            reason = str(exc)
+            return PolicyDecision(
+                allowed=False,
+                requires_approval=False,
+                decision="deny",
+                reason=reason,
+                reason_code=_shell_error_reason_code(reason),
+                trust_level=int(tool.get("trust_level") or 0),
+                details={"tool_name": tool.get("name"), "kind": "shell"},
+            )
+    return evaluate_tool_policy(tool, payload, settings, approved=approved)

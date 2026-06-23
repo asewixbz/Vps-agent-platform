@@ -6,12 +6,13 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from .artifact_lifecycle import cleanup_artifact_roots
 from .agent_runtime import run_agent_runtime, runtime_execution_to_dict
+from .artifact_lifecycle import cleanup_artifact_roots
 from .observability import build_trace_context
 from .planner import build_execution_plan
 from .runtime_events import group_runtime_events, normalize_runtime_events, runtime_events_for_step
 from .runtime_trace import build_runtime_run_trace
+from .security_controls import resolve_runtime_step_budget
 from .settings import get_settings
 from .store import get_runtime_run, list_runtime_run_events, list_runtime_runs
 
@@ -40,6 +41,10 @@ def agent_plan(request: AgentPlanRequest) -> dict[str, object]:
 
 @router.post("/agent/run")
 def agent_run(request: AgentRunRequest) -> dict[str, object]:
+    step_budget = resolve_runtime_step_budget(settings, request.max_steps)
+    if not step_budget.allowed:
+        raise HTTPException(status_code=400, detail=step_budget.reason)
+
     trace_context = build_trace_context(
         correlation_id=str(request.context.get("correlation_id") or request.runtime_run_id or "").strip() or None,
         runtime_run_id=request.runtime_run_id,
@@ -52,7 +57,7 @@ def agent_run(request: AgentRunRequest) -> dict[str, object]:
         settings,
         goal=request.goal,
         context=execution_context,
-        max_steps=request.max_steps,
+        max_steps=step_budget.max_steps,
         resume_from_step_index=request.resume_from_step_index,
         runtime_run_id=request.runtime_run_id,
     )

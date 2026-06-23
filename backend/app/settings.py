@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     worker_once: bool = False
     allowed_shell_commands: str = "echo,ls,pwd,cat,grep,python"
     default_timeout_seconds: int = 60
+    task_timeout_hard_limit_seconds: int = 300
+    runtime_max_steps_hard_limit: int = 10
+    tool_policy_overrides_json: str = "{}"
     require_approval_for_draft: bool = True
     browser_runner_enabled: bool = False
     model_runner_enabled: bool = False
