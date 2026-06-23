@@ -24,6 +24,13 @@ class WorkflowTemplateCliTests(TestCase):
         self.assertEqual(parsed.command, "workflow-template-delete")
         self.assertTrue(callable(parsed.func))
 
+    def test_workflow_template_compare_command_is_registered(self) -> None:
+        parser = build_parser()
+
+        parsed = parser.parse_args(["workflow-template-compare", "compare_workflow", "left-run", "right-run"])
+        self.assertEqual(parsed.command, "workflow-template-compare")
+        self.assertTrue(callable(parsed.func))
+
     def test_workflow_schedule_commands_are_registered(self) -> None:
         parser = build_parser()
 
