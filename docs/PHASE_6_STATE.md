@@ -13,6 +13,7 @@
 - runtime history, checkpoints, provenance, and durable memory are already wired in
 - shell policy parsing rejects malformed commands safely and now blocks basic shell control operators before the runner
 - task execution now goes through a sandbox helper with cwd isolation, restricted env, explicit resource limits, and a bubblewrap-backed prototype when available
+- writer-side artifact generation now emits canonical artifact manifests for python, shell, browser, and workflow outputs
 - the docs sync and shell hardening PRs (#15 and #13) are merged
 - the current docs snapshot should match the codebase
 
