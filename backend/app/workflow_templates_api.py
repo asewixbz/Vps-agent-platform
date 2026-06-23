@@ -130,7 +130,7 @@ def summarize_workflow_template_run(run: dict[str, Any] | None) -> dict[str, Any
         result = step.get("result") if isinstance(step.get("result"), dict) else {}
         artifacts = result.get("artifacts") if isinstance(result.get("artifacts"), dict) else {}
         if isinstance(artifacts, dict):
-            for key in ("workdir", "script_path", "html_path", "text_path", "json_path", "md_path", "report_path", "ranking_path", "scan_path", "compare_path", "schedule_path", "schedule_manifest_path"):
+            for key in ("workdir", "script_path", "html_path", "text_path", "json_path", "md_path", "report_path", "ranking_path", "scan_path", "compare_path", "schedule_path", "schedule_manifest_path", "artifact_manifest_path"):
                 path = artifacts.get(key)
                 if isinstance(path, str) and path not in artifact_paths:
                     artifact_paths.append(path)
