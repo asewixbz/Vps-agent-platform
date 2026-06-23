@@ -50,9 +50,11 @@ def _slugify(value: str) -> str:
 def _shell_error_reason_code(message: str) -> str:
     lowered = message.lower()
     if lowered.startswith("blocked shell snippet:"):
-        return f"deny.shell.{_slugify(message.split(":", 1)[1].strip())}"
+        snippet = message.split(":", 1)[1].strip() if ":" in message else message
+        return f"deny.shell.{_slugify(snippet)}"
     if lowered.startswith("blocked shell operator:"):
-        return f"deny.shell.operator.{_slugify(message.split(":", 1)[1].strip())}"
+        operator = message.split(":", 1)[1].strip() if ":" in message else message
+        return f"deny.shell.operator.{_slugify(operator)}"
     if "not in the allowlist" in lowered:
         return "deny.shell.not_allowlisted"
     if "missing the command field" in lowered:
