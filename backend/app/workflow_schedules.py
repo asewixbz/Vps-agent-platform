@@ -8,7 +8,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
-from .agent_runtime import run_agent_runtime, runtime_execution_to_dict
+from .runtime_execution import run_inline_runtime
 from .settings import Settings, get_settings
 from .store import connect, utc_now
 from .workflow_template_registry import list_custom_workflow_templates
@@ -407,7 +407,7 @@ def dispatch_due_workflow_schedules(
                 "scheduled_from_runtime_run_id": schedule.get("source_runtime_run_id"),
             },
         )
-        execution = run_agent_runtime(
+        execution = run_inline_runtime(
             settings,
             goal=str(schedule.get("target_goal") or template.summary),
             context=workflow_context,
