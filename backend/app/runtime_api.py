@@ -6,11 +6,12 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from .agent_runtime import run_agent_runtime, runtime_execution_to_dict
+from .agent_runtime import runtime_execution_to_dict
 from .artifact_lifecycle import cleanup_artifact_roots
 from .observability import build_trace_context
 from .planner import build_execution_plan
 from .runtime_events import group_runtime_events, normalize_runtime_events, runtime_events_for_step
+from .runtime_execution import run_inline_runtime
 from .runtime_trace import build_runtime_run_trace
 from .security_controls import resolve_runtime_step_budget
 from .settings import get_settings
@@ -53,7 +54,7 @@ def agent_run(request: AgentRunRequest) -> dict[str, object]:
     execution_context.setdefault("correlation_id", trace_context["correlation_id"])
     if trace_context.get("runtime_run_id") is not None:
         execution_context.setdefault("runtime_run_id", trace_context["runtime_run_id"])
-    execution = run_agent_runtime(
+    execution = run_inline_runtime(
         settings,
         goal=request.goal,
         context=execution_context,
