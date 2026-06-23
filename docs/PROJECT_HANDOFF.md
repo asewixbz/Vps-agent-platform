@@ -38,6 +38,7 @@ The project should be treated as an execution platform first, and a UI product s
 - persistent runtime run history in SQLite
 - explicit runtime event logs in SQLite
 - runtime event replay filters for step-scoped and grouped inspection
+- runtime trace API that joins runtime events, provenance, memory snapshots, tasks, steps, and artifacts into one recoverable story
 - durable memory records with artifact indexing
 - runtime run snapshots persisted into durable memory
 - project/contact dossier helpers
@@ -46,6 +47,8 @@ The project should be treated as an execution platform first, and a UI product s
 - runtime and memory provenance API routes
 - sectioned provenance payloads with explicit root, one-hop, transitive, and artifact-only views
 - sectioned provenance contract tests
+- canonical artifact manifests written by Python, shell, browser, and workflow runners
+- artifact cleanup helpers and worker-driven cleanup for expired or empty workdirs
 - Python runner support for optional `artifacts.json` manifests so workflow templates can publish extra artifact paths
 - Python runner materialization of schedule artifacts so schedule-style workflows can surface `schedule_manifest.json` automatically
 - Phase 5 workflow templates, including built-in scan/rank/report/compare/schedule templates, persisted custom templates, recurring schedule dispatch, and one-shot schedule completion through the worker loop
@@ -65,8 +68,8 @@ The project should be treated as an execution platform first, and a UI product s
 - shell execution is intentionally restricted
 - there is no production-grade sandboxing
 - execution still relies on local subprocesses inside the shared backend container
-- artifact retention is still local-volume based
-- observability exists through runtime events and provenance, but it is not yet the stronger audit surface planned for Phase 6
+- artifact retention is still local-volume based, but canonical manifests and cleanup jobs are now in place
+- observability exists through runtime events, provenance, and trace navigation, but it is not yet the stronger audit surface planned for Phase 6
 
 ## Technical direction
 
@@ -340,7 +343,11 @@ Status:
 
 ## Current code map
 
-- `backend/app/main.py` — API endpoints for tools, tasks, approvals, planning, runtime, run history, memory, dossiers, event logs, links, provenance, and queue status
+- `backend/app/main.py` — FastAPI app bootstrap and router registration
+- `backend/app/runtime_api.py` — runtime planning/execution/history/events/trace endpoints plus artifact cleanup
+- `backend/app/runtime_trace.py` — trace assembly that joins runtime events, provenance, tasks, steps, artifacts, and memory snapshots
+- `backend/app/observability.py` — trace context helpers, normalized event names, reason codes, and structured errors
+- `backend/app/artifact_lifecycle.py` — artifact manifest contract, retention classes, and cleanup helpers
 - `backend/app/dossiers.py` — project/contact dossier helpers built on top of durable memory
 - `backend/app/memory.py` — durable memory storage, artifact indexing, and runtime snapshot helpers
 - `backend/app/memory_graph.py` — server-side memory and runtime provenance graph helpers
@@ -380,4 +387,4 @@ Status:
 
 ## Current project status summary
 
-The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, but the runtime still lacks per-task sandbox boundaries, stronger audit logging, and production artifact retention.
+The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, and the codebase now includes runtime trace navigation plus canonical artifact manifests and cleanup helpers, but it still needs stronger sandbox boundaries and fuller production-grade retention policy before the phase is finished.
