@@ -9,6 +9,22 @@ from .memory import get_memory_record
 from .store import get_runtime_run, get_task, list_runtime_run_events
 from .runtime_events import group_runtime_events, normalize_runtime_events
 
+_PATH_ARTIFACT_KEYS = {
+    "workdir",
+    "script_path",
+    "html_path",
+    "text_path",
+    "json_path",
+    "md_path",
+    "report_path",
+    "ranking_path",
+    "scan_path",
+    "compare_path",
+    "schedule_path",
+    "schedule_manifest_path",
+    "artifact_manifest_path",
+}
+
 
 def _step_artifacts(step: dict[str, Any]) -> list[dict[str, Any]]:
     result = step.get("result") if isinstance(step.get("result"), dict) else {}
@@ -42,6 +58,8 @@ def _step_artifacts(step: dict[str, Any]) -> list[dict[str, Any]]:
                     artifact = normalize_artifact_entry({"artifact_type": "file", "artifact_ref": ref, "label": ref.split("/")[-1]})
                     if artifact is not None:
                         normalized.append(artifact)
+            continue
+        if key not in _PATH_ARTIFACT_KEYS:
             continue
         if not isinstance(value, str):
             continue
