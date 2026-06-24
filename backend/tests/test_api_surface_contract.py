@@ -61,6 +61,8 @@ class ApiSurfaceContractTests(TestCase):
             "/tasks/{task_id}/approve",
             "/model/health",
             "/model/chat",
+            "/persistence/layers",
+            "/persistence/schema",
             "/workflow-templates/{template_name}/compare",
         }
         self.assertTrue(expected_paths.issubset(paths), f"missing routes: {sorted(expected_paths - paths)}")

@@ -7,6 +7,7 @@ from .memory import init_memory_schema
 from .memory_links import init_memory_links_schema
 from .model_api import router as model_router
 from .persistence_api import router as persistence_router
+from .persistence_migrations import ensure_persistence_schema
 from .provenance_api import router as provenance_router
 from .runtime_api import router as runtime_router
 from .security_api import router as security_router
@@ -23,6 +24,7 @@ app = FastAPI(title=settings.app_name)
 @app.on_event("startup")
 def startup() -> None:
     init_db(settings)
+    ensure_persistence_schema(settings)
     init_memory_schema(settings)
     init_memory_links_schema(settings)
     ensure_workflow_template_registry(settings)
