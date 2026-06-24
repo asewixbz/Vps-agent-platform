@@ -32,6 +32,7 @@ class SandboxTests(TestCase):
                 timeout_seconds=5,
             )
 
+            self.assertEqual(sandbox.requested_mode, "auto")
             self.assertEqual(sandbox.backend, "bubblewrap")
             self.assertEqual(sandbox.cwd, "/work")
             self.assertIsNone(sandbox.preexec_fn)
@@ -39,6 +40,8 @@ class SandboxTests(TestCase):
             self.assertEqual(sandbox.env["TMPDIR"], "/work/tmp")
             self.assertEqual(sandbox.file_policy, "workdir-bind-only")
             self.assertEqual(sandbox.network_policy, "unshared")
+            self.assertFalse(sandbox.fallback_used)
+            self.assertIn("bubblewrap", sandbox.selection_reason)
             self.assertEqual(sandbox.argv[0], "bwrap")
             self.assertIn("--unshare-all", sandbox.argv)
             self.assertIn("--bind", sandbox.argv)
@@ -57,13 +60,15 @@ class SandboxTests(TestCase):
             workdir = Path(tmpdir) / "work" / "task-2"
             workdir.mkdir(parents=True, exist_ok=True)
 
-            sandbox = build_subprocess_sandbox(
-                settings,
-                workdir=workdir,
-                argv=["echo", "hello"],
-                timeout_seconds=5,
-            )
+            with patch("app.sandbox.logger.warning") as warning_mock:
+                sandbox = build_subprocess_sandbox(
+                    settings,
+                    workdir=workdir,
+                    argv=["echo", "hello"],
+                    timeout_seconds=5,
+                )
 
+            self.assertEqual(sandbox.requested_mode, "auto")
             self.assertEqual(sandbox.backend, "rlimit")
             self.assertEqual(sandbox.cwd, str(workdir))
             self.assertIsNotNone(sandbox.preexec_fn)
@@ -71,5 +76,8 @@ class SandboxTests(TestCase):
             self.assertEqual(sandbox.env["TMPDIR"], str(workdir / "tmp"))
             self.assertEqual(sandbox.file_policy, "cwd-and-rlimit")
             self.assertEqual(sandbox.network_policy, "not-enforced")
+            self.assertTrue(sandbox.fallback_used)
+            self.assertIn("falling back to rlimit", sandbox.selection_reason)
             self.assertEqual(sandbox.argv, ["echo", "hello"])
+            warning_mock.assert_called_once()
             which_mock.assert_called_once_with("bwrap")
