@@ -51,3 +51,16 @@ class PersistenceApiTests(TestCase):
             self.assertEqual(len(all_rows), 1)
             self.assertEqual(all_rows[0]["schema_name"], "persistence")
             self.assertEqual(all_rows[0]["metadata"]["migration_path"][0], "introduce persistence adapter boundary")
+
+    def test_persistence_schema_snapshot_tolerates_missing_metadata_table(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = self._settings(tmpdir)
+            init_db(settings)
+
+            with patch.object(persistence_api, "settings", settings):
+                snapshot = persistence_api.persistence_schema()
+
+            self.assertEqual(snapshot["schema_name"], "persistence")
+            self.assertFalse(snapshot["present"])
+            self.assertIsNone(snapshot["current"])
+            self.assertEqual(snapshot["schema_metadata_contract"]["table"], "schema_metadata")
