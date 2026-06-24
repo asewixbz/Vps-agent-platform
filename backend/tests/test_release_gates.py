@@ -186,10 +186,17 @@ class ReleaseGateTests(TestCase):
 
             execute_steps = [step for step in dispatched[0]["execution"]["steps"] if step.get("kind") == "execute"]
             self.assertTrue(execute_steps)
-            artifact_map = execute_steps[0].get("result", {}).get("artifacts", {}) if isinstance(execute_steps[0].get("result"), dict) else {}
+            execute_result = execute_steps[0].get("result", {}) if isinstance(execute_steps[0].get("result"), dict) else {}
+            artifact_map = execute_result.get("artifacts", {}) if isinstance(execute_result, dict) else {}
             self.assertIn("artifact_manifest_path", artifact_map)
             manifest_path = Path(str(artifact_map["artifact_manifest_path"]))
             self.assertTrue(manifest_path.exists())
+
+            policy_map = execute_result.get("policy", {}) if isinstance(execute_result, dict) else {}
+            self.assertEqual(policy_map.get("policy_source"), "executor.policy")
+            self.assertIn("decision_summary", policy_map)
+            self.assertIn("policy_sources", policy_map)
+            self.assertIn("tool_name", policy_map.get("details", {}))
 
             manifest = normalize_artifact_manifest(json.loads(manifest_path.read_text(encoding="utf-8")), source="release_gates_smoke")
             self.assertIsNotNone(manifest)

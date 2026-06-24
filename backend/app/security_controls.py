@@ -163,8 +163,11 @@ def get_tool_policy_overrides(settings: Settings) -> dict[str, Any]:
     return _load_json_mapping(getattr(settings, "tool_policy_overrides_json", "{}"))
 
 
-def _merge_policy_source(profile: dict[str, Any], source: dict[str, Any]) -> dict[str, Any]:
+def _merge_policy_source(profile: dict[str, Any], source: dict[str, Any], *, source_name: str | None = None) -> dict[str, Any]:
     merged = dict(profile)
+    applied_sources = list(merged.get("policy_sources") or [])
+    if source_name:
+        applied_sources.append(source_name)
     for key in ("status", "deny_reason", "allow_reason"):
         value = source.get(key)
         if value not in {None, ""}:
@@ -180,6 +183,9 @@ def _merge_policy_source(profile: dict[str, Any], source: dict[str, Any]) -> dic
         )
     if "deny_triggers" in source:
         merged["deny_triggers"] = _unique_items([*merged.get("deny_triggers", []), *_coerce_str_list(source.get("deny_triggers"))])
+    if applied_sources:
+        merged["policy_sources"] = applied_sources
+        merged["policy_source"] = applied_sources[-1]
     return merged
 
 
@@ -198,16 +204,18 @@ def get_tool_policy_profile(settings: Settings, tool: dict[str, Any]) -> dict[st
         "max_steps": None,
         "deny_reason": None,
         "allow_reason": None,
+        "policy_sources": ["default"],
+        "policy_source": "default",
     }
 
-    for key in ("__default__", profile["kind"], profile["name"]):
+    for source_name, key in (("default_override", "__default__"), ("kind_override", profile["kind"]), ("tool_override", profile["name"])):
         source = overrides.get(key)
         if isinstance(source, dict):
-            profile = _merge_policy_source(profile, source)
+            profile = _merge_policy_source(profile, source, source_name=source_name)
 
     metadata_overrides = metadata.get("policy_overrides")
     if isinstance(metadata_overrides, dict):
-        profile = _merge_policy_source(profile, metadata_overrides)
+        profile = _merge_policy_source(profile, metadata_overrides, source_name="metadata_override")
 
     if profile["kind"] == "browser" and not profile["approval_triggers"]:
         profile["approval_triggers"] = ["external_url"]
@@ -227,6 +235,7 @@ def get_operational_controls(settings: Settings) -> dict[str, Any]:
         "deny_triggers": {
             "shell": list(DEFAULT_SHELL_DENY_TRIGGERS),
         },
+        "policy_override_order": ["default", "default_override", "kind_override", "tool_override", "metadata_override"],
         "budgets": {
             "default_timeout_seconds": settings.default_timeout_seconds,
             "task_timeout_hard_limit_seconds": settings.task_timeout_hard_limit_seconds,
@@ -258,6 +267,9 @@ def evaluate_tool_policy(
         "approval_triggers": profile.get("approval_triggers", []),
         "deny_triggers": profile.get("deny_triggers", []),
         "requires_approval": bool(profile.get("requires_approval") or False),
+        "policy_source": profile.get("policy_source"),
+        "policy_sources": profile.get("policy_sources", []),
+        "policy_override_order": ["default", "default_override", "kind_override", "tool_override", "metadata_override"],
     }
 
     if profile.get("deny_reason"):
@@ -499,6 +511,8 @@ def resolve_task_timeout_budget(
         "tool_name": profile["name"],
         "kind": profile["kind"],
         "trust_level": profile["trust_level"],
+        "policy_source": profile.get("policy_source"),
+        "policy_sources": profile.get("policy_sources", []),
         "limit_seconds": limit_seconds,
         "hard_limit_seconds": hard_limit,
         "default_timeout_seconds": base_limit,
