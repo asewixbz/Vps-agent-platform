@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 from typing import Any
 
 from .persistence_layers import (
@@ -87,10 +88,13 @@ def ensure_persistence_schema(settings: Settings) -> dict[str, Any]:
 def get_schema_metadata(settings: Settings, *, schema_name: str = PERSISTENCE_SCHEMA_NAME) -> dict[str, Any] | None:
     conn = connect(settings.db_path)
     try:
-        row = conn.execute(
-            f"SELECT * FROM {PERSISTENCE_SCHEMA_METADATA_TABLE} WHERE schema_name = ?",
-            (schema_name,),
-        ).fetchone()
+        try:
+            row = conn.execute(
+                f"SELECT * FROM {PERSISTENCE_SCHEMA_METADATA_TABLE} WHERE schema_name = ?",
+                (schema_name,),
+            ).fetchone()
+        except sqlite3.OperationalError:
+            return None
         return _schema_metadata_row_to_dict(row)
     finally:
         conn.close()
@@ -99,7 +103,10 @@ def get_schema_metadata(settings: Settings, *, schema_name: str = PERSISTENCE_SC
 def list_schema_metadata(settings: Settings) -> list[dict[str, Any]]:
     conn = connect(settings.db_path)
     try:
-        rows = conn.execute(f"SELECT * FROM {PERSISTENCE_SCHEMA_METADATA_TABLE} ORDER BY schema_name ASC").fetchall()
+        try:
+            rows = conn.execute(f"SELECT * FROM {PERSISTENCE_SCHEMA_METADATA_TABLE} ORDER BY schema_name ASC").fetchall()
+        except sqlite3.OperationalError:
+            return []
         return [item for row in rows if (item := _schema_metadata_row_to_dict(row)) is not None]
     finally:
         conn.close()
