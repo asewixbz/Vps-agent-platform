@@ -39,7 +39,14 @@ class RuntimeTraceTests(TestCase):
                 "event_type": "running",
                 "step_index": None,
                 "message": "runtime started",
-                "payload_json": {"status": "running", "trace": {"correlation_id": "corr-1", "runtime_run_id": "run-1"}},
+                "payload_json": {
+                    "status": "running",
+                    "summary": "runtime started",
+                    "reason_code": "runtime.start",
+                    "tool_name": "python_local",
+                    "kind": "runtime",
+                    "trace": {"correlation_id": "corr-1", "runtime_run_id": "run-1"},
+                },
             },
             {
                 "id": 2,
@@ -47,7 +54,15 @@ class RuntimeTraceTests(TestCase):
                 "event_type": "completed",
                 "step_index": 1,
                 "message": "runtime completed",
-                "payload_json": {"status": "completed", "trace": {"correlation_id": "corr-1", "runtime_run_id": "run-1"}},
+                "payload_json": {
+                    "status": "completed",
+                    "summary": "runtime completed",
+                    "reason_code": "runtime.complete",
+                    "tool_name": "python_local",
+                    "kind": "runtime",
+                    "artifact_refs": ["/tmp/report.json"],
+                    "trace": {"correlation_id": "corr-1", "runtime_run_id": "run-1"},
+                },
             },
         ]
         self.tasks = {
@@ -122,7 +137,14 @@ class RuntimeTraceTests(TestCase):
         self.assertEqual(trace["event_count"], 2)
         self.assertEqual(trace["step_count"], 1)
         self.assertEqual(trace["events"][0]["event_name"], "started")
+        self.assertEqual(trace["events"][0]["audit"]["runtime_run_id"], "run-1")
         self.assertEqual(trace["events"][1]["event_name"], "completed")
+        self.assertEqual(trace["events"][1]["audit"]["tool_name"], "python_local")
         self.assertEqual(trace["steps"][0]["task"]["id"], "task-1")
         self.assertEqual(trace["steps"][0]["artifact_count"], 1)
+        self.assertEqual(trace["steps"][0]["audit"]["tool_name"], "python_local")
+        self.assertEqual(trace["audit"]["runtime_run_id"], "run-1")
+        self.assertEqual(trace["audit"]["event_names"], ["started", "completed"])
+        self.assertEqual(trace["audit"]["reason_codes"], ["runtime_start", "runtime_complete"])
+        self.assertEqual(trace["audit"]["artifact_refs"], ["/tmp/report.json"])
         self.assertEqual(trace["memory_snapshot"]["id"], "memory-1")
