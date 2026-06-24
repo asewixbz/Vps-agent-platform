@@ -4,23 +4,12 @@ from typing import Any
 
 from fastapi import HTTPException
 
+from .observability import build_policy_audit_payload
 from .policy import evaluate
 from .runner import run_browser_task, run_model_task, run_python_script, run_shell_command, run_unimplemented
 from .security_controls import resolve_task_timeout_budget
 from .settings import Settings
 from .store import get_task, get_tool, update_task, utc_now
-
-
-def _policy_result(decision: Any) -> dict[str, Any]:
-    return {
-        "decision": getattr(decision, "decision", "deny"),
-        "allowed": bool(getattr(decision, "allowed", False)),
-        "requires_approval": bool(getattr(decision, "requires_approval", False)),
-        "reason": getattr(decision, "reason", "policy denied execution"),
-        "reason_code": getattr(decision, "reason_code", "deny.policy"),
-        "trust_level": int(getattr(decision, "trust_level", 0) or 0),
-        "details": getattr(decision, "details", {}) or {},
-    }
 
 
 def execute_task(settings: Settings, task_id: str, timeout_seconds: int | None = None) -> dict[str, Any]:
@@ -30,16 +19,34 @@ def execute_task(settings: Settings, task_id: str, timeout_seconds: int | None =
 
     tool = get_tool(settings, name=task["tool_name"])
     if tool is None:
+        policy_payload = build_policy_audit_payload(
+            {
+                "decision": "deny",
+                "allowed": False,
+                "requires_approval": False,
+                "reason": f'tool "{task["tool_name"]}" no longer exists',
+                "reason_code": "deny.tool_missing",
+                "trust_level": 0,
+                "details": {"tool_name": task["tool_name"], "kind": None},
+            },
+            source="executor.tool_missing",
+            context={"task_id": task_id, "tool_name": task["tool_name"]},
+        )
         return update_task(
             settings,
             task_id=task_id,
             status="blocked",
             reason=f'tool "{task["tool_name"]}" no longer exists',
             finished_at=utc_now(),
-            result_json={"ok": False, "duration_ms": 0, "artifacts": {}, "policy": {"decision": "deny", "reason_code": "deny.tool_missing"}},
+            result_json={"ok": False, "duration_ms": 0, "artifacts": {}, "policy": policy_payload},
         ) or task
 
     decision = evaluate(tool, task["payload"], settings, approved=bool(task.get("approved")))
+    policy_payload = build_policy_audit_payload(
+        decision,
+        source="executor.policy",
+        context={"task_id": task_id, "tool_name": tool.get("name"), "kind": tool.get("kind")},
+    )
     if not decision.allowed:
         new_status = "pending_approval" if decision.requires_approval else "blocked"
         return update_task(
@@ -48,7 +55,7 @@ def execute_task(settings: Settings, task_id: str, timeout_seconds: int | None =
             status=new_status,
             reason=decision.reason,
             finished_at=utc_now(),
-            result_json={"ok": False, "duration_ms": 0, "artifacts": {}, "policy": _policy_result(decision)},
+            result_json={"ok": False, "duration_ms": 0, "artifacts": {}, "policy": policy_payload},
         ) or task
 
     timeout_budget = resolve_task_timeout_budget(
@@ -56,6 +63,19 @@ def execute_task(settings: Settings, task_id: str, timeout_seconds: int | None =
         tool,
         task["payload"],
         requested_timeout_seconds=timeout_seconds,
+    )
+    timeout_policy_payload = build_policy_audit_payload(
+        {
+            "decision": "allow" if timeout_budget.allowed else "deny",
+            "allowed": timeout_budget.allowed,
+            "requires_approval": False,
+            "reason": timeout_budget.reason,
+            "reason_code": timeout_budget.reason_code,
+            "trust_level": int(tool.get("trust_level") or 0),
+            "details": timeout_budget.details,
+        },
+        source="executor.timeout_budget",
+        context={"task_id": task_id, "tool_name": tool.get("name"), "kind": tool.get("kind")},
     )
     if not timeout_budget.allowed:
         return update_task(
@@ -68,14 +88,7 @@ def execute_task(settings: Settings, task_id: str, timeout_seconds: int | None =
                 "ok": False,
                 "duration_ms": 0,
                 "artifacts": {},
-                "policy": {
-                    "decision": "deny",
-                    "allowed": False,
-                    "requires_approval": False,
-                    "reason": timeout_budget.reason,
-                    "reason_code": timeout_budget.reason_code,
-                    "details": timeout_budget.details,
-                },
+                "policy": timeout_policy_payload,
             },
         ) or task
 
@@ -108,6 +121,19 @@ def execute_task(settings: Settings, task_id: str, timeout_seconds: int | None =
             )
         elif kind == "browser":
             if not settings.browser_runner_enabled:
+                browser_policy_payload = build_policy_audit_payload(
+                    {
+                        "decision": "deny",
+                        "allowed": False,
+                        "requires_approval": False,
+                        "reason": "browser runner is not enabled",
+                        "reason_code": "deny.browser_runner_disabled",
+                        "trust_level": int(tool.get("trust_level") or 0),
+                        "details": {"tool_name": tool.get("name"), "kind": "browser"},
+                    },
+                    source="executor.browser_gate",
+                    context={"task_id": task_id, "tool_name": tool.get("name"), "kind": "browser"},
+                )
                 return update_task(
                     settings,
                     task_id=task_id,
@@ -118,14 +144,7 @@ def execute_task(settings: Settings, task_id: str, timeout_seconds: int | None =
                         "ok": False,
                         "duration_ms": 0,
                         "artifacts": {},
-                        "policy": {
-                            "decision": "deny",
-                            "allowed": False,
-                            "requires_approval": False,
-                            "reason": "browser runner is not enabled",
-                            "reason_code": "deny.browser_runner_disabled",
-                            "details": {"tool_name": tool.get("name"), "kind": "browser"},
-                        },
+                        "policy": browser_policy_payload,
                     },
                 ) or task
             result = run_browser_task(
@@ -152,7 +171,7 @@ def execute_task(settings: Settings, task_id: str, timeout_seconds: int | None =
             stderr=str(exc),
             exit_code=1,
             finished_at=utc_now(),
-            result_json={"ok": False, "duration_ms": 0, "artifacts": {}, "policy": _policy_result(decision)},
+            result_json={"ok": False, "duration_ms": 0, "artifacts": {}, "policy": policy_payload},
         ) or task
 
     final_status = "completed" if result.ok else "failed"
@@ -169,7 +188,7 @@ def execute_task(settings: Settings, task_id: str, timeout_seconds: int | None =
             "ok": result.ok,
             "duration_ms": result.duration_ms,
             "artifacts": result.artifacts,
-            "policy": _policy_result(decision),
+            "policy": policy_payload,
             "timeout_budget": {
                 "allowed": timeout_budget.allowed,
                 "timeout_seconds": timeout_budget.timeout_seconds,
