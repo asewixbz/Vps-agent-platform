@@ -3,11 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from .artifact_lifecycle import normalize_artifact_entry, normalize_artifact_manifest
-from .observability import build_trace_context, normalize_reason_code
 from .memory_graph import build_runtime_run_provenance
 from .memory import get_memory_record
-from .store import get_runtime_run, get_task, list_runtime_run_events
+from .observability import build_trace_context, normalize_reason_code
+from .runtime_audit import build_runtime_event_audit_payload, summarize_runtime_audit
 from .runtime_events import group_runtime_events, normalize_runtime_events
+from .store import get_runtime_run, get_task, list_runtime_run_events
 
 _PATH_ARTIFACT_KEYS = {
     "workdir",
@@ -130,6 +131,25 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
                 "reason_code": normalize_reason_code(raw_step.get("status"), fallback="unknown_error"),
                 "message": str(raw_step.get("detail") or raw_step.get("status") or "step status changed"),
             }
+        step_audit = build_runtime_event_audit_payload(
+            {
+                "event_name": raw_step.get("status"),
+                "event_type": raw_step.get("kind") or "step",
+                "status": raw_step.get("status"),
+                "message": raw_step.get("detail") or raw_step.get("stderr") or raw_step.get("status"),
+                "reason_code": (reason or {}).get("reason_code"),
+                "summary": raw_step.get("detail") or raw_step.get("stderr") or raw_step.get("status"),
+                "task_id": task_id,
+                "runtime_run_id": runtime_run_id,
+                "step_index": int(raw_step.get("index") or 0) or None,
+                "tool_name": task.get("tool_name") if isinstance(task, dict) else raw_step.get("tool_name"),
+                "kind": raw_step.get("kind"),
+                "blocked_reason": raw_step.get("blocked_reason") or ((reason or {}).get("message") if isinstance(reason, dict) else None),
+                "resume_hint": raw_step.get("resume_hint"),
+                "artifact_refs": [artifact["artifact_ref"] for artifact in artifacts],
+            },
+            context=step_trace,
+        )
         step_entry = {
             **raw_step,
             "trace": step_trace,
@@ -137,6 +157,7 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
             "task": task,
             "artifacts": artifacts,
             "artifact_count": len(artifacts),
+            "audit": step_audit,
         }
         steps.append(step_entry)
 
@@ -165,6 +186,8 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
                 artifact_map[artifact_ref] = normalized
         artifacts = list(artifact_map.values())
 
+    audit = summarize_runtime_audit(events, runtime_run=runtime_run, steps=steps, trace_context=trace_context)
+
     navigation = {
         "correlation_id": trace_context["correlation_id"],
         "runtime_run_id": runtime_run_id,
@@ -172,6 +195,7 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
         "step_count": len(steps),
         "artifact_refs": [artifact["artifact_ref"] for artifact in artifacts],
         "memory_record_id": memory_record_id,
+        "audit_reason_codes": audit.get("reason_codes", []),
     }
 
     return {
@@ -179,6 +203,7 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
         "runtime_run": {
             **runtime_run,
             "correlation_id": trace_context["correlation_id"],
+            "audit": audit,
         },
         "events": events,
         "grouped_events": grouped_events,
@@ -188,6 +213,7 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
         "steps": steps,
         "artifacts": artifacts,
         "navigation": navigation,
+        "audit": audit,
         "event_count": len(events),
         "step_count": len(steps),
     }
