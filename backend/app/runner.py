@@ -7,6 +7,7 @@ import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from .artifact_lifecycle import build_artifact_manifest, normalize_artifact_entry, normalize_artifact_manifest, write_artifact_manifest
 from .model_runtime import chat_model
@@ -223,6 +224,8 @@ def _run_subprocess(
         capture_output=True,
         text=True,
         timeout=timeout,
+        stdin=subprocess.DEVNULL,
+        close_fds=True,
         start_new_session=True,
     )
     return completed, sandbox
@@ -232,6 +235,9 @@ def _sandbox_artifacts(workdir: Path, sandbox: SubprocessSandbox, *, command_arg
     artifacts: dict[str, Any] = {
         "workdir": str(workdir),
         "sandbox_backend": sandbox.backend,
+        "sandbox_mode": sandbox.requested_mode,
+        "sandbox_selection_reason": sandbox.selection_reason,
+        "sandbox_fallback_used": sandbox.fallback_used,
         "sandbox_cwd": sandbox.cwd,
         "sandbox_file_policy": sandbox.file_policy,
         "sandbox_network_policy": sandbox.network_policy,
@@ -249,6 +255,15 @@ def _prepare_shell_argv(command_argv: list[str]) -> list[str]:
     if command_argv and Path(command_argv[0]).name.startswith("python") and "-I" not in command_argv[1:]:
         return [command_argv[0], "-I", "-s", "-B", *command_argv[1:]]
     return command_argv
+
+
+def _browser_url_is_supported(url: str) -> tuple[bool, str]:
+    parsed = urlparse(url)
+    if not parsed.scheme:
+        return False, "browser payload is missing a URL scheme"
+    if parsed.scheme not in {"http", "https"}:
+        return False, f"browser url scheme '{parsed.scheme}' is not supported"
+    return True, ""
 
 
 def run_python_script(settings: Settings, *, task_id: str, script: str, timeout_seconds: int | None = None) -> RunResult:
@@ -440,6 +455,16 @@ def run_browser_task(
     workdir = _prepare_workdir(settings, task_id)
     started = time.monotonic()
     timeout = timeout_seconds or settings.default_timeout_seconds
+    if not settings.browser_runner_enabled:
+        return RunResult(
+            ok=False,
+            stdout="",
+            stderr="browser runner is not enabled",
+            exit_code=126,
+            timed_out=False,
+            duration_ms=0,
+            artifacts={"workdir": str(workdir), "browser_runner_enabled": False},
+        )
     if not url:
         return RunResult(
             ok=False,
@@ -449,6 +474,18 @@ def run_browser_task(
             timed_out=False,
             duration_ms=0,
             artifacts={"workdir": str(workdir)},
+        )
+
+    browser_url_allowed, browser_url_reason = _browser_url_is_supported(url)
+    if not browser_url_allowed:
+        return RunResult(
+            ok=False,
+            stdout="",
+            stderr=browser_url_reason,
+            exit_code=2,
+            timed_out=False,
+            duration_ms=0,
+            artifacts={"workdir": str(workdir), "browser_url": url},
         )
 
     try:
