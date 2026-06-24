@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import logging
 import os
 import shutil
 from dataclasses import dataclass
@@ -15,6 +16,9 @@ except Exception:  # pragma: no cover - fallback for non-POSIX platforms
     resource = None  # type: ignore[assignment]
 
 
+logger = logging.getLogger(__name__)
+
+
 @dataclass(frozen=True)
 class SubprocessSandbox:
     argv: list[str]
@@ -22,6 +26,9 @@ class SubprocessSandbox:
     env: dict[str, str]
     preexec_fn: Callable[[], None] | None
     backend: str
+    requested_mode: str
+    selection_reason: str
+    fallback_used: bool
     file_policy: str
     network_policy: str
 
@@ -166,26 +173,49 @@ def build_subprocess_sandbox(
     timeout_seconds: int | None = None,
 ) -> SubprocessSandbox:
     timeout_budget = timeout_seconds or settings.default_timeout_seconds
-    sandbox_mode = (settings.task_sandbox_mode or "auto").strip().lower()
+    requested_mode = (settings.task_sandbox_mode or "auto").strip().lower() or "auto"
     allow_network = bool(settings.task_sandbox_allow_network)
+    bubblewrap_available = _bubblewrap_available()
+
     backend = "rlimit"
     sandbox_cwd = str(workdir)
     file_policy = "cwd-and-rlimit"
     network_policy = "not-enforced"
     preexec_fn = _apply_rlimits(timeout_seconds=timeout_budget, settings=settings, workdir=workdir)
     sandbox_argv = list(argv)
+    selection_reason = "rlimit mode selected"
+    fallback_used = requested_mode not in {"rlimit"}
 
-    if sandbox_mode in {"auto", "bubblewrap", "bwrap"} and _bubblewrap_available():
-        try:
-            sandbox_argv = _build_bubblewrap_argv(workdir, argv, allow_network=allow_network)
-            backend = "bubblewrap"
-            sandbox_cwd = "/work"
-            file_policy = "workdir-bind-only"
-            network_policy = "unshared" if not allow_network else "best-effort"
-            preexec_fn = None
-        except Exception:
-            if sandbox_mode in {"bubblewrap", "bwrap"}:
-                raise
+    if requested_mode in {"auto", "bubblewrap", "bwrap"}:
+        if bubblewrap_available:
+            try:
+                sandbox_argv = _build_bubblewrap_argv(workdir, argv, allow_network=allow_network)
+                backend = "bubblewrap"
+                sandbox_cwd = "/work"
+                file_policy = "workdir-bind-only"
+                network_policy = "unshared" if not allow_network else "best-effort"
+                preexec_fn = None
+                selection_reason = "bubblewrap selected"
+                fallback_used = False
+            except Exception as exc:
+                logger.warning(
+                    "sandbox mode %s requested bubblewrap but the privileged path could not be constructed; falling back to rlimit (%s)",
+                    requested_mode,
+                    exc,
+                )
+                selection_reason = f"bubblewrap fallback to rlimit after build failure: {exc}"
+        else:
+            logger.warning(
+                "sandbox mode %s requested bubblewrap but bwrap is unavailable; falling back to rlimit",
+                requested_mode,
+            )
+            selection_reason = "bubblewrap unavailable; falling back to rlimit"
+    elif requested_mode == "rlimit":
+        selection_reason = "rlimit mode selected explicitly"
+        fallback_used = False
+    else:
+        logger.warning("unknown sandbox mode %s; falling back to rlimit", requested_mode)
+        selection_reason = f"unknown sandbox mode '{requested_mode}'; falling back to rlimit"
 
     return SubprocessSandbox(
         argv=sandbox_argv,
@@ -193,6 +223,9 @@ def build_subprocess_sandbox(
         env=_sandbox_env(sandbox_cwd),
         preexec_fn=preexec_fn,
         backend=backend,
+        requested_mode=requested_mode,
+        selection_reason=selection_reason,
+        fallback_used=fallback_used,
         file_policy=file_policy,
         network_policy=network_policy,
     )

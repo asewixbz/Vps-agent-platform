@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 from subprocess import CompletedProcess
@@ -9,7 +10,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.runner import run_python_script, run_shell_command
+from app.runner import run_browser_task, run_python_script, run_shell_command
 from app.settings import Settings
 
 
@@ -43,6 +44,8 @@ class RunnerArtifactManifestTests(TestCase):
             self.assertIn("schedule_manifest_path", result.artifacts)
             self.assertIn("schedule_json_path", result.artifacts)
             self.assertIn("schedule_md_path", result.artifacts)
+            self.assertEqual(result.artifacts["sandbox_mode"], "auto")
+            self.assertIn("sandbox_selection_reason", result.artifacts)
             self.assertTrue(str(result.artifacts["schedule_manifest_path"]).endswith("schedule_manifest.json"))
             self.assertTrue(manifest_path.exists())
             self.assertTrue(artifacts_path.exists())
@@ -111,8 +114,11 @@ class RunnerArtifactManifestTests(TestCase):
             self.assertEqual(call.kwargs["env"]["HOME"], str(Path(tmpdir) / "work" / "task-789"))
             self.assertEqual(call.kwargs["env"]["TMPDIR"], str(Path(tmpdir) / "work" / "task-789" / "tmp"))
             self.assertIsNotNone(call.kwargs["preexec_fn"])
+            self.assertEqual(call.kwargs["stdin"], subprocess.DEVNULL)
+            self.assertTrue(call.kwargs["close_fds"])
             self.assertTrue(result.ok)
             self.assertEqual(result.artifacts["sandbox_backend"], "rlimit")
+            self.assertEqual(result.artifacts["sandbox_mode"], "rlimit")
             self.assertEqual(result.artifacts["sandbox_file_policy"], "cwd-and-rlimit")
 
     @patch("app.runner.subprocess.run")
@@ -145,6 +151,49 @@ class RunnerArtifactManifestTests(TestCase):
             self.assertEqual(call.kwargs["env"]["HOME"], str(Path(tmpdir) / "work" / "task-999"))
             self.assertEqual(call.kwargs["env"]["TMPDIR"], str(Path(tmpdir) / "work" / "task-999" / "tmp"))
             self.assertIsNotNone(call.kwargs["preexec_fn"])
+            self.assertEqual(call.kwargs["stdin"], subprocess.DEVNULL)
+            self.assertTrue(call.kwargs["close_fds"])
             self.assertTrue(result.ok)
             self.assertEqual(result.artifacts["sandbox_backend"], "rlimit")
+            self.assertEqual(result.artifacts["sandbox_mode"], "rlimit")
             self.assertEqual(result.artifacts["command_argv"], ["echo", "hello world"])
+
+    def test_browser_runner_is_disabled_by_default(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+                browser_runner_enabled=False,
+            )
+
+            result = run_browser_task(
+                settings,
+                task_id="task-browser",
+                url="https://example.com",
+                timeout_seconds=5,
+            )
+
+            self.assertFalse(result.ok)
+            self.assertEqual(result.exit_code, 126)
+            self.assertIn("browser runner is not enabled", result.stderr)
+            self.assertEqual(result.artifacts["browser_runner_enabled"], False)
+
+    def test_browser_runner_rejects_unsupported_url_scheme(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+                browser_runner_enabled=True,
+            )
+
+            result = run_browser_task(
+                settings,
+                task_id="task-browser-scheme",
+                url="file:///tmp/index.html",
+                timeout_seconds=5,
+            )
+
+            self.assertFalse(result.ok)
+            self.assertEqual(result.exit_code, 2)
+            self.assertIn("browser url scheme 'file' is not supported", result.stderr)
+            self.assertEqual(result.artifacts["browser_url"], "file:///tmp/index.html")

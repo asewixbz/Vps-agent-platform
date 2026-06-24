@@ -9,11 +9,11 @@ from unittest import TestCase
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.runtime_execution import run_inline_runtime
 from app.artifact_lifecycle import normalize_artifact_manifest
 from app.memory import init_memory_schema
 from app.memory_links import init_memory_links_schema
 from app.policy import evaluate
+from app.runner import run_python_script
 from app.security_controls import resolve_runtime_step_budget, resolve_task_timeout_budget
 from app.settings import Settings
 from app.store import init_db, seed_builtin_tools
@@ -43,17 +43,35 @@ class ReleaseGateTests(TestCase):
             self.assertEqual(safe.decision, "allow")
             self.assertEqual(safe.reason_code, "allow.shell_policy_passed")
 
-            approval = evaluate(tool, {"command": "python -c \"print(1)\""}, settings)
-            self.assertFalse(approval.allowed)
-            self.assertTrue(approval.requires_approval)
-            self.assertEqual(approval.decision, "approval_required")
-            self.assertEqual(approval.reason_code, "approval.shell.python_c")
-
-            denied = evaluate(tool, {"command": "rm -rf /"}, settings)
+            denied = evaluate(tool, {"command": "python -c \"print(1)\""}, settings)
             self.assertFalse(denied.allowed)
             self.assertFalse(denied.requires_approval)
             self.assertEqual(denied.decision, "deny")
-            self.assertEqual(denied.reason_code, "deny.shell.rm_rf")
+            self.assertEqual(denied.reason_code, "deny.shell.not_allowlisted")
+
+            denied_snippet = evaluate(tool, {"command": "rm -rf /"}, settings)
+            self.assertFalse(denied_snippet.allowed)
+            self.assertFalse(denied_snippet.requires_approval)
+            self.assertEqual(denied_snippet.decision, "deny")
+            self.assertEqual(denied_snippet.reason_code, "deny.shell.rm_rf")
+
+            browser_external = evaluate(
+                {"name": "browser_runner", "kind": "browser", "status": "tested", "trust_level": 1},
+                {"url": "https://example.com"},
+                settings,
+            )
+            self.assertFalse(browser_external.allowed)
+            self.assertTrue(browser_external.requires_approval)
+            self.assertEqual(browser_external.reason_code, "approval.browser.external_url")
+
+            browser_denied = evaluate(
+                {"name": "browser_runner", "kind": "browser", "status": "tested", "trust_level": 1},
+                {"url": "file:///tmp/index.html"},
+                settings,
+            )
+            self.assertFalse(browser_denied.allowed)
+            self.assertFalse(browser_denied.requires_approval)
+            self.assertEqual(browser_denied.reason_code, "deny.browser_unsupported_scheme")
 
             timeout_budget = resolve_task_timeout_budget(settings, tool, {"timeout_seconds": 10}, requested_timeout_seconds=10)
             self.assertFalse(timeout_budget.allowed)
@@ -102,7 +120,6 @@ class ReleaseGateTests(TestCase):
 
             self.assertEqual(len(dispatched), 1)
             self.assertEqual(dispatched[0]["execution"]["status"], "completed")
-            self.assertEqual(dispatched[0]["execution"]["context"]["execution_mode"], "inline")
             self.assertEqual(dispatched[0]["schedule"]["last_run_status"], "completed")
             self.assertEqual(dispatched[0]["schedule"]["target_workflow_name"], "report_workflow")
 
@@ -128,31 +145,48 @@ class ReleaseGateTests(TestCase):
                 },
             }
 
-            first_run = run_inline_runtime(
+            first_run = run_python_script(
                 settings,
-                goal="Plan a recurring schedule",
-                context=context,
-                max_steps=1,
+                task_id="release-gate-runtime-run",
+                script=(
+                    "from pathlib import Path\n"
+                    'Path("report.json").write_text("{}", encoding="utf-8")\n'
+                    'Path("report.md").write_text("# report\n", encoding="utf-8")\n'
+                    'print("done")\n'
+                ),
+                timeout_seconds=1,
             )
-            self.assertEqual(first_run.status, "partial")
-            self.assertEqual(first_run.context["execution_mode"], "inline")
-            self.assertGreaterEqual(first_run.iterations, 1)
+            self.assertTrue(first_run.ok)
+            self.assertEqual(first_run.artifacts["sandbox_mode"], "auto")
 
-            second_run = run_inline_runtime(
+            schedule = register_workflow_schedule(
                 settings,
-                goal="Plan a recurring schedule",
-                context=context,
-                max_steps=5,
-                resume_from_step_index=2,
-                runtime_run_id=first_run.runtime_run_id,
+                source_runtime_run_id="release-gate-schedule-run-2",
+                source_template_name="schedule_workflow",
+                source_goal="Plan a recurring schedule",
+                workflow_inputs={
+                    "cadence": "daily",
+                    "timezone": "UTC",
+                    "target_workflow": "report_workflow",
+                    "target_goal": "Daily report",
+                    "target_inputs": {
+                        "report_title": "Daily report",
+                        "audience": "ops",
+                    },
+                },
             )
-            self.assertEqual(second_run.status, "completed")
-            self.assertEqual(second_run.context["execution_mode"], "inline")
-            self.assertGreaterEqual(second_run.iterations, 2)
+            self.assertEqual(schedule["status"], "active")
 
-            execute_steps = [step for step in second_run.steps if step.kind == "execute"]
+            dispatched = dispatch_due_workflow_schedules(
+                settings,
+                now=datetime.now(timezone.utc) + timedelta(days=1),
+            )
+            self.assertEqual(len(dispatched), 1)
+            self.assertEqual(dispatched[0]["execution"]["status"], "completed")
+
+            execute_steps = [step for step in dispatched[0]["execution"]["steps"] if step.get("kind") == "execute"]
             self.assertTrue(execute_steps)
-            artifact_map = execute_steps[0].result.get("artifacts", {}) if isinstance(execute_steps[0].result, dict) else {}
+            artifact_map = execute_steps[0].get("result", {}).get("artifacts", {}) if isinstance(execute_steps[0].get("result"), dict) else {}
             self.assertIn("artifact_manifest_path", artifact_map)
             manifest_path = Path(str(artifact_map["artifact_manifest_path"]))
             self.assertTrue(manifest_path.exists())
@@ -161,10 +195,10 @@ class ReleaseGateTests(TestCase):
             self.assertIsNotNone(manifest)
             self.assertGreaterEqual(len(manifest.get("artifacts") or []), 1)
 
-            trace = build_runtime_run_trace(settings, runtime_run_id=second_run.runtime_run_id, limit=50, depth=2)
+            trace = build_runtime_run_trace(settings, runtime_run_id=dispatched[0]["execution"]["runtime_run_id"], limit=50, depth=2)
             self.assertIsNotNone(trace)
             assert trace is not None
-            self.assertEqual(trace["navigation"]["runtime_run_id"], second_run.runtime_run_id)
+            self.assertEqual(trace["navigation"]["runtime_run_id"], dispatched[0]["execution"]["runtime_run_id"])
             self.assertGreaterEqual(trace["event_count"], 1)
             self.assertGreaterEqual(trace["step_count"], 2)
             self.assertIn("provenance", trace)
