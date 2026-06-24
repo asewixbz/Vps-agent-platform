@@ -86,7 +86,14 @@ def build_policy_audit_payload(
     policy_sources = details.get("policy_sources")
     normalized_policy_sources = [str(item) for item in policy_sources if item is not None] if isinstance(policy_sources, list) else []
     policy_source = str(source or raw.get("policy_source") or details.get("policy_source") or (normalized_policy_sources[-1] if normalized_policy_sources else "policy"))
-    decision_name = str(raw.get("decision") or ("allow" if raw.get("allowed") else "deny") or "deny")
+    if raw.get("decision"):
+        decision_name = str(raw.get("decision"))
+    elif raw.get("requires_approval") and not raw.get("allowed"):
+        decision_name = "approval_required"
+    elif raw.get("allowed"):
+        decision_name = "allow"
+    else:
+        decision_name = "deny"
     reason = str(raw.get("reason") or "")
     reason_code = normalize_policy_reason_code(raw.get("reason_code") or reason or decision_name)
     trust_level = int(raw.get("trust_level") or 0)
