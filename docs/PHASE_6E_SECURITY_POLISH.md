@@ -30,12 +30,14 @@ Phase 6 already has the audit and persistence foundations. This layer tightens e
 - per-tool timeout overrides can tighten the budget for a specific tool
 - fail-fast behavior blocks tasks that exceed budget or policy instead of silently running too long
 - guardrails are exposed through `/security/controls`
+- runtime traces now carry audit summaries so blocked and approved behavior is easier to inspect
 
 ### Ready criteria
 
 - execution requests that exceed timeout or step budgets fail early with a clear reason
 - the runtime loop never runs past the configured step ceiling
 - policy overrides can be inspected without reading code
+- runtime traces clearly surface the relevant audit context
 
 ## 5.3 Smoke tests / release gates
 
@@ -46,6 +48,7 @@ Phase 6 already has the audit and persistence foundations. This layer tightens e
 - runtime resume
 - artifact manifest
 - provenance fetch
+- audit-aware trace checks
 
 ### Current smoke set
 
@@ -53,7 +56,9 @@ Phase 6 already has the audit and persistence foundations. This layer tightens e
   - verifies safe shell allow, approval-triggered shell behavior, and hard deny cases
   - checks timeout and max-step guardrails
   - exercises schedule dispatch end to end
-  - exercises runtime resume, canonical artifact manifests, and runtime trace/provenance fetch
+  - exercises runtime resume, canonical artifact manifests, runtime trace/provenance fetch, and audit summary assertions
+- `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
+  - documents the fast path for diagnosing blocked tasks, runtime runs, security controls, and persistence snapshots
 
 ## Status
 
