@@ -349,6 +349,27 @@ def evaluate_tool_policy(
                 trust_level=trust_level,
                 details=details,
             )
+        parsed = urlparse(url)
+        if not parsed.scheme:
+            return GuardrailDecision(
+                allowed=False,
+                requires_approval=False,
+                decision="deny",
+                reason="browser payload is missing a URL scheme",
+                reason_code="deny.browser_missing_scheme",
+                trust_level=trust_level,
+                details=details,
+            )
+        if parsed.scheme not in {"http", "https"}:
+            return GuardrailDecision(
+                allowed=False,
+                requires_approval=False,
+                decision="deny",
+                reason=f"browser url scheme '{parsed.scheme}' is not supported",
+                reason_code="deny.browser_unsupported_scheme",
+                trust_level=trust_level,
+                details={**details, "url": url, "scheme": parsed.scheme},
+            )
         if _is_external_url(url) and not approved:
             return GuardrailDecision(
                 allowed=False,
