@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
+PERSISTENCE_SCHEMA_NAME = "persistence"
 PERSISTENCE_SCHEMA_VERSION = 1
+PERSISTENCE_SCHEMA_METADATA_TABLE = "schema_metadata"
 
 
 def get_persistence_layers() -> dict[str, Any]:
@@ -30,6 +32,7 @@ def get_persistence_layers() -> dict[str, Any]:
                 "memory graph",
                 "schedules",
                 "audit logs",
+                "schema metadata",
             ],
             "layers": [
                 {
@@ -59,8 +62,8 @@ def get_persistence_layers() -> dict[str, Any]:
                 },
                 {
                     "name": "schema_metadata",
-                    "tables": ["schema_metadata"],
-                    "notes": "Version metadata must be durable so future migrations can be coordinated safely.",
+                    "tables": [PERSISTENCE_SCHEMA_METADATA_TABLE],
+                    "notes": "Schema version rows and migration notes are durable so future upgrades can coordinate safely.",
                 },
             ],
         },
@@ -70,6 +73,9 @@ def get_persistence_layers() -> dict[str, Any]:
 def get_schema_version_strategy() -> dict[str, Any]:
     return {
         "current_schema_version": PERSISTENCE_SCHEMA_VERSION,
+        "schema_name": PERSISTENCE_SCHEMA_NAME,
+        "metadata_table": PERSISTENCE_SCHEMA_METADATA_TABLE,
+        "version_record_key": PERSISTENCE_SCHEMA_NAME,
         "strategy": "additive versioned migrations with compatibility-first readers",
         "rules": [
             "new fields should be added without breaking existing readers",
@@ -77,6 +83,28 @@ def get_schema_version_strategy() -> dict[str, Any]:
             "schema changes should be versioned explicitly before any backend swap",
             "read paths should tolerate old rows until backfill is complete",
         ],
+        "operational_notes": [
+            "schema metadata rows are seeded on startup and can be read before any future storage swap",
+            "legacy databases without schema metadata should be treated as pre-migration state",
+            "read paths should tolerate old rows until schema metadata has been populated",
+        ],
+    }
+
+
+def get_schema_metadata_contract() -> dict[str, Any]:
+    return {
+        "table": PERSISTENCE_SCHEMA_METADATA_TABLE,
+        "schema_name": PERSISTENCE_SCHEMA_NAME,
+        "schema_version": PERSISTENCE_SCHEMA_VERSION,
+        "versioning_model": "single-row upsert",
+        "record_fields": {
+            "schema_name": "text primary key",
+            "schema_version": "integer not null",
+            "metadata_json": "json payload for migration notes and durable table inventory",
+            "applied_at": "timestamp when the row was first created",
+            "updated_at": "timestamp when the row was last refreshed",
+        },
+        "scope": "migration scaffolding and upgrade coordination",
     }
 
 
@@ -130,8 +158,10 @@ def get_persistence_boundary_map() -> dict[str, Any]:
     layers = get_persistence_layers()
     return {
         "schema_version": PERSISTENCE_SCHEMA_VERSION,
+        "schema_name": PERSISTENCE_SCHEMA_NAME,
         "layers": layers,
         "schema_version_strategy": get_schema_version_strategy(),
+        "schema_metadata_contract": get_schema_metadata_contract(),
         "durable_table_candidates": get_durable_table_candidates(),
         "postgres_migration_path": get_postgres_migration_path(),
     }
