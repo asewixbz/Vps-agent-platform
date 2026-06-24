@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import Any
 
 from .observability import normalize_reason_code, normalize_runtime_event_name
+from .runtime_audit import build_runtime_event_audit_payload
 
 
 def normalize_runtime_event(event: dict[str, Any]) -> dict[str, Any]:
@@ -52,6 +53,24 @@ def normalize_runtime_event(event: dict[str, Any]) -> dict[str, Any]:
     )
     if "message" not in normalized:
         normalized["message"] = str(payload.get("summary") or payload.get("blocked_reason") or payload.get("reason") or normalized["event_name"])
+
+    audit = build_runtime_event_audit_payload(
+        {
+            **normalized,
+            "payload": payload,
+            "trace": trace,
+            "event_name": normalized["event_name"],
+            "reason_code": normalized["reason_code"],
+            "message": normalized["message"],
+        },
+        context=trace,
+    )
+    normalized["audit"] = audit
+    for field in ("tool_name", "kind", "task_id", "runtime_run_id", "step_index", "step_id", "blocked_reason", "resume_hint", "artifact_refs"):
+        if audit.get(field) is not None:
+            normalized[field] = audit[field]
+    normalized["reason_code"] = str(audit.get("reason_code") or normalized["reason_code"])
+    normalized["message"] = str(audit.get("message") or normalized["message"])
     return normalized
 
 

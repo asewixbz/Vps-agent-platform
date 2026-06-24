@@ -210,3 +210,8 @@ class ReleaseGateTests(TestCase):
             self.assertGreaterEqual(trace["step_count"], 2)
             self.assertIn("provenance", trace)
             self.assertIn("artifacts", trace)
+            self.assertIn("audit", trace)
+            self.assertIn("reason_codes", trace["audit"])
+            self.assertIn("artifact_refs", trace["audit"])
+            self.assertEqual(trace["audit"]["runtime_run_id"], dispatched[0]["execution"]["runtime_run_id"])
+            self.assertEqual(trace["runtime_run"]["audit"]["runtime_run_id"], dispatched[0]["execution"]["runtime_run_id"])
