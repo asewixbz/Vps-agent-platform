@@ -177,3 +177,23 @@ class RunnerArtifactManifestTests(TestCase):
             self.assertEqual(result.exit_code, 126)
             self.assertIn("browser runner is not enabled", result.stderr)
             self.assertEqual(result.artifacts["browser_runner_enabled"], False)
+
+    def test_browser_runner_rejects_unsupported_url_scheme(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+                browser_runner_enabled=True,
+            )
+
+            result = run_browser_task(
+                settings,
+                task_id="task-browser-scheme",
+                url="file:///tmp/index.html",
+                timeout_seconds=5,
+            )
+
+            self.assertFalse(result.ok)
+            self.assertEqual(result.exit_code, 2)
+            self.assertIn("browser url scheme 'file' is not supported", result.stderr)
+            self.assertEqual(result.artifacts["browser_url"], "file:///tmp/index.html")
