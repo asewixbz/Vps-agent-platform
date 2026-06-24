@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     task_queue_name: str = "agent_tasks"
     worker_poll_seconds: int = 5
     worker_once: bool = False
-    allowed_shell_commands: str = "echo,ls,pwd,cat,grep,python"
+    allowed_shell_commands: str = "echo,ls,pwd,cat,grep,head,tail"
     default_timeout_seconds: int = 60
     task_timeout_hard_limit_seconds: int = 300
     runtime_max_steps_hard_limit: int = 10
