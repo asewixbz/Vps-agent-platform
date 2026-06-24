@@ -135,7 +135,13 @@ def summarize_runtime_audit(
     task_ids = _unique_values([event.get("task_id") for event in [*normalized_events, *normalized_steps]])
     step_indices = sorted({event.get("step_index") for event in [*normalized_events, *normalized_steps] if isinstance(event.get("step_index"), int)})
     blocked_count = sum(1 for event in normalized_events if event.get("event_name") == "blocked" or event.get("blocked_reason"))
-    approval_count = sum(1 for event in normalized_events if event.get("event_name") == "approved")
+    approval_count = sum(
+        1
+        for event in normalized_events
+        if event.get("event_name") == "approved"
+        or "approval" in str(event.get("reason_code") or "").lower()
+        or "approval" in str(event.get("blocked_reason") or "").lower()
+    )
     artifact_refs: list[str] = []
     for event in [*normalized_events, *normalized_steps]:
         for ref in event.get("artifact_refs") or []:
