@@ -60,6 +60,7 @@ class WorkflowScheduleTests(TestCase):
             self.assertIn("execution", dispatched_item)
             self.assertIn("schedule", dispatched_item)
             self.assertEqual(dispatched_item["execution"]["status"], "completed")
+            self.assertEqual(dispatched_item["execution"]["context"]["execution_mode"], "inline")
             self.assertEqual(dispatched_item["schedule"]["status"], "active")
             self.assertEqual(dispatched_item["schedule"]["last_run_status"], "completed")
             self.assertGreater(dispatched_item["schedule"]["next_run_at"], original_next_run_at)
@@ -131,6 +132,7 @@ class WorkflowScheduleTests(TestCase):
             self.assertEqual(len(dispatched), 1)
             self.assertEqual(dispatched[0]["schedule"]["target_workflow_name"], "custom_report_workflow")
             self.assertEqual(dispatched[0]["execution"]["status"], "completed")
+            self.assertEqual(dispatched[0]["execution"]["context"]["execution_mode"], "inline")
             self.assertEqual(dispatched[0]["schedule"]["last_run_status"], "completed")
             self.assertEqual(schedule["target_workflow_name"], "custom_report_workflow")
 
@@ -171,6 +173,7 @@ class WorkflowScheduleTests(TestCase):
 
             self.assertEqual(len(dispatched), 1)
             self.assertEqual(dispatched[0]["execution"]["status"], "completed")
+            self.assertEqual(dispatched[0]["execution"]["context"]["execution_mode"], "inline")
             self.assertEqual(dispatched[0]["schedule"]["status"], "completed")
             self.assertIsNone(dispatched[0]["schedule"]["next_run_at"])
             self.assertEqual(dispatched[0]["schedule"]["last_run_status"], "completed")

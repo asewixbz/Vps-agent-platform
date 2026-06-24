@@ -9,7 +9,7 @@ from unittest import TestCase
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.agent_runtime import run_agent_runtime
+from app.runtime_execution import run_inline_runtime
 from app.artifact_lifecycle import normalize_artifact_manifest
 from app.memory import init_memory_schema
 from app.memory_links import init_memory_links_schema
@@ -102,6 +102,7 @@ class ReleaseGateTests(TestCase):
 
             self.assertEqual(len(dispatched), 1)
             self.assertEqual(dispatched[0]["execution"]["status"], "completed")
+            self.assertEqual(dispatched[0]["execution"]["context"]["execution_mode"], "inline")
             self.assertEqual(dispatched[0]["schedule"]["last_run_status"], "completed")
             self.assertEqual(dispatched[0]["schedule"]["target_workflow_name"], "report_workflow")
 
@@ -127,16 +128,17 @@ class ReleaseGateTests(TestCase):
                 },
             }
 
-            first_run = run_agent_runtime(
+            first_run = run_inline_runtime(
                 settings,
                 goal="Plan a recurring schedule",
                 context=context,
                 max_steps=1,
             )
             self.assertEqual(first_run.status, "partial")
+            self.assertEqual(first_run.context["execution_mode"], "inline")
             self.assertGreaterEqual(first_run.iterations, 1)
 
-            second_run = run_agent_runtime(
+            second_run = run_inline_runtime(
                 settings,
                 goal="Plan a recurring schedule",
                 context=context,
@@ -145,6 +147,7 @@ class ReleaseGateTests(TestCase):
                 runtime_run_id=first_run.runtime_run_id,
             )
             self.assertEqual(second_run.status, "completed")
+            self.assertEqual(second_run.context["execution_mode"], "inline")
             self.assertGreaterEqual(second_run.iterations, 2)
 
             execute_steps = [step for step in second_run.steps if step.kind == "execute"]
