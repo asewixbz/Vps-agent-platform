@@ -34,8 +34,8 @@
 
 ## Open PRs noted in this snapshot
 
-- PR #30 (`docs: refresh Phase 6 state snapshot`) is the current docs-sync PR for this snapshot
+- PR #30 (`docs: refresh Phase 6 state snapshot`) is the current docs-sync PR for this snapshot and is mergeable
 
 ## Recommended next step
 
-Keep the README and handoff docs aligned with this refreshed snapshot, then run the release-gate smoke suite before tightening any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Merge PR #30, then keep the README and handoff docs aligned with this refreshed snapshot, and run the release-gate smoke suite before tightening any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
