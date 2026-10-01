@@ -34,8 +34,8 @@
 
 ## Open PRs noted in this snapshot
 
-- PR #16 (`fix: sync settings bootstrap and docs`) is the only open PR currently returned by GitHub
-- GitHub currently reports `mergeable: false` for that PR, so it needs reconciliation before it can be merged or closed out
+- PR #16 (`fix: sync settings bootstrap and docs`) is still open and GitHub currently reports `mergeable: false`
+- PR #30 (`docs: refresh Phase 6 state snapshot`) is the current docs-sync PR for this snapshot
 
 ## Recommended next step
 
