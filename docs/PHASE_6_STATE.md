@@ -31,7 +31,7 @@
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
 - the remaining open Phase 6 docs/bootstrap PR (#16) still needs a fresh review or rebase before it can be closed out cleanly
-- the top-level README and handoff docs still need a quick sync pass so this snapshot is reflected in the user-facing docs
+- the top-level README is now synced, and the handoff docs still need a quick pass so this snapshot is reflected in the user-facing docs
 
 ## Open PRs noted in this snapshot
 
@@ -40,4 +40,4 @@
 
 ## Recommended next step
 
-Reconcile PR #16 against current main, keep the README and handoff docs aligned with this snapshot, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Finish syncing the handoff docs, then reconcile PR #16 against current main, keep the README and handoff docs aligned with this snapshot, and run the release-gate smoke suite before tightening any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
