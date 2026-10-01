@@ -12,7 +12,7 @@ Harden execution so the platform is safer and more production-ready without losi
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
-- the docs-sync PR (#30) keeps the refreshed Phase 6 snapshot aligned across README, handoff, and state docs
+- the docs-sync PR (#30) keeps the refreshed Phase 6 snapshot aligned across README, handoff, and state docs, including the README folder layout update for the Phase 6 docs set
 
 ## Near-term roadmap
 
