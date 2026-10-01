@@ -63,6 +63,11 @@ vps-agent-platform/
     PROJECT_HANDOFF.md
     MODEL_ADAPTER.md
     PHASE5_CUSTOM_WORKFLOW_TEMPLATES.md
+    PHASE_6_OPERATIONAL_RUNBOOK.md
+    PHASE_6_ROADMAP.md
+    PHASE_6_STATE.md
+    PHASE_6D_PERSISTENCE_HARDENING.md
+    PHASE_6E_SECURITY_POLISH.md
   backend/
     Dockerfile
     requirements.txt
