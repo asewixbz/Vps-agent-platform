@@ -30,13 +30,12 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
-- the remaining open Phase 6 docs/bootstrap PR (#16) still needs a fresh review or rebase before it can be closed out cleanly
+- the docs/bootstrap PR (#16) has been closed as stale because the startup bootstrap work is already present in `main`
 
 ## Open PRs noted in this snapshot
 
-- PR #16 (`fix: sync settings bootstrap and docs`) is still open and GitHub currently reports `mergeable: false`
 - PR #30 (`docs: refresh Phase 6 state snapshot`) is the current docs-sync PR for this snapshot
 
 ## Recommended next step
 
-Finish reconciling PR #16 against current main, keep the README and handoff docs aligned with this refreshed snapshot, and run the release-gate smoke suite before tightening any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Keep the README and handoff docs aligned with this refreshed snapshot, then run the release-gate smoke suite before tightening any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
