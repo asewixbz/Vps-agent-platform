@@ -81,3 +81,33 @@ class SandboxTests(TestCase):
             self.assertEqual(sandbox.argv, ["echo", "hello"])
             warning_mock.assert_called_once()
             which_mock.assert_called_once_with("bwrap")
+
+    @patch("app.sandbox.shutil.which", return_value=None)
+    def test_explicit_bubblewrap_mode_falls_back_to_rlimit_when_bubblewrap_is_missing(self, which_mock) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                task_sandbox_mode="bubblewrap",
+                task_sandbox_allow_network=False,
+                default_timeout_seconds=5,
+            )
+            workdir = Path(tmpdir) / "work" / "task-3"
+            workdir.mkdir(parents=True, exist_ok=True)
+
+            with patch("app.sandbox.logger.warning") as warning_mock:
+                sandbox = build_subprocess_sandbox(
+                    settings,
+                    workdir=workdir,
+                    argv=["echo", "hello"],
+                    timeout_seconds=5,
+                )
+
+            self.assertEqual(sandbox.requested_mode, "bubblewrap")
+            self.assertEqual(sandbox.backend, "rlimit")
+            self.assertEqual(sandbox.cwd, str(workdir))
+            self.assertIsNotNone(sandbox.preexec_fn)
+            self.assertTrue(sandbox.fallback_used)
+            self.assertIn("falling back to rlimit", sandbox.selection_reason)
+            self.assertEqual(sandbox.argv, ["echo", "hello"])
+            warning_mock.assert_called_once()
+            which_mock.assert_called_once_with("bwrap")
