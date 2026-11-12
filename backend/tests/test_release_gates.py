@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -14,6 +15,7 @@ from app.memory import init_memory_schema
 from app.memory_links import init_memory_links_schema
 from app.policy import evaluate
 from app.runner import run_python_script
+from app.sandbox import build_subprocess_sandbox
 from app.security_controls import resolve_runtime_step_budget, resolve_task_timeout_budget
 from app.settings import Settings
 from app.store import init_db, seed_builtin_tools
@@ -82,6 +84,37 @@ class ReleaseGateTests(TestCase):
             self.assertFalse(step_budget.allowed)
             self.assertEqual(step_budget.reason_code, "deny.max_steps_exceeds_limit")
             self.assertEqual(step_budget.limit_max_steps, 2)
+
+    @patch("app.sandbox.shutil.which", return_value="/usr/bin/bwrap")
+    def test_sandbox_build_failure_falls_back_to_rlimit(self, which_mock) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = self._settings(tmpdir)
+            settings.task_sandbox_mode = "bubblewrap"
+            workdir = Path(tmpdir) / "work" / "release-gate-sandbox-run"
+            workdir.mkdir(parents=True, exist_ok=True)
+
+            with patch("app.sandbox._build_bubblewrap_argv", side_effect=RuntimeError("forced build failure")) as build_mock, patch("app.sandbox.logger.warning") as warning_mock:
+                sandbox = build_subprocess_sandbox(
+                    settings,
+                    workdir=workdir,
+                    argv=["echo", "hello"],
+                    timeout_seconds=5,
+                )
+
+            self.assertEqual(sandbox.requested_mode, "bubblewrap")
+            self.assertEqual(sandbox.backend, "rlimit")
+            self.assertEqual(sandbox.cwd, str(workdir))
+            self.assertIsNotNone(sandbox.preexec_fn)
+            self.assertEqual(sandbox.env["HOME"], str(workdir))
+            self.assertEqual(sandbox.env["TMPDIR"], str(workdir / "tmp"))
+            self.assertEqual(sandbox.file_policy, "cwd-and-rlimit")
+            self.assertEqual(sandbox.network_policy, "not-enforced")
+            self.assertTrue(sandbox.fallback_used)
+            self.assertIn("bubblewrap fallback to rlimit after build failure", sandbox.selection_reason)
+            self.assertEqual(sandbox.argv, ["echo", "hello"])
+            build_mock.assert_called_once()
+            warning_mock.assert_called_once()
+            which_mock.assert_called_once_with("bwrap")
 
     def test_schedule_dispatch_smoke(self) -> None:
         with TemporaryDirectory() as tmpdir:

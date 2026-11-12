@@ -8,14 +8,17 @@ Harden execution so the platform is safer and more production-ready without losi
 
 - shell policy parsing rejects malformed shell commands and blocks obvious control operators
 - the runner uses a sandbox helper with cwd isolation, restricted env, and explicit resource limits
+- sandbox fallback coverage now includes the explicit bubblewrap-requested build-failure case when `bwrap` is unavailable and the explicit `bwrap` alias selection path
+- explicit rlimit smoke coverage keeps the fallback state stable across sandbox backend selection
 - browser execution is behind a feature flag and still requires approval for external URLs
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
-- release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
+- release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, sandbox fallback checks, the `bwrap` alias selection path, and audit-aware trace checks
+- the release-gate smoke suite now exercises the explicit bubblewrap-requested build-failure fallback path and the `bwrap` alias selection path
 
 ## Near-term roadmap
 
-1. Exercise and harden the sandbox fallback path.
+1. Exercise and harden the sandbox fallback path, including explicit bubblewrap-requested build-failure coverage and the `bwrap` alias selection path.
 2. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
 3. Continue improving runtime audit and trace visibility for blocked and approved runs.
 4. Keep the release-gate smoke suite green while making small hardening changes.
