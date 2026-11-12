@@ -56,7 +56,7 @@ The project should be treated as an execution platform first, and a UI product s
 - Python runner support for optional `artifacts.json` manifests so workflow templates can publish extra artifact paths
 - Python runner materialization of schedule artifacts so schedule-style workflows can surface `schedule_manifest.json` automatically
 - Phase 5 workflow templates, including built-in scan/rank/report/compare/schedule templates, persisted custom templates, recurring schedule dispatch, and one-shot schedule completion through the worker loop
-- release-gate smoke tests for policy regression, schedule dispatch, runtime resume, artifact manifests, and provenance fetch
+- release-gate smoke tests for policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, audit-aware trace checks, and sandbox fallback coverage
 
 ### Phase status
 
@@ -413,4 +413,4 @@ Status:
 
 ## Current project status summary
 
-The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, and the codebase now includes runtime trace navigation, canonical artifact manifests and cleanup helpers, an explicit persistence boundary map and migration path, plus operational security controls and release-gate smoke tests. The remaining work is to keep the smoke suite green and then move durable state toward a backend that can handle more scale and less contention.
+The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, and the codebase now includes runtime trace navigation, canonical artifact manifests and cleanup helpers, an explicit persistence boundary map and migration path, plus operational security controls and release-gate smoke tests, including sandbox fallback coverage. The remaining work is to keep the smoke suite green and then move durable state toward a backend that can handle more scale and less contention.
