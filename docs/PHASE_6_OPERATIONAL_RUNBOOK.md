@@ -162,6 +162,18 @@ If the task or runtime stops early, inspect:
 - `resume_hint`
 - `runtime_max_steps_hard_limit`
 
+### Sandbox fallback and backend selection
+
+If sandbox execution does not use the backend you expected:
+
+- check `task_sandbox_mode`
+- confirm whether `bwrap` is installed in the environment
+- inspect `sandbox.backend`, `sandbox.fallback_used`, `sandbox.selection_reason`, and `sandbox.file_policy`
+- look for `falling back to rlimit` when auto mode cannot find `bwrap`
+- look for `bubblewrap fallback to rlimit after build failure` when explicit bubblewrap mode was requested but the sandbox could not be built
+
+This is the fastest way to tell the difference between a missing binary, a build-failure fallback, and the expected `bwrap` alias path.
+
 ### Browser failures
 
 If browser execution is disabled or gated:

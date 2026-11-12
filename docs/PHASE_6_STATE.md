@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-12
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: runtime boundary hardening, sandbox fallback path coverage, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates, including explicit bubblewrap-requested build-failure smoke coverage and the `bwrap` alias selection path
 
 ## What is already true
 
@@ -13,15 +13,18 @@
 - runtime history, checkpoints, provenance, and durable memory are already wired in
 - runtime trace now joins runtime events, provenance, memory snapshots, tasks, steps, artifacts, and audit summaries into one inspection surface
 - shell policy parsing rejects malformed commands safely and blocks basic shell control operators before the runner
-- task execution now goes through a sandbox helper with cwd isolation, restricted env, explicit resource limits, and a bubblewrap-backed prototype when available
+- task execution now goes through a sandbox helper with cwd isolation, restricted env, explicit resource limits, and bubblewrap selection/fallback metadata when bubblewrap is available or cannot be built
+- explicit bubblewrap requests now have regression coverage for the rlimit fallback path when `bwrap` is missing
+- explicit `bwrap` alias selection now has regression coverage alongside the explicit bubblewrap-requested fallback path
 - writer-side artifact generation now emits canonical artifact manifests for python, shell, browser, and workflow outputs
 - the runtime/CLI/docs surfaces now include artifact cleanup helpers and trace navigation for incident review
 - the persistence boundary is documented in code and exposes both `/persistence/layers` and `/persistence/schema`
 - the schema/versioning strategy and Postgres migration path for durable state are documented in code and in `docs/PHASE_6D_PERSISTENCE_HARDENING.md`
 - security controls expose `/security/controls` with trust levels, approval triggers, and operational budgets
 - runtime API requests are capped by a hard max-step budget before the loop starts
-- release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
+- release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, sandbox fallback assertions, the explicit bubblewrap-requested build-failure case, the `bwrap` alias selection path, and audit-aware trace checks
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
+- the runbook now includes sandbox fallback triage guidance for missing `bwrap` binaries, build-failure fallback, and the expected alias path
 
 ## Current blockers
 
