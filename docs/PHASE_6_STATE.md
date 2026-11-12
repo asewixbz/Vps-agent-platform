@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- draft and review PRs 31, 33, 34, 35, 36, 37, 38, 39, and 40 cover overlapping sandbox fallback, docs, and release-gate work
+- draft and review PRs 31-47 cover overlapping sandbox fallback, docs, runbook, README, and release-gate work
 - the latest docs sync branches are still pending review or merge
 
 ## Recommended next step
