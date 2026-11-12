@@ -170,6 +170,15 @@ If browser execution is disabled or gated:
 - check `/security/controls` for browser approval triggers
 - confirm the URL scheme is `http` or `https`
 
+### Sandbox fallback path
+
+If auto sandbox mode falls back from bubblewrap to rlimit:
+
+- inspect the runtime trace or logs for the sandbox selection reason
+- confirm whether `bwrap` is installed on the host
+- expect `requested_mode` to stay `auto` while `backend` changes to `rlimit` and `fallback_used` becomes `true`
+- remember the fallback still provides cwd isolation and resource limits, but not the stronger bubblewrap file/network boundary
+
 ### Persistence or schema issues
 
 If startup or inspection fails around durable state:
