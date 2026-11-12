@@ -162,6 +162,16 @@ If the task or runtime stops early, inspect:
 - `resume_hint`
 - `runtime_max_steps_hard_limit`
 
+### Sandbox fallback behavior
+
+If sandbox setup falls back from bubblewrap to the rlimit path:
+
+- check whether `requested_mode` was `auto`, `bubblewrap`, or `bwrap`
+- confirm whether `bwrap` is installed and available on the worker host
+- inspect `backend`, `fallback_used`, and `selection_reason` in the runtime trace or sandbox logs
+- treat explicit bubblewrap-requested fallback as expected when the binary is missing, but still note it as a signal that the stricter path was unavailable
+- use the release-gate smoke suite to confirm the fallback case stays covered before relying on the stricter sandbox path
+
 ### Browser failures
 
 If browser execution is disabled or gated:
