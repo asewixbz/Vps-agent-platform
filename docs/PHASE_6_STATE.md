@@ -35,7 +35,7 @@
 ## Open PRs noted in this snapshot
 
 - PR #51 is the canonical docs/state sync branch for the current cleanup pass
-- PRs #52 and #53 are duplicate follow-on docs branches to retire before the next release-gate run
+- PRs #52 and #53 are already closed duplicate follow-on docs branches
 
 ## Recommended next step
 
