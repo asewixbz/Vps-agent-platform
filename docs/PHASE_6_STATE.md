@@ -14,6 +14,7 @@
 - runtime trace now joins runtime events, provenance, memory snapshots, tasks, steps, artifacts, and audit summaries into one inspection surface
 - shell policy parsing rejects malformed commands safely and blocks basic shell control operators before the runner
 - task execution now goes through a sandbox helper with cwd isolation, restricted env, explicit resource limits, and a bubblewrap-backed prototype when available
+- explicit bubblewrap requests now have regression coverage for the rlimit fallback path when `bwrap` is missing
 - writer-side artifact generation now emits canonical artifact manifests for python, shell, browser, and workflow outputs
 - the runtime/CLI/docs surfaces now include artifact cleanup helpers and trace navigation for incident review
 - the persistence boundary is documented in code and exposes both `/persistence/layers` and `/persistence/schema`
