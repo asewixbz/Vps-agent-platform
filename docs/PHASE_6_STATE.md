@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-12
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: sandbox fallback coverage, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
 ## What is already true
 
@@ -34,7 +34,8 @@
 ## Open PRs noted in this snapshot
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- current review attention should stay on sandbox fallback coverage and the release-gate smoke suite before any broader hardening move
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, persistence snapshot, or sandbox fallback smoke tests.
