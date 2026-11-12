@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-12
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: runtime boundary hardening, sandbox fallback path coverage, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
 ## What is already true
 
@@ -13,7 +13,7 @@
 - runtime history, checkpoints, provenance, and durable memory are already wired in
 - runtime trace now joins runtime events, provenance, memory snapshots, tasks, steps, artifacts, and audit summaries into one inspection surface
 - shell policy parsing rejects malformed commands safely and blocks basic shell control operators before the runner
-- task execution now goes through a sandbox helper with cwd isolation, restricted env, explicit resource limits, and a bubblewrap-backed prototype when available
+- task execution now goes through a sandbox helper with cwd isolation, restricted env, explicit resource limits, and bubblewrap selection/fallback metadata when bubblewrap is available or cannot be built
 - writer-side artifact generation now emits canonical artifact manifests for python, shell, browser, and workflow outputs
 - the runtime/CLI/docs surfaces now include artifact cleanup helpers and trace navigation for incident review
 - the persistence boundary is documented in code and exposes both `/persistence/layers` and `/persistence/schema`
