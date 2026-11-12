@@ -397,7 +397,7 @@ Status:
 
 ## Immediate next work
 
-1. Review or merge the sandbox fallback PRs, then run the Phase 6E release-gate smoke suite and fix any regressions.
+1. Review or merge the sandbox fallback PRs and the overlapping docs/test branches tracked in issue #49, then run the Phase 6E release-gate smoke suite and fix any regressions.
 2. Keep Phase 6D persistence validation moving once the smoke gates are stable.
 3. Continue Phase 6 hardening only after the boundaries and release gates stay green.
 
