@@ -14,6 +14,7 @@
 - runtime trace now joins runtime events, provenance, memory snapshots, tasks, steps, artifacts, and audit summaries into one inspection surface
 - shell policy parsing rejects malformed commands safely and blocks basic shell control operators before the runner
 - task execution now goes through a sandbox helper with cwd isolation, restricted env, explicit resource limits, and a bubblewrap-backed prototype when available
+- the sandbox fallback path now has explicit regression coverage for both auto mode and explicit bubblewrap requests
 - writer-side artifact generation now emits canonical artifact manifests for python, shell, browser, and workflow outputs
 - the runtime/CLI/docs surfaces now include artifact cleanup helpers and trace navigation for incident review
 - the persistence boundary is documented in code and exposes both `/persistence/layers` and `/persistence/schema`
@@ -36,7 +37,8 @@
 ## Open PRs noted in this snapshot
 
 - PR #30 (`docs: refresh Phase 6 state snapshot`) is the current docs-sync PR for this snapshot and is mergeable
+- PR #31 (`test: cover explicit bubblewrap sandbox fallback`) tracks the new sandbox fallback regression coverage
 
 ## Recommended next step
 
-Merge PR #30, then keep the README and handoff docs aligned with this refreshed snapshot, and run the release-gate smoke suite before tightening any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Merge PR #30, then review PR #31, keep the README and handoff docs aligned with this refreshed snapshot, and run the release-gate smoke suite before tightening any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
