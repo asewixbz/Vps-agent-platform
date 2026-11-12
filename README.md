@@ -44,6 +44,7 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - persisted custom workflow templates in SQLite
 - recurring workflow schedule dispatch from the worker loop
 - worker-driven artifact lifecycle cleanup
+- security controls exposed via `/security/controls` with trust levels, approval triggers, and operational budgets
 
 ## What is not included yet
 
@@ -63,6 +64,11 @@ vps-agent-platform/
     PROJECT_HANDOFF.md
     MODEL_ADAPTER.md
     PHASE5_CUSTOM_WORKFLOW_TEMPLATES.md
+    PHASE_6_OPERATIONAL_RUNBOOK.md
+    PHASE_6_ROADMAP.md
+    PHASE_6_STATE.md
+    PHASE_6D_PERSISTENCE_HARDENING.md
+    PHASE_6E_SECURITY_POLISH.md
   backend/
     Dockerfile
     requirements.txt
@@ -84,14 +90,22 @@ vps-agent-platform/
       model_adapter.py
       model_runtime.py
       observability.py
+      persistence_api.py
+      persistence_layers.py
+      persistence_migrations.py
       planner.py
       policy.py
       provenance_api.py
       runner.py
       runtime_api.py
+      runtime_audit.py
+      runtime_execution.py
       runtime_events.py
       runtime_provenance.py
       runtime_trace.py
+      sandbox.py
+      security_api.py
+      security_controls.py
       settings.py
       store.py
       worker.py
@@ -294,7 +308,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 
 ## Recommended rollout plan
 
-### Phase 1 — complete
+### Phase 1  complete
 - control plane
 - local Python/shell execution
 - tool registry
@@ -304,7 +318,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - model API endpoints
 - first provider adapter
 
-### Phase 2 — complete
+### Phase 2  complete
 - Redis queue
 - worker process
 - browser runner
@@ -312,7 +326,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - execution planning bridge
 - runtime loop scaffold
 
-### Phase 3 — complete
+### Phase 3  complete
 - Postgres
 - stronger policy engine
 - trust scoring
@@ -320,14 +334,14 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - persistent runtime history
 - runtime event logs
 
-### Phase 4 — complete
+### Phase 4  complete
 - durable memory records
 - project/contact dossiers
 - memory links
 - artifact indexing
 - long-lived workflow context
 
-### Phase 5 — complete
+### Phase 5  complete
 - workflow templates
 - scanning workflows
 - ranking workflows
@@ -337,7 +351,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - custom workflow template persistence
 - recurring schedule dispatch
 
-### Phase 6 — next, but not ready yet
+### Phase 6  next, but not ready yet
 - automatic tool synthesis
 - sandbox-first execution
 - human approval gates for risky actions
