@@ -44,6 +44,7 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - persisted custom workflow templates in SQLite
 - recurring workflow schedule dispatch from the worker loop
 - worker-driven artifact lifecycle cleanup
+- sandbox fallback regression coverage for auto mode and explicit bubblewrap requests
 
 ## What is not included yet
 
