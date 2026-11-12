@@ -12,7 +12,7 @@ Harden execution so the platform is safer and more production-ready without losi
 - browser execution is behind a feature flag and still requires approval for external URLs
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
-- release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, audit-aware trace checks, and explicit sandbox fallback coverage
+- release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, audit-aware trace checks, explicit sandbox fallback coverage, and explicit rlimit smoke coverage
 
 ## Near-term roadmap
 
