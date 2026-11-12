@@ -397,7 +397,7 @@ Status:
 
 ## Immediate next work
 
-1. Run the Phase 6E release-gate smoke suite and fix any regressions.
+1. Consolidate the overlapping Phase 6 docs/test branches, keep PR #51 as the canonical docs/state sync branch, and then run the Phase 6E release-gate smoke suite from the consolidated baseline.
 2. Keep Phase 6D persistence validation moving once the smoke gates are stable.
 3. Continue Phase 6 hardening only after the boundaries and release gates stay green.
 
