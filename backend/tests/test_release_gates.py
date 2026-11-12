@@ -218,6 +218,28 @@ class ReleaseGateTests(TestCase):
             self.assertEqual(trace["audit"]["runtime_run_id"], dispatched[0]["execution"]["runtime_run_id"])
             self.assertEqual(trace["runtime_run"]["audit"]["runtime_run_id"], dispatched[0]["execution"]["runtime_run_id"])
 
+    def test_auto_sandbox_falls_back_to_rlimit_when_bwrap_is_missing(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+            )
+
+            with patch("app.sandbox.shutil.which", return_value=None):
+                result = run_python_script(
+                    settings,
+                    task_id="release-gate-auto-fallback-run",
+                    script='print("done")\n',
+                    timeout_seconds=1,
+                )
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.artifacts["sandbox_mode"], "auto")
+            self.assertEqual(result.artifacts["sandbox_backend"], "rlimit")
+            self.assertTrue(result.artifacts["sandbox_fallback_used"])
+            self.assertEqual(result.artifacts["sandbox_file_policy"], "cwd-and-rlimit")
+            self.assertIn("falling back to rlimit", result.artifacts["sandbox_selection_reason"])
+
     def test_explicit_rlimit_sandbox_smoke(self) -> None:
         with TemporaryDirectory() as tmpdir:
             settings = Settings(
