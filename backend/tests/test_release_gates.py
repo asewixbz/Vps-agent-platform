@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -82,6 +83,27 @@ class ReleaseGateTests(TestCase):
             self.assertFalse(step_budget.allowed)
             self.assertEqual(step_budget.reason_code, "deny.max_steps_exceeds_limit")
             self.assertEqual(step_budget.limit_max_steps, 2)
+
+    @patch("app.sandbox.shutil.which", return_value=None)
+    def test_release_gate_smoke_records_sandbox_fallback(self, which_mock) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = self._settings(tmpdir)
+
+            result = run_python_script(
+                settings,
+                task_id="release-gate-sandbox-fallback",
+                script='print("sandbox fallback")\n',
+                timeout_seconds=1,
+            )
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.artifacts["sandbox_mode"], "auto")
+            self.assertEqual(result.artifacts["sandbox_backend"], "rlimit")
+            self.assertTrue(result.artifacts["sandbox_fallback_used"])
+            self.assertEqual(result.artifacts["sandbox_file_policy"], "cwd-and-rlimit")
+            self.assertEqual(result.artifacts["sandbox_network_policy"], "not-enforced")
+            self.assertIn("falling back to rlimit", result.artifacts["sandbox_selection_reason"])
+            which_mock.assert_called_once_with("bwrap")
 
     def test_schedule_dispatch_smoke(self) -> None:
         with TemporaryDirectory() as tmpdir:
