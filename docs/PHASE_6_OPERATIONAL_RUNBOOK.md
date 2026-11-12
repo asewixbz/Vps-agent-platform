@@ -179,6 +179,16 @@ If the sandbox logs say bubblewrap was requested but the privileged path could n
 - expect the run to continue with the rlimit fallback instead of failing immediately
 - confirm whether the requested `task_sandbox_mode` was `auto`, `bubblewrap`, or `bwrap`
 
+### `bwrap` alias selection
+
+If the requested sandbox mode is `bwrap` and the host has `bwrap` available:
+
+- expect the sandbox to use the bubblewrap backend
+- confirm `selection_reason` says `bubblewrap selected`
+- confirm `fallback_used` is `false`
+- check the trace or task details for the bubblewrap-specific cwd and environment settings
+- if the backend still falls back, inspect the build path and the host installation first
+
 ### Persistence or schema issues
 
 If startup or inspection fails around durable state:
