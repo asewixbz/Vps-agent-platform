@@ -35,6 +35,7 @@
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
 - current review attention should stay on sandbox fallback coverage and the release-gate smoke suite before any broader hardening move
+- after the sandbox fallback smoke checks settle, the next review target is persistence migration validation and its release-gate exercise
 
 ## Recommended next step
 
