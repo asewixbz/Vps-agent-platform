@@ -44,6 +44,8 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - persisted custom workflow templates in SQLite
 - recurring workflow schedule dispatch from the worker loop
 - worker-driven artifact lifecycle cleanup
+- sandbox fallback regression coverage for auto mode and explicit bubblewrap requests
+- explicit rlimit smoke coverage in the release-gate suite
 
 ## What is not included yet
 
@@ -63,6 +65,11 @@ vps-agent-platform/
     PROJECT_HANDOFF.md
     MODEL_ADAPTER.md
     PHASE5_CUSTOM_WORKFLOW_TEMPLATES.md
+    PHASE_6_OPERATIONAL_RUNBOOK.md
+    PHASE_6_ROADMAP.md
+    PHASE_6_STATE.md
+    PHASE_6D_PERSISTENCE_HARDENING.md
+    PHASE_6E_SECURITY_POLISH.md
   backend/
     Dockerfile
     requirements.txt
@@ -294,7 +301,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 
 ## Recommended rollout plan
 
-### Phase 1 — complete
+### Phase 1 - complete
 - control plane
 - local Python/shell execution
 - tool registry
@@ -304,7 +311,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - model API endpoints
 - first provider adapter
 
-### Phase 2 — complete
+### Phase 2 - complete
 - Redis queue
 - worker process
 - browser runner
@@ -312,7 +319,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - execution planning bridge
 - runtime loop scaffold
 
-### Phase 3 — complete
+### Phase 3 - complete
 - Postgres
 - stronger policy engine
 - trust scoring
@@ -320,14 +327,14 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - persistent runtime history
 - runtime event logs
 
-### Phase 4 — complete
+### Phase 4 - complete
 - durable memory records
 - project/contact dossiers
 - memory links
 - artifact indexing
 - long-lived workflow context
 
-### Phase 5 — complete
+### Phase 5 - complete
 - workflow templates
 - scanning workflows
 - ranking workflows
@@ -337,7 +344,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - custom workflow template persistence
 - recurring schedule dispatch
 
-### Phase 6 — next, but not ready yet
+### Phase 6 - next, but not ready yet
 - automatic tool synthesis
 - sandbox-first execution
 - human approval gates for risky actions
@@ -349,6 +356,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - shell execution is still guarded only by a basic allowlist and heuristic policy checks
 - artifact retention is still local-volume based, although canonical manifests and cleanup helpers are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger audit pipeline
+- the Phase 6 state snapshot should stay aligned with `docs/PHASE_6_STATE.md` and `docs/PROJECT_HANDOFF.md`, and the current docs-sync PR (#30) tracks the refreshed snapshot
 
 ## Notes on safety
 

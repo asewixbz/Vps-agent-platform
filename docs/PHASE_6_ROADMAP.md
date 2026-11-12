@@ -8,10 +8,12 @@ Harden execution so the platform is safer and more production-ready without losi
 
 - shell policy parsing rejects malformed shell commands and blocks obvious control operators
 - the runner uses a sandbox helper with cwd isolation, restricted env, and explicit resource limits
+- the sandbox fallback path now has explicit regression coverage for both auto mode and explicit bubblewrap requests
 - browser execution is behind a feature flag and still requires approval for external URLs
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
-- release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
+- release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, audit-aware trace checks, and explicit rlimit sandbox smoke coverage
+- the docs-sync PR (#30) keeps the refreshed Phase 6 snapshot aligned across README, handoff, and state docs, including the README folder layout update for the Phase 6 docs set
 
 ## Near-term roadmap
 
@@ -19,7 +21,7 @@ Harden execution so the platform is safer and more production-ready without losi
 2. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
 3. Continue improving runtime audit and trace visibility for blocked and approved runs.
 4. Keep the release-gate smoke suite green while making small hardening changes.
-5. Keep documentation and runbooks aligned with the code.
+5. Keep documentation and runbooks aligned with the code and the refreshed snapshot in PR #30.
 
 ## Working rule
 
