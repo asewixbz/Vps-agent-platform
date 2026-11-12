@@ -12,7 +12,7 @@ Harden execution so the platform is safer and more production-ready without losi
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, audit-aware trace checks, and sandbox fallback smoke coverage
-- sandbox fallback coverage is the next small hardening area being reviewed now
+- sandbox fallback coverage is the next small hardening area being reviewed now, and persistence validation is the next review target after that
 
 ## Near-term roadmap
 
