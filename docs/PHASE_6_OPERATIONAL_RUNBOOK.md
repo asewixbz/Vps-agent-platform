@@ -106,6 +106,25 @@ The runtime audit summary in the trace is the quickest way to see:
 - which artifact refs were recorded
 - whether the run spent time blocked or waiting for approval
 
+### Sandbox fallback triage
+
+If a run behaves differently than expected, inspect these runtime artifact fields first:
+
+- `sandbox_backend`
+- `sandbox_mode`
+- `sandbox_selection_reason`
+- `sandbox_fallback_used`
+- `sandbox_file_policy`
+- `sandbox_network_policy`
+
+Use them to distinguish:
+
+- bubblewrap selected and running normally
+- bubblewrap requested but unavailable or failed to build, so the runner fell back to `rlimit`
+- explicit `rlimit` mode selected intentionally
+
+If fallback happened, the selection reason should explain why. Escalate only when the fields are missing or inconsistent.
+
 ## 5) Workflow and schedule triage
 
 List and inspect workflow schedules:
