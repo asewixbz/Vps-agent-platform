@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-12
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and sandbox fallback coverage alongside security polish and release gates
 
 ## What is already true
 
@@ -25,7 +25,8 @@
 
 ## Current blockers
 
-- tasks still need stronger filesystem confinement guarantees beyond the current best-effort sandbox fallback
+- tasks still need stronger filesystem confinement guarantees beyond the current fallback path
+- the explicit bubblewrap-requested fallback branch still needs the same release-gate exercise as the auto-missing path
 - artifact retention is still local-volume based, although canonical manifests and cleanup jobs are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
@@ -33,8 +34,8 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- the Phase 6 sandbox fallback docs/test branches are in progress as reviewable PRs, alongside the broader persistence, security, observability, and docs updates
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Review or merge the sandbox fallback PRs, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
