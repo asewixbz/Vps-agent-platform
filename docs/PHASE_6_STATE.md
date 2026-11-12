@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs; issue #49 tracks the branch-consolidation cleanup before the next smoke-suite pass
+- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs; issue #49 tracks the branch-consolidation cleanup before the next smoke-suite pass, and PR #57 is the current docs/state sync baseline
 
 ## Recommended next step
 
