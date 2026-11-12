@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- several Phase 6 review branches are still open and overlap on docs, state, and smoke-suite coverage; see issue #49 for consolidation before the next release-gate pass
+- several Phase 6 review branches are still open and overlap on docs, state, and smoke-suite coverage; see issue #49 for consolidation before the next release-gate pass. PR #51 is the canonical docs/state sync branch for this pass.
 
 ## Recommended next step
 
