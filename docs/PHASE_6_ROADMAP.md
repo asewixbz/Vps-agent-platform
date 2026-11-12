@@ -7,7 +7,7 @@ Harden execution so the platform is safer and more production-ready without losi
 ## Current state
 
 - shell policy parsing rejects malformed shell commands and blocks obvious control operators
-- the runner uses a sandbox helper with cwd isolation, restricted env, and explicit resource limits
+- the runner uses a sandbox helper with cwd isolation, restricted env, explicit resource limits, and a bubblewrap-backed prototype when available, with explicit fallback metadata and `bwrap` alias coverage
 - browser execution is behind a feature flag and still requires approval for external URLs
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
@@ -15,7 +15,7 @@ Harden execution so the platform is safer and more production-ready without losi
 
 ## Near-term roadmap
 
-1. Exercise and harden the sandbox fallback path, including explicit mode selection.
+1. Exercise and harden the sandbox fallback path, including explicit mode selection and the `bwrap` alias path.
 2. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
 3. Continue improving runtime audit and trace visibility for blocked and approved runs.
 4. Keep the release-gate smoke suite green while making small hardening changes.
