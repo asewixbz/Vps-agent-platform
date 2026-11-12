@@ -35,7 +35,8 @@
 ## Open PRs noted in this snapshot
 
 - the current review cluster includes overlapping docs/test branches; issue 49 tracks choosing the canonical docs branches and closing the redundant duplicates before the next smoke-suite run
+- the project handoff is now aligned with that same branch-consolidation step, so the remaining cleanup is to keep the docs/test baseline unified
 
 ## Recommended next step
 
-Consolidate the overlapping docs/test branches noted in issue 49, then rerun the release-gate smoke suite from the consolidated baseline.
+Consolidate the overlapping docs/test branches noted in issue 49, keep the handoff aligned, then rerun the release-gate smoke suite from the consolidated baseline.
