@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-12
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish, and release-gate/docs alignment
 
 ## What is already true
 
@@ -19,9 +19,11 @@
 - the persistence boundary is documented in code and exposes both `/persistence/layers` and `/persistence/schema`
 - the schema/versioning strategy and Postgres migration path for durable state are documented in code and in `docs/PHASE_6D_PERSISTENCE_HARDENING.md`
 - security controls expose `/security/controls` with trust levels, approval triggers, and operational budgets
+- the README now surfaces the security controls surface alongside the hardening docs so the user-facing docs stay aligned with the code
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
+- the README and Phase 6 docs stay close to the implemented runtime and security surface
 
 ## Current blockers
 
