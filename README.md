@@ -349,7 +349,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - shell execution is still guarded only by a basic allowlist and heuristic policy checks
 - artifact retention is still local-volume based, although canonical manifests and cleanup helpers are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger audit pipeline
-- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
+- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass; PR #51 is the canonical docs/state baseline for that cleanup
 
 ## Notes on safety
 
