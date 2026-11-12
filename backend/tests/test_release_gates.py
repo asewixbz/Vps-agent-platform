@@ -215,3 +215,24 @@ class ReleaseGateTests(TestCase):
             self.assertIn("artifact_refs", trace["audit"])
             self.assertEqual(trace["audit"]["runtime_run_id"], dispatched[0]["execution"]["runtime_run_id"])
             self.assertEqual(trace["runtime_run"]["audit"]["runtime_run_id"], dispatched[0]["execution"]["runtime_run_id"])
+
+    def test_explicit_rlimit_sandbox_smoke(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+                task_sandbox_mode="rlimit",
+            )
+
+            result = run_python_script(
+                settings,
+                task_id="release-gate-rlimit-run",
+                script='print("done")\n',
+                timeout_seconds=1,
+            )
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.artifacts["sandbox_mode"], "rlimit")
+            self.assertEqual(result.artifacts["sandbox_backend"], "rlimit")
+            self.assertEqual(result.artifacts["sandbox_file_policy"], "cwd-and-rlimit")
+            self.assertEqual(result.artifacts["sandbox_selection_reason"], "rlimit mode selected explicitly")
