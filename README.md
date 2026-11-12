@@ -294,7 +294,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 
 ## Recommended rollout plan
 
-### Phase 1 — complete
+### Phase 1 - complete
 - control plane
 - local Python/shell execution
 - tool registry
@@ -304,7 +304,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - model API endpoints
 - first provider adapter
 
-### Phase 2 — complete
+### Phase 2 - complete
 - Redis queue
 - worker process
 - browser runner
@@ -312,7 +312,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - execution planning bridge
 - runtime loop scaffold
 
-### Phase 3 — complete
+### Phase 3 - complete
 - Postgres
 - stronger policy engine
 - trust scoring
@@ -320,14 +320,14 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - persistent runtime history
 - runtime event logs
 
-### Phase 4 — complete
+### Phase 4 - complete
 - durable memory records
 - project/contact dossiers
 - memory links
 - artifact indexing
 - long-lived workflow context
 
-### Phase 5 — complete
+### Phase 5 - complete
 - workflow templates
 - scanning workflows
 - ranking workflows
@@ -337,15 +337,14 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - custom workflow template persistence
 - recurring schedule dispatch
 
-### Phase 6 — next, but not ready yet
+### Phase 6 - next, but not ready yet
 - automatic tool synthesis
 - sandbox-first execution
 - human approval gates for risky actions
 - stronger observability and audit logs
 
 ### Current Phase 6 blockers
-- execution still happens through local subprocesses in the shared backend container
-- there is no seccomp/AppArmor profile or equivalent per-task sandbox boundary
+- execution still depends on the shared backend container and lacks a production-grade per-task sandbox boundary, including seccomp/AppArmor or an equivalent isolation layer
 - shell execution is still guarded only by a basic allowlist and heuristic policy checks
 - artifact retention is still local-volume based, although canonical manifests and cleanup helpers are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger audit pipeline
