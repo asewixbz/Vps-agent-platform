@@ -15,6 +15,7 @@
 - shell policy parsing rejects malformed commands safely and blocks basic shell control operators before the runner
 - task execution now goes through a sandbox helper with cwd isolation, restricted env, explicit resource limits, and a bubblewrap-backed prototype when available
 - the sandbox fallback path now has explicit regression coverage for both auto mode and explicit bubblewrap requests
+- explicit rlimit mode now has regression coverage to keep the backend selection and fallback state stable
 - writer-side artifact generation now emits canonical artifact manifests for python, shell, browser, and workflow outputs
 - the runtime/CLI/docs surfaces now include artifact cleanup helpers and trace navigation for incident review
 - the persistence boundary is documented in code and exposes both `/persistence/layers` and `/persistence/schema`
@@ -23,7 +24,6 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
-- the README folder layout now includes the Phase 6 docs set so the tree matches the refreshed snapshot
 
 ## Current blockers
 
@@ -32,13 +32,11 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
-- the docs/bootstrap PR (#16) has been closed as stale after the bootstrap work landed in main
 
 ## Open PRs noted in this snapshot
 
-- PR #30 (`docs: refresh Phase 6 state snapshot`) is the current docs-sync PR for this snapshot and is mergeable
-- PR #31 (`test: cover explicit bubblewrap sandbox fallback`) tracks the new sandbox fallback regression coverage
+- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
 
 ## Recommended next step
 
-Merge PR #30, then review PR #31, keep the README and handoff docs aligned with this refreshed snapshot, and run the release-gate smoke suite before tightening any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
