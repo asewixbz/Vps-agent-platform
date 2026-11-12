@@ -81,3 +81,93 @@ class SandboxTests(TestCase):
             self.assertEqual(sandbox.argv, ["echo", "hello"])
             warning_mock.assert_called_once()
             which_mock.assert_called_once_with("bwrap")
+
+    @patch("app.sandbox.shutil.which", return_value="/usr/bin/bwrap")
+    def test_bwrap_alias_selects_bubblewrap_when_available(self, which_mock) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                task_sandbox_mode="bwrap",
+                task_sandbox_allow_network=False,
+                default_timeout_seconds=5,
+            )
+            workdir = Path(tmpdir) / "work" / "task-3"
+            workdir.mkdir(parents=True, exist_ok=True)
+
+            sandbox = build_subprocess_sandbox(
+                settings,
+                workdir=workdir,
+                argv=["echo", "hello"],
+                timeout_seconds=5,
+            )
+
+            self.assertEqual(sandbox.requested_mode, "bwrap")
+            self.assertEqual(sandbox.backend, "bubblewrap")
+            self.assertEqual(sandbox.cwd, "/work")
+            self.assertIsNone(sandbox.preexec_fn)
+            self.assertEqual(sandbox.file_policy, "workdir-bind-only")
+            self.assertEqual(sandbox.network_policy, "unshared")
+            self.assertFalse(sandbox.fallback_used)
+            self.assertEqual(sandbox.selection_reason, "bubblewrap selected")
+            self.assertEqual(sandbox.argv[0], "bwrap")
+            which_mock.assert_called_once_with("bwrap")
+
+    @patch("app.sandbox.shutil.which", return_value=None)
+    def test_explicit_bubblewrap_mode_falls_back_to_rlimit_when_bubblewrap_is_missing(self, which_mock) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                task_sandbox_mode="bubblewrap",
+                task_sandbox_allow_network=False,
+                default_timeout_seconds=5,
+            )
+            workdir = Path(tmpdir) / "work" / "task-3"
+            workdir.mkdir(parents=True, exist_ok=True)
+
+            with patch("app.sandbox.logger.warning") as warning_mock:
+                sandbox = build_subprocess_sandbox(
+                    settings,
+                    workdir=workdir,
+                    argv=["echo", "hello"],
+                    timeout_seconds=5,
+                )
+
+            self.assertEqual(sandbox.requested_mode, "bubblewrap")
+            self.assertEqual(sandbox.backend, "rlimit")
+            self.assertEqual(sandbox.cwd, str(workdir))
+            self.assertIsNotNone(sandbox.preexec_fn)
+            self.assertTrue(sandbox.fallback_used)
+            self.assertIn("falling back to rlimit", sandbox.selection_reason)
+            self.assertEqual(sandbox.argv, ["echo", "hello"])
+            warning_mock.assert_called_once()
+            which_mock.assert_called_once_with("bwrap")
+
+    @patch("app.sandbox.shutil.which", return_value=None)
+    def test_explicit_rlimit_mode_stays_on_rlimit_without_fallback(self, which_mock) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                task_sandbox_mode="rlimit",
+                task_sandbox_allow_network=True,
+                default_timeout_seconds=5,
+            )
+            workdir = Path(tmpdir) / "work" / "task-4"
+            workdir.mkdir(parents=True, exist_ok=True)
+
+            with patch("app.sandbox.logger.warning") as warning_mock:
+                sandbox = build_subprocess_sandbox(
+                    settings,
+                    workdir=workdir,
+                    argv=["echo", "hello"],
+                    timeout_seconds=5,
+                )
+
+            self.assertEqual(sandbox.requested_mode, "rlimit")
+            self.assertEqual(sandbox.backend, "rlimit")
+            self.assertEqual(sandbox.cwd, str(workdir))
+            self.assertIsNotNone(sandbox.preexec_fn)
+            self.assertFalse(sandbox.fallback_used)
+            self.assertEqual(sandbox.selection_reason, "rlimit mode selected explicitly")
+            self.assertEqual(sandbox.argv, ["echo", "hello"])
+            warning_mock.assert_not_called()
+            which_mock.assert_called_once_with("bwrap")

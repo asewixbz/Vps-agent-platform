@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -14,6 +15,7 @@ from app.memory import init_memory_schema
 from app.memory_links import init_memory_links_schema
 from app.policy import evaluate
 from app.runner import run_python_script
+from app.sandbox import build_subprocess_sandbox
 from app.security_controls import resolve_runtime_step_budget, resolve_task_timeout_budget
 from app.settings import Settings
 from app.store import init_db, seed_builtin_tools
@@ -215,3 +217,77 @@ class ReleaseGateTests(TestCase):
             self.assertIn("artifact_refs", trace["audit"])
             self.assertEqual(trace["audit"]["runtime_run_id"], dispatched[0]["execution"]["runtime_run_id"])
             self.assertEqual(trace["runtime_run"]["audit"]["runtime_run_id"], dispatched[0]["execution"]["runtime_run_id"])
+
+    def test_auto_sandbox_falls_back_to_rlimit_when_bwrap_is_missing(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+            )
+
+            with patch("app.sandbox.shutil.which", return_value=None):
+                result = run_python_script(
+                    settings,
+                    task_id="release-gate-auto-fallback-run",
+                    script='print("done")\n',
+                    timeout_seconds=1,
+                )
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.artifacts["sandbox_mode"], "auto")
+            self.assertEqual(result.artifacts["sandbox_backend"], "rlimit")
+            self.assertTrue(result.artifacts["sandbox_fallback_used"])
+            self.assertEqual(result.artifacts["sandbox_file_policy"], "cwd-and-rlimit")
+            self.assertIn("falling back to rlimit", result.artifacts["sandbox_selection_reason"])
+
+    def test_explicit_rlimit_sandbox_smoke(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+                task_sandbox_mode="rlimit",
+            )
+
+            result = run_python_script(
+                settings,
+                task_id="release-gate-rlimit-run",
+                script='print("done")\n',
+                timeout_seconds=1,
+            )
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.artifacts["sandbox_mode"], "rlimit")
+            self.assertEqual(result.artifacts["sandbox_backend"], "rlimit")
+            self.assertEqual(result.artifacts["sandbox_file_policy"], "cwd-and-rlimit")
+            self.assertEqual(result.artifacts["sandbox_selection_reason"], "rlimit mode selected explicitly")
+
+    def test_bwrap_alias_selects_bubblewrap_backend(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                default_timeout_seconds=5,
+                task_sandbox_mode="bwrap",
+            )
+            dummy_argv = ["bwrap", "--chdir", "/work", "--", sys.executable, "-c", "print('hi')"]
+
+            with patch("app.sandbox._bubblewrap_available", return_value=True), patch(
+                "app.sandbox._build_bubblewrap_argv",
+                return_value=dummy_argv,
+            ):
+                sandbox = build_subprocess_sandbox(
+                    settings,
+                    workdir=Path(tmpdir) / "task",
+                    argv=[sys.executable, "-c", "print('hi')"],
+                    timeout_seconds=1,
+                )
+
+            self.assertEqual(sandbox.argv, dummy_argv)
+            self.assertEqual(sandbox.backend, "bubblewrap")
+            self.assertEqual(sandbox.requested_mode, "bwrap")
+            self.assertEqual(sandbox.selection_reason, "bubblewrap selected")
+            self.assertFalse(sandbox.fallback_used)
+            self.assertEqual(sandbox.cwd, "/work")
+            self.assertEqual(sandbox.file_policy, "workdir-bind-only")
+            self.assertEqual(sandbox.env["HOME"], "/work")
+            self.assertEqual(sandbox.env["PWD"], "/work")
+            self.assertEqual(sandbox.env["TMPDIR"], "/work/tmp")
