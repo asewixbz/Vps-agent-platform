@@ -57,6 +57,7 @@ The project should be treated as an execution platform first, and a UI product s
 - Python runner materialization of schedule artifacts so schedule-style workflows can surface `schedule_manifest.json` automatically
 - Phase 5 workflow templates, including built-in scan/rank/report/compare/schedule templates, persisted custom templates, recurring schedule dispatch, and one-shot schedule completion through the worker loop
 - release-gate smoke tests for policy regression, schedule dispatch, runtime resume, artifact manifests, and provenance fetch
+- sandbox fallback regression coverage for auto mode and explicit bubblewrap requests
 
 ### Phase status
 
