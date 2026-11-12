@@ -115,3 +115,35 @@ class SandboxTests(TestCase):
             build_mock.assert_called_once()
             warning_mock.assert_called_once()
             which_mock.assert_called_once_with("bwrap")
+
+    @patch("app.sandbox.shutil.which", return_value="/usr/bin/bwrap")
+    def test_explicit_bwrap_alias_prefers_bubblewrap_when_available(self, which_mock) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                task_sandbox_mode="bwrap",
+                task_sandbox_allow_network=False,
+                default_timeout_seconds=5,
+            )
+            workdir = Path(tmpdir) / "work" / "task-4"
+            workdir.mkdir(parents=True, exist_ok=True)
+
+            sandbox = build_subprocess_sandbox(
+                settings,
+                workdir=workdir,
+                argv=["echo", "hello"],
+                timeout_seconds=5,
+            )
+
+            self.assertEqual(sandbox.requested_mode, "bwrap")
+            self.assertEqual(sandbox.backend, "bubblewrap")
+            self.assertEqual(sandbox.cwd, "/work")
+            self.assertIsNone(sandbox.preexec_fn)
+            self.assertEqual(sandbox.env["HOME"], "/work")
+            self.assertEqual(sandbox.env["TMPDIR"], "/work/tmp")
+            self.assertEqual(sandbox.file_policy, "workdir-bind-only")
+            self.assertEqual(sandbox.network_policy, "unshared")
+            self.assertFalse(sandbox.fallback_used)
+            self.assertEqual(sandbox.selection_reason, "bubblewrap selected")
+            self.assertEqual(sandbox.argv[0], "bwrap")
+            which_mock.assert_called_once_with("bwrap")
