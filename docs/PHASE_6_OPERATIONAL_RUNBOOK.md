@@ -170,6 +170,15 @@ If browser execution is disabled or gated:
 - check `/security/controls` for browser approval triggers
 - confirm the URL scheme is `http` or `https`
 
+### Sandbox fallback behavior
+
+If the sandbox logs say bubblewrap was requested but the privileged path could not be constructed:
+
+- check whether `bwrap` is installed and available on the host
+- inspect the sandbox `selection_reason` and `fallback_used` fields in the task or runtime details
+- expect the run to continue with the rlimit fallback instead of failing immediately
+- confirm whether the requested `task_sandbox_mode` was `auto`, `bubblewrap`, or `bwrap`
+
 ### Persistence or schema issues
 
 If startup or inspection fails around durable state:
