@@ -1,4 +1,4 @@
-# Vps Agent Platform  Handoff and Implementation Plan
+# Vps Agent Platform — Handoff and Implementation Plan
 
 ## Purpose
 
@@ -230,7 +230,7 @@ The recommended path keeps the project useful early while still allowing hardeni
 
 ## Phase plan
 
-### Phase 1  CLI-first operational layer
+### Phase 1 — CLI-first operational layer
 
 Goal: make the system usable without a web interface.
 
@@ -249,7 +249,7 @@ Acceptance criteria:
 - a developer can approve a task without using a browser
 - the CLI works against the existing FastAPI backend
 
-### Phase 2  Model adapter and agent planner
+### Phase 2 — Model adapter and agent planner
 
 Goal: connect an external model through a provider-agnostic layer.
 
@@ -267,7 +267,7 @@ Acceptance criteria:
 - the plan can choose between direct execution and workflow execution
 - the model provider can be changed without rewriting the application core
 
-### Phase 3  Agent runtime and multi-step execution
+### Phase 3 — Agent runtime and multi-step execution
 
 Goal: let the system continue working across multiple steps.
 
@@ -285,7 +285,7 @@ Acceptance criteria:
 - the system can summarize progress
 - the system can stop when human input is needed
 
-### Phase 4  Durable memory
+### Phase 4 — Durable memory
 
 Goal: make long-running work actually persistent.
 
@@ -314,7 +314,7 @@ Status:
 - the sectioned provenance contract is locked in with tests
 - the next active phase is Phase 6 runtime hardening
 
-### Phase 5  Workflow templates
+### Phase 5 — Workflow templates
 
 Goal: make repeated jobs predictable and cheap to run.
 
@@ -336,7 +336,7 @@ Status:
 
 - complete, including built-in templates, custom template persistence, and recurring schedule dispatch
 
-### Phase 6  Runtime hardening
+### Phase 6 — Runtime hardening
 
 Goal: make execution safer and more production-ready.
 
@@ -361,43 +361,43 @@ Status:
 
 ## Current code map
 
-- `backend/app/main.py`  FastAPI app bootstrap and router registration
-- `backend/app/runtime_api.py`  runtime planning/execution/history/events/trace endpoints plus artifact cleanup
-- `backend/app/runtime_trace.py`  trace assembly that joins runtime events, provenance, tasks, steps, artifacts, and memory snapshots
-- `backend/app/observability.py`  trace context helpers, normalized event names, reason codes, and structured errors
-- `backend/app/artifact_lifecycle.py`  artifact manifest contract, retention classes, and cleanup helpers
-- `backend/app/persistence_layers.py`  local vs durable persistence boundary map and Postgres migration path
-- `backend/app/persistence_api.py`  API route for inspecting the persistence boundary map
-- `backend/app/security_controls.py`  trust levels, approval triggers, timeout budgets, and runtime step budgets
-- `backend/app/security_api.py`  API route for inspecting security controls
-- `backend/app/dossiers.py`  project/contact dossier helpers built on top of durable memory
-- `backend/app/memory.py`  durable memory storage, artifact indexing, and runtime snapshot helpers
-- `backend/app/memory_graph.py`  server-side memory and runtime provenance graph helpers
-- `backend/app/memory_links.py`  durable memory link storage and query helpers
-- `backend/app/memory_provenance.py`  CLI provenance inspector for durable memory graphs
-- `backend/app/provenance_api.py`  FastAPI provenance routes for memory records and runtime runs
-- `backend/app/store.py`  SQLite schema and CRUD for core control-plane data
-- `backend/app/policy.py`  trust and safety checks
-- `backend/app/job_queue.py`  Redis queue wrapper
-- `backend/app/runner.py`  Python, shell, and browser execution helpers
-- `backend/app/executor.py`  task execution orchestration
-- `backend/app/worker.py`  queue consumer loop
-- `backend/app/settings.py`  configuration and model adapter settings scaffold
-- `backend/app/cli.py`  terminal client for health, tools, tasks, approvals, planning, runtime, run history, event logs, memory records, links, provenance, runtime provenance, tool registration, and workflow template commands
-- `backend/app/model_adapter.py`  provider-neutral model request/response contract and adapter registry
-- `backend/app/planner.py`  conservative planning bridge that can work with or without the model runner
-- `backend/app/agent_runtime.py`  multi-step runtime loop that executes planned steps conservatively and returns checkpoints for resuming
-- `backend/app/runtime_events.py`  runtime event normalization and replay helpers
-- `backend/app/runtime_provenance.py`  CLI provenance inspector for runtime runs
-- `backend/app/workflow_template_registry.py`  SQLite-backed custom workflow template registry
-- `backend/app/workflow_schedules.py`  workflow schedule storage, inspection, and dispatch
-- `backend/app/workflow_templates.py`  built-in workflow template definitions and helpers
-- `backend/app/workflow_templates_api.py`  workflow template API routes
-- `backend/app/workflow_templates_cli.py`  workflow template CLI commands
+- `backend/app/main.py` — FastAPI app bootstrap and router registration
+- `backend/app/runtime_api.py` — runtime planning/execution/history/events/trace endpoints plus artifact cleanup
+- `backend/app/runtime_trace.py` — trace assembly that joins runtime events, provenance, tasks, steps, artifacts, and memory snapshots
+- `backend/app/observability.py` — trace context helpers, normalized event names, reason codes, and structured errors
+- `backend/app/artifact_lifecycle.py` — artifact manifest contract, retention classes, and cleanup helpers
+- `backend/app/persistence_layers.py` — local vs durable persistence boundary map and Postgres migration path
+- `backend/app/persistence_api.py` — API route for inspecting the persistence boundary map
+- `backend/app/security_controls.py` — trust levels, approval triggers, timeout budgets, and runtime step budgets
+- `backend/app/security_api.py` — API route for inspecting security controls
+- `backend/app/dossiers.py` — project/contact dossier helpers built on top of durable memory
+- `backend/app/memory.py` — durable memory storage, artifact indexing, and runtime snapshot helpers
+- `backend/app/memory_graph.py` — server-side memory and runtime provenance graph helpers
+- `backend/app/memory_links.py` — durable memory link storage and query helpers
+- `backend/app/memory_provenance.py` — CLI provenance inspector for durable memory graphs
+- `backend/app/provenance_api.py` — FastAPI provenance routes for memory records and runtime runs
+- `backend/app/store.py` — SQLite schema and CRUD for core control-plane data
+- `backend/app/policy.py` — trust and safety checks
+- `backend/app/job_queue.py` — Redis queue wrapper
+- `backend/app/runner.py` — Python, shell, and browser execution helpers
+- `backend/app/executor.py` — task execution orchestration
+- `backend/app/worker.py` — queue consumer loop
+- `backend/app/settings.py` — configuration and model adapter settings scaffold
+- `backend/app/cli.py` — terminal client for health, tools, tasks, approvals, planning, runtime, run history, event logs, memory records, links, provenance, runtime provenance, tool registration, and workflow template commands
+- `backend/app/model_adapter.py` — provider-neutral model request/response contract and adapter registry
+- `backend/app/planner.py` — conservative planning bridge that can work with or without the model runner
+- `backend/app/agent_runtime.py` — multi-step runtime loop that executes planned steps conservatively and returns checkpoints for resuming
+- `backend/app/runtime_events.py` — runtime event normalization and replay helpers
+- `backend/app/runtime_provenance.py` — CLI provenance inspector for runtime runs
+- `backend/app/workflow_template_registry.py` — SQLite-backed custom workflow template registry
+- `backend/app/workflow_schedules.py` — workflow schedule storage, inspection, and dispatch
+- `backend/app/workflow_templates.py` — built-in workflow template definitions and helpers
+- `backend/app/workflow_templates_api.py` — workflow template API routes
+- `backend/app/workflow_templates_cli.py` — workflow template CLI commands
 
 ## Immediate next work
 
-1. Consolidate the overlapping Phase 6 docs/test branches around PR #51 before the next smoke-suite pass.
+1. Consolidate the overlapping Phase 6 docs/test branches around issue #49 and the PR #51 canonical baseline before the next smoke-suite pass.
 2. Run the Phase 6E release-gate smoke suite and fix any regressions.
 3. Keep Phase 6D persistence validation moving once the smoke gates are stable.
 4. Continue Phase 6 hardening only after the boundaries and release gates stay green.
@@ -414,4 +414,4 @@ Status:
 
 ## Current project status summary
 
-The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, and the codebase now includes runtime trace navigation, canonical artifact manifests and cleanup helpers, an explicit persistence boundary map and migration path, plus operational security controls and release-gate smoke tests. The current cleanup baseline is PR #51, and the overlapping follow-on docs branches have already been closed. The remaining work is to keep the smoke suite green and then move durable state toward a backend that can handle more scale and less contention.
+The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, and the codebase now includes runtime trace navigation, canonical artifact manifests and cleanup helpers, an explicit persistence boundary map and migration path, plus operational security controls and release-gate smoke tests. The current cleanup baseline is PR #51 and issue #49 tracks the overlapping docs/test branch consolidation. The remaining work is to keep the smoke suite green and then move durable state toward a backend that can handle more scale and less contention.
