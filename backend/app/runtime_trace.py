@@ -26,6 +26,13 @@ _PATH_ARTIFACT_KEYS = {
     "artifact_manifest_path",
 }
 
+_SANDBOX_ARTIFACT_KEYS = {
+    "sandbox_backend",
+    "sandbox_mode",
+    "sandbox_selection_reason",
+    "sandbox_fallback_used",
+}
+
 
 def _step_artifacts(step: dict[str, Any]) -> list[dict[str, Any]]:
     result = step.get("result") if isinstance(step.get("result"), dict) else {}
@@ -107,6 +114,10 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
     steps: list[dict[str, Any]] = []
     artifact_map: dict[str, dict[str, Any]] = {}
     task_ids: list[str] = []
+    sandbox_backends: list[str] = []
+    sandbox_modes: list[str] = []
+    sandbox_selection_reasons: list[str] = []
+    sandbox_fallback_used = False
     for raw_step in steps_payload:
         if not isinstance(raw_step, dict):
             continue
@@ -126,6 +137,25 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
             step_index=int(raw_step.get("index") or 0) or None,
         )
         reason = _step_reason(raw_step)
+        result = raw_step.get("result") if isinstance(raw_step.get("result"), dict) else {}
+        sandbox_artifacts = result.get("artifacts") if isinstance(result.get("artifacts"), dict) else {}
+        sandbox_extra_details: dict[str, Any] = {}
+        for key in _SANDBOX_ARTIFACT_KEYS:
+            value = sandbox_artifacts.get(key)
+            if value is None:
+                continue
+            sandbox_extra_details[key] = value
+        backend = str(sandbox_extra_details.get("sandbox_backend") or "").strip()
+        if backend and backend not in sandbox_backends:
+            sandbox_backends.append(backend)
+        mode = str(sandbox_extra_details.get("sandbox_mode") or "").strip()
+        if mode and mode not in sandbox_modes:
+            sandbox_modes.append(mode)
+        selection_reason = str(sandbox_extra_details.get("sandbox_selection_reason") or "").strip()
+        if selection_reason and selection_reason not in sandbox_selection_reasons:
+            sandbox_selection_reasons.append(selection_reason)
+        if sandbox_extra_details.get("sandbox_fallback_used"):
+            sandbox_fallback_used = True
         if reason is None and isinstance(raw_step.get("status"), str) and raw_step["status"] not in {"completed", "observed", "skipped"}:
             reason = {
                 "reason_code": normalize_reason_code(raw_step.get("status"), fallback="unknown_error"),
@@ -149,6 +179,7 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
                 "artifact_refs": [artifact["artifact_ref"] for artifact in artifacts],
             },
             context=step_trace,
+            extra_details=sandbox_extra_details or None,
         )
         step_entry = {
             **raw_step,
@@ -196,6 +227,10 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
         "artifact_refs": [artifact["artifact_ref"] for artifact in artifacts],
         "memory_record_id": memory_record_id,
         "audit_reason_codes": audit.get("reason_codes", []),
+        "sandbox_backends": sandbox_backends,
+        "sandbox_modes": sandbox_modes,
+        "sandbox_fallback_used": sandbox_fallback_used,
+        "sandbox_selection_reasons": sandbox_selection_reasons,
     }
 
     return {
