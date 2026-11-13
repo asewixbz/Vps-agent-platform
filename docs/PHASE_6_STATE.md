@@ -16,6 +16,7 @@
 - task execution now goes through a sandbox helper with cwd isolation, restricted env, explicit resource limits, and a bubblewrap-backed prototype when available
 - writer-side artifact generation now emits canonical artifact manifests for python, shell, browser, and workflow outputs
 - the runtime/CLI/docs surfaces now include artifact cleanup helpers and trace navigation for incident review
+- the Phase 6 operational runbook now explicitly points to issue #49 and PR #51 for the branch-cleanup stream
 - the persistence boundary is documented in code and exposes both `/persistence/layers` and `/persistence/schema`
 - the schema/versioning strategy and Postgres migration path for durable state are documented in code and in `docs/PHASE_6D_PERSISTENCE_HARDENING.md`
 - security controls expose `/security/controls` with trust levels, approval triggers, and operational budgets
