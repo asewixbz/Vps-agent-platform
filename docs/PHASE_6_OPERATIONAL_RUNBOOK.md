@@ -4,6 +4,16 @@
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
 
+## 0) Before the smoke suite
+
+Before starting the next release-gate smoke pass, make sure the overlapping Phase 6 docs/test branches have been consolidated or intentionally left as the active baseline.
+
+If the branch landscape is still fragmented:
+
+- review the latest docs sync and cleanup branches first
+- merge or close the redundant docs-only branches before the next smoke pass
+- keep the smoke-suite run focused on the narrowed baseline instead of the stale branch set
+
 ## 1) Fast health check
 
 Start with the control plane and queue:
