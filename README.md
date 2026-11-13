@@ -342,7 +342,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - sandbox-first execution
 - human approval gates for risky actions
 - stronger observability and audit logs
-- consolidate overlapping docs/test branches tracked in issue #49 before the next smoke-suite pass
+- consolidate overlapping docs/test branches tracked in issue #49; PR #51 is the canonical docs/state sync baseline before the next smoke-suite pass
 
 ### Current Phase 6 blockers
 - overlapping docs/test branches still need consolidation before the next smoke-suite pass
