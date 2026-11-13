@@ -81,3 +81,40 @@ class SandboxTests(TestCase):
             self.assertEqual(sandbox.argv, ["echo", "hello"])
             warning_mock.assert_called_once()
             which_mock.assert_called_once_with("bwrap")
+
+    @patch("app.sandbox.shutil.which", return_value="/usr/bin/bwrap")
+    def test_auto_mode_falls_back_to_rlimit_when_bubblewrap_build_fails(self, which_mock) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                task_sandbox_mode="auto",
+                task_sandbox_allow_network=False,
+                default_timeout_seconds=5,
+            )
+            workdir = Path(tmpdir) / "work" / "task-3"
+            workdir.mkdir(parents=True, exist_ok=True)
+
+            with patch("app.sandbox._build_bubblewrap_argv", side_effect=RuntimeError("boom")) as build_mock:
+                with patch("app.sandbox.logger.warning") as warning_mock:
+                    sandbox = build_subprocess_sandbox(
+                        settings,
+                        workdir=workdir,
+                        argv=["echo", "hello"],
+                        timeout_seconds=5,
+                    )
+
+            self.assertEqual(sandbox.requested_mode, "auto")
+            self.assertEqual(sandbox.backend, "rlimit")
+            self.assertEqual(sandbox.cwd, str(workdir))
+            self.assertIsNotNone(sandbox.preexec_fn)
+            self.assertEqual(sandbox.env["HOME"], str(workdir))
+            self.assertEqual(sandbox.env["TMPDIR"], str(workdir / "tmp"))
+            self.assertEqual(sandbox.file_policy, "cwd-and-rlimit")
+            self.assertEqual(sandbox.network_policy, "not-enforced")
+            self.assertTrue(sandbox.fallback_used)
+            self.assertIn("build failure", sandbox.selection_reason)
+            self.assertIn("falling back to rlimit", sandbox.selection_reason)
+            self.assertEqual(sandbox.argv, ["echo", "hello"])
+            which_mock.assert_called_once_with("bwrap")
+            build_mock.assert_called_once()
+            warning_mock.assert_called_once()
