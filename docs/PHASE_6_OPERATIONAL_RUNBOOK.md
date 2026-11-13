@@ -4,6 +4,8 @@
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
 
+If you are following the Phase 6 cleanup stream, keep issue #49 nearby: it tracks the overlapping docs/test branch consolidation, and PR #51 is the canonical docs/state sync baseline for that pass.
+
 ## 1) Fast health check
 
 Start with the control plane and queue:
