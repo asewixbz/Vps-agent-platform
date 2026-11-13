@@ -4,7 +4,7 @@
 
 - Last reviewed: 2026-11-13
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish, and branch consolidation before the next smoke-suite pass
+- Current focus: runtime boundary hardening, branch cleanup, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
 ## What is already true
 
@@ -23,6 +23,7 @@
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
 - the project handoff now mirrors the PR #51 cleanup baseline
+- the current branch cleanup / docs sync pass is still centered on issue #49 and the canonical PR #51 baseline
 
 ## Current blockers
 
@@ -36,7 +37,7 @@
 ## Open PRs noted in this snapshot
 
 - PR #51 is the canonical docs/state sync branch for the current cleanup pass
-- PRs #52, #53, and #56 are already closed duplicate follow-on docs branches
+- PRs #57, #58, #60, #61, #62, and #63 are active follow-on docs branches that should be consolidated once #51 lands
 
 ## Recommended next step
 
