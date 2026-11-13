@@ -28,7 +28,16 @@ class RuntimeTraceTests(TestCase):
                     "tool_name": "python_local",
                     "task_id": "task-1",
                     "detail": "step executed",
-                    "result": {"artifacts": {"report_path": "/tmp/report.json", "artifact_paths": ["/tmp/report.json"]}},
+                    "result": {
+                        "artifacts": {
+                            "report_path": "/tmp/report.json",
+                            "artifact_paths": ["/tmp/report.json"],
+                            "sandbox_backend": "rlimit",
+                            "sandbox_mode": "bubblewrap",
+                            "sandbox_selection_reason": "bubblewrap unavailable; falling back to rlimit",
+                            "sandbox_fallback_used": True,
+                        }
+                    },
                 }
             ],
         }
@@ -134,6 +143,10 @@ class RuntimeTraceTests(TestCase):
         self.assertEqual(trace["navigation"]["runtime_run_id"], "run-1")
         self.assertEqual(trace["navigation"]["task_ids"], ["task-1"])
         self.assertEqual(trace["navigation"]["artifact_refs"], ["/tmp/report.json"])
+        self.assertEqual(trace["navigation"]["sandbox_backends"], ["rlimit"])
+        self.assertEqual(trace["navigation"]["sandbox_modes"], ["bubblewrap"])
+        self.assertTrue(trace["navigation"]["sandbox_fallback_used"])
+        self.assertEqual(trace["navigation"]["sandbox_selection_reasons"], ["bubblewrap unavailable; falling back to rlimit"])
         self.assertEqual(trace["event_count"], 2)
         self.assertEqual(trace["step_count"], 1)
         self.assertEqual(trace["events"][0]["event_name"], "started")
