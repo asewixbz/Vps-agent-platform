@@ -8,6 +8,7 @@ Harden execution so the platform is safer and more production-ready without losi
 
 - shell policy parsing rejects malformed shell commands and blocks obvious control operators
 - the runner uses a sandbox helper with cwd isolation, restricted env, and explicit resource limits
+- runtime trace navigation now surfaces sandbox backend, mode, fallback flag, and selection reason from step artifacts
 - browser execution is behind a feature flag and still requires approval for external URLs
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
@@ -15,11 +16,12 @@ Harden execution so the platform is safer and more production-ready without losi
 
 ## Near-term roadmap
 
-1. Exercise and harden the sandbox fallback path.
-2. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
-3. Continue improving runtime audit and trace visibility for blocked and approved runs.
-4. Keep the release-gate smoke suite green while making small hardening changes.
-5. Keep documentation and runbooks aligned with the code.
+1. Consolidate overlapping Phase 6 docs/test branches before the next smoke-suite pass.
+2. Exercise and harden the sandbox fallback path.
+3. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
+4. Continue improving runtime audit and trace visibility for blocked, approved, and sandbox-fallback runs.
+5. Keep the release-gate smoke suite green while making small hardening changes.
+6. Keep documentation and runbooks aligned with the code.
 
 ## Working rule
 
