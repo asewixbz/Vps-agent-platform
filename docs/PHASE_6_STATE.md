@@ -33,8 +33,8 @@
 
 ## Open PRs noted in this snapshot
 
-- there are overlapping Phase 6 docs and test branches in draft PRs, so the next housekeeping pass is to consolidate them before the next smoke-suite run
+- there are still overlapping Phase 6 docs and test branches in draft PRs, but the oldest duplicate docs/state PR has been closed; the remaining overlap still needs consolidation before the next smoke-suite run
 
 ## Recommended next step
 
-Consolidate the overlapping docs/test branches, then run the release-gate smoke suite again and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Continue consolidating the remaining overlapping docs/test branches, then run the release-gate smoke suite again and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
