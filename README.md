@@ -345,7 +345,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - branch consolidation cleanup before the next smoke-suite pass
 
 ### Current Phase 6 blockers
-- overlapping docs/test branches still need consolidation before the next smoke-suite pass; issue #49 tracks the cleanup and PR #58 is the current branch-cleanup sync pass
+- overlapping docs/test branches still need consolidation before the next smoke-suite pass; issue #49 tracks the cleanup and PR #51 is the canonical branch-cleanup baseline
 - execution still happens through local subprocesses in the shared backend container
 - there is no seccomp/AppArmor profile or equivalent per-task sandbox boundary
 - shell execution is still guarded only by a basic allowlist and heuristic policy checks
