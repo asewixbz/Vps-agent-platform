@@ -23,6 +23,7 @@
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
 - the active docs cleanup baseline is captured in the roadmap/state sync branch; PR #107 and PR #109 remain part of the older cleanup stream, and PR #108 remains the sandbox fallback test branch
+- workflow schedule dispatch serialization via `runtime_execution_to_dict` is part of the consolidated baseline and should stay covered by the next smoke-suite pass
 
 ## Current blockers
 
