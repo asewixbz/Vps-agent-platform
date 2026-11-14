@@ -8,6 +8,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
+from .agent_runtime import runtime_execution_to_dict
 from .runtime_execution import run_inline_runtime
 from .settings import Settings, get_settings
 from .store import connect, utc_now
