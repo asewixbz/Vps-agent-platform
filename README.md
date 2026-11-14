@@ -338,6 +338,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - recurring schedule dispatch
 
 ### Phase 6 — next, but not ready yet
+- consolidate overlapping docs/test branches before the next smoke-suite pass
 - automatic tool synthesis
 - sandbox-first execution
 - human approval gates for risky actions
@@ -349,6 +350,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - shell execution is still guarded only by a basic allowlist and heuristic policy checks
 - artifact retention is still local-volume based, although canonical manifests and cleanup helpers are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger audit pipeline
+- overlapping docs/test branches still need consolidation before the next smoke-suite pass
 
 ## Notes on safety
 
