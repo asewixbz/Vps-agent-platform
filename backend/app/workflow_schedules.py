@@ -8,7 +8,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
-from .runtime_execution import run_inline_runtime
+from .runtime_execution import run_inline_runtime, runtime_execution_to_dict
 from .settings import Settings, get_settings
 from .store import connect, utc_now
 from .workflow_template_registry import list_custom_workflow_templates
