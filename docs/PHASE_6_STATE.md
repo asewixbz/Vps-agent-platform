@@ -34,8 +34,9 @@
 
 ## Open PRs noted in this snapshot
 
-- the active Phase 6 draft PR set still centers on branch cleanup, docs sync, and other small hardening steps
+- PR #126 is the current docs-sync branch for the roadmap/state refresh
+- older overlapping Phase 6 docs/test drafts are still open until the consolidated baseline is merged or superseded
 
 ## Recommended next step
 
-Consolidate the overlapping docs/test branches, then rerun the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the active docs cleanup PRs, then rerun the release-gate smoke suite from the consolidated baseline.
