@@ -2,7 +2,7 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-14
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
 - Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
@@ -10,6 +10,7 @@
 
 - workflow templates are in place
 - recurring workflow schedule dispatch is working
+- workflow schedule dispatch now serializes runtime execution payloads through the shared runtime execution serializer
 - runtime history, checkpoints, provenance, and durable memory are already wired in
 - runtime trace now joins runtime events, provenance, memory snapshots, tasks, steps, artifacts, and audit summaries into one inspection surface
 - shell policy parsing rejects malformed commands safely and blocks basic shell control operators before the runner
