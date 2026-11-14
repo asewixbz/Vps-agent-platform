@@ -4,6 +4,10 @@
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
 
+## 0) Pre-flight repo hygiene
+
+Before a Phase 6 smoke-suite pass, confirm the overlapping docs/test cleanup branches have been consolidated and the remaining draft PRs are the ones you still intend to keep.
+
 ## 1) Fast health check
 
 Start with the control plane and queue:
