@@ -397,9 +397,9 @@ Status:
 
 ## Immediate next work
 
-1. Run the Phase 6E release-gate smoke suite and fix any regressions.
-2. Keep Phase 6D persistence validation moving once the smoke gates are stable.
-3. Continue Phase 6 hardening only after the boundaries and release gates stay green.
+1. Consolidate the active Phase 6 docs/test branches tracked in issue 49 before the next smoke-suite pass.
+2. Run the Phase 6E release-gate smoke suite from that consolidated baseline and fix any regressions.
+3. Keep Phase 6D persistence validation moving once the smoke gates are stable and the baseline stays clean.
 
 ## Working rules for future contributors
 
