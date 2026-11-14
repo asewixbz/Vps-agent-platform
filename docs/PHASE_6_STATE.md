@@ -10,7 +10,7 @@
 
 - workflow templates are in place
 - recurring workflow schedule dispatch is working
-- workflow schedule dispatch now serializes runtime execution payloads through the shared runtime execution serializer
+- workflow schedule dispatch now serializes runtime execution payloads through the shared runtime execution serializer, and the serialization path is covered by a regression test
 - runtime history, checkpoints, provenance, and durable memory are already wired in
 - runtime trace now joins runtime events, provenance, memory snapshots, tasks, steps, artifacts, and audit summaries into one inspection surface
 - shell policy parsing rejects malformed commands safely and blocks basic shell control operators before the runner
