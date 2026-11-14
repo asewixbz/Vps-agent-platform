@@ -25,7 +25,7 @@
 
 ## Current blockers
 
-- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
+- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass; issue #49 tracks the cleanup
 - tasks still need stronger filesystem confinement guarantees beyond the current best-effort sandbox fallback
 - artifact retention is still local-volume based, although canonical manifests and cleanup jobs are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
@@ -38,4 +38,4 @@
 
 ## Recommended next step
 
-Consolidate the overlapping Phase 6 docs/test branches, then rerun the Phase 6E release-gate smoke suite and tighten any boundary gaps that appear.
+Consolidate the overlapping Phase 6 docs/test branches tracked in issue #49, then rerun the Phase 6E release-gate smoke suite and tighten any boundary gaps that appear.
