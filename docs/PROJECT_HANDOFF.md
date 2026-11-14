@@ -65,7 +65,7 @@ The project should be treated as an execution platform first, and a UI product s
 - Phase 3 complete
 - Phase 4 complete
 - Phase 5 complete
-- Phase 6 runtime hardening is underway
+- Phase 6 runtime hardening is underway, with the active docs cleanup baseline centered on the roadmap/state sync branch
 - Phase 6D persistence hardening is defined
 - Phase 6E security polish and operational controls are in progress
 
@@ -397,7 +397,7 @@ Status:
 
 ## Immediate next work
 
-1. Run the Phase 6E release-gate smoke suite and fix any regressions.
+1. Merge the active docs cleanup and schedule-dispatch baseline PRs, then rerun the Phase 6E release-gate smoke suite.
 2. Keep Phase 6D persistence validation moving once the smoke gates are stable.
 3. Continue Phase 6 hardening only after the boundaries and release gates stay green.
 
