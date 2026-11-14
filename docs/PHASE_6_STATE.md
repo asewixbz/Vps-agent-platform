@@ -22,7 +22,7 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
-- the current docs cleanup baseline centers on PR #107 and PR #109, with PR #108 remaining the sandbox fallback test branch
+- the active docs cleanup baseline is captured in the roadmap/state sync branch; PR #107 and PR #109 remain part of the older cleanup stream, and PR #108 remains the sandbox fallback test branch
 
 ## Current blockers
 
@@ -31,11 +31,11 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
-- the overlapping docs/test branch set still needs consolidation before the next smoke-suite pass
+- the overlapping docs/test branch set still needs consolidation around the active roadmap/state sync baseline before the next smoke-suite pass
 
 ## Open PRs noted in this snapshot
 
-- the active docs cleanup baseline is centered on PR #107 and PR #109; PR #108 remains the sandbox fallback test branch
+- the active docs cleanup baseline is the roadmap/state sync branch; PR #107 and PR #109 remain part of the older cleanup stream, and PR #108 remains the sandbox fallback test branch
 - older overlapping Phase 6 docs/test drafts can stay open until the baseline is merged and the next smoke pass is complete
 
 ## Recommended next step
