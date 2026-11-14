@@ -44,6 +44,7 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - persisted custom workflow templates in SQLite
 - recurring workflow schedule dispatch from the worker loop
 - worker-driven artifact lifecycle cleanup
+- Phase 6 cleanup docs stay aligned with the active branch-cleanup baseline tracked in issue 49
 
 ## What is not included yet
 
@@ -338,17 +339,20 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - recurring schedule dispatch
 
 ### Phase 6 — next, but not ready yet
+- consolidate overlapping docs/test branches before the next smoke-suite pass
 - automatic tool synthesis
 - sandbox-first execution
 - human approval gates for risky actions
 - stronger observability and audit logs
 
-### Current Phase 6 blockers
+## Current Phase 6 blockers
+
+- overlapping docs/test branches still need consolidation around the active branch-cleanup baseline
 - execution still happens through local subprocesses in the shared backend container
 - there is no seccomp/AppArmor profile or equivalent per-task sandbox boundary
 - shell execution is still guarded only by a basic allowlist and heuristic policy checks
 - artifact retention is still local-volume based, although canonical manifests and cleanup helpers are now in place
-- observability is still centered on SQLite runtime events and provenance views rather than a stronger audit pipeline
+- observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 
 ## Notes on safety
 
