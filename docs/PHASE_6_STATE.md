@@ -2,7 +2,7 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-11-14
+- Last reviewed: 2026-11-14; issue #49 now explicitly tracks the branch consolidation cleanup
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
 - Current focus: consolidate overlapping docs/test branches, then continue runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
@@ -25,7 +25,7 @@
 
 ## Current blockers
 
-- overlapping docs/test branches still need consolidation before the next smoke-suite pass
+- overlapping docs/test branches still need consolidation before the next smoke-suite pass; issue #49 tracks the cleanup
 - tasks still need stronger filesystem confinement guarantees beyond the current best-effort sandbox fallback
 - artifact retention is still local-volume based, although canonical manifests and cleanup jobs are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
@@ -38,4 +38,4 @@
 
 ## Recommended next step
 
-Consolidate the overlapping docs/test branches, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the overlapping docs/test branches tracked in issue #49, then rerun the Phase 6E release-gate smoke suite and tighten any boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
