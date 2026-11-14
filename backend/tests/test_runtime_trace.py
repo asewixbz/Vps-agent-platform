@@ -156,6 +156,13 @@ class RuntimeTraceTests(TestCase):
         self.assertEqual(trace["steps"][0]["task"]["id"], "task-1")
         self.assertEqual(trace["steps"][0]["artifact_count"], 1)
         self.assertEqual(trace["steps"][0]["audit"]["tool_name"], "python_local")
+        self.assertEqual(trace["steps"][0]["audit"]["details"]["sandbox_backend"], "rlimit")
+        self.assertEqual(trace["steps"][0]["audit"]["details"]["sandbox_mode"], "bubblewrap")
+        self.assertTrue(trace["steps"][0]["audit"]["details"]["sandbox_fallback_used"])
+        self.assertEqual(
+            trace["steps"][0]["audit"]["details"]["sandbox_selection_reason"],
+            "bubblewrap unavailable; falling back to rlimit",
+        )
         self.assertEqual(trace["audit"]["runtime_run_id"], "run-1")
         self.assertEqual(trace["audit"]["event_names"], ["started", "completed"])
         self.assertEqual(trace["audit"]["reason_codes"], ["runtime_start", "runtime_complete"])
