@@ -2,7 +2,7 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-14
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
 - Current focus: branch cleanup, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- the current cleanup branch is the active home for the overlapping docs/test branch consolidation work; other Phase 6 branches remain in progress as reviewable drafts
 
 ## Recommended next step
 
