@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-14
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: runtime boundary hardening, blocked-step trace/audit visibility, canonical artifact manifests, persistence hardening, and security polish with release gates
 
 ## What is already true
 
@@ -12,6 +12,7 @@
 - recurring workflow schedule dispatch is working
 - runtime history, checkpoints, provenance, and durable memory are already wired in
 - runtime trace now joins runtime events, provenance, memory snapshots, tasks, steps, artifacts, and audit summaries into one inspection surface
+- blocked runtime steps now have regression coverage for reason, blocked_reason, and audit fields in the trace surface
 - shell policy parsing rejects malformed commands safely and blocks basic shell control operators before the runner
 - task execution now goes through a sandbox helper with cwd isolation, restricted env, explicit resource limits, and a bubblewrap-backed prototype when available
 - writer-side artifact generation now emits canonical artifact manifests for python, shell, browser, and workflow outputs
