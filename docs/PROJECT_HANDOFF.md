@@ -410,3 +410,7 @@ Status:
 - Separate open-ended agent work from fixed workflows.
 - Keep local scratch data local and durable state backend-agnostic.
 - Fail fast on over-budget or risky operations.
+
+## Current project status summary
+
+The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, and the codebase now includes runtime trace navigation, canonical artifact manifests and cleanup helpers, an explicit persistence boundary map and migration path, plus operational security controls and release-gate smoke tests. The current short-term priority is to consolidate overlapping Phase 6 docs/test branches before the next smoke-suite pass.
