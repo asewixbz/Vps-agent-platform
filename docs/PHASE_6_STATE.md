@@ -38,4 +38,4 @@
 
 ## Recommended next step
 
-Consolidate the overlapping draft branches, then rerun the release-gate smoke suite on the canonical cleanup branch.
+Consolidate the overlapping draft branches into the canonical cleanup branch, then rerun the release-gate smoke suite on that branch.
