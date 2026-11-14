@@ -344,6 +344,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - stronger observability and audit logs
 
 ### Current Phase 6 blockers
+- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
 - execution still happens through local subprocesses in the shared backend container
 - there is no seccomp/AppArmor profile or equivalent per-task sandbox boundary
 - shell execution is still guarded only by a basic allowlist and heuristic policy checks
@@ -353,3 +354,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 ## Notes on safety
 
 The shell runner is guarded by a basic allowlist and heuristic policy checks. This is not enough for high-risk production use by itself. Treat this platform as a controlled development system, not as a fully hardened security boundary.
+
+## Current project status summary
+
+The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, and the codebase now includes runtime trace navigation, canonical artifact manifests and cleanup helpers, an explicit persistence boundary map and migration path, plus operational security controls and release-gate smoke tests. The remaining work is to keep the smoke suite green after the branch cleanup consolidation and then move durable state toward a backend that can handle more scale and less contention.
