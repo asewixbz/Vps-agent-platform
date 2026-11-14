@@ -36,6 +36,7 @@
 ## Open PRs noted in this snapshot
 
 - the remaining Phase 6 docs/test cleanup PRs are still in progress as reviewable draft PRs
+- issue #49 remains the coordination point for the remaining consolidation work
 
 ## Recommended next step
 
