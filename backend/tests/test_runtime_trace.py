@@ -148,3 +148,74 @@ class RuntimeTraceTests(TestCase):
         self.assertEqual(trace["audit"]["reason_codes"], ["runtime_start", "runtime_complete"])
         self.assertEqual(trace["audit"]["artifact_refs"], ["/tmp/report.json"])
         self.assertEqual(trace["memory_snapshot"]["id"], "memory-1")
+
+    @patch("app.runtime_trace.get_memory_record")
+    @patch("app.runtime_trace.build_runtime_run_provenance")
+    @patch("app.runtime_trace.get_task")
+    @patch("app.runtime_trace.list_runtime_run_events")
+    @patch("app.runtime_trace.get_runtime_run")
+    def test_build_runtime_run_trace_captures_blocked_step_reason_and_audit(
+        self,
+        mock_get_run,
+        mock_list_events,
+        mock_get_task,
+        mock_build_provenance,
+        mock_get_memory_record,
+    ) -> None:
+        blocked_step = {
+            **self.runtime_run["steps"][0],
+            "status": "blocked",
+            "detail": "",
+            "blocked_reason": "approval required",
+            "resume_hint": "approve the task",
+        }
+        blocked_run = {
+            **self.runtime_run,
+            "status": "blocked",
+            "summary": "awaiting approval",
+            "blocked_reason": "approval required",
+            "steps": [blocked_step],
+        }
+        blocked_events = [
+            {
+                **self.events[0],
+                "event_type": "blocked",
+                "status": "blocked",
+                "message": "approval required",
+                "summary": "approval required",
+                "reason_code": "approval_required",
+                "blocked_reason": "approval required",
+                "step_index": 1,
+            },
+            {
+                **self.events[1],
+                "event_type": "blocked",
+                "status": "blocked",
+                "message": "approval required",
+                "summary": "approval required",
+                "reason_code": "approval_required",
+                "blocked_reason": "approval required",
+                "step_index": 1,
+            },
+        ]
+        mock_get_run.side_effect = lambda settings, runtime_run_id: blocked_run if runtime_run_id == "run-1" else None
+        mock_list_events.side_effect = lambda settings, runtime_run_id, limit=None: list(blocked_events) if runtime_run_id == "run-1" else []
+        mock_get_task.side_effect = self._get_task
+        mock_build_provenance.side_effect = self._build_provenance
+        mock_get_memory_record.return_value = self.snapshot
+
+        trace = runtime_trace.build_runtime_run_trace(self.settings, runtime_run_id="run-1", limit=10, depth=2)
+
+        self.assertIsNotNone(trace)
+        assert trace is not None
+        self.assertEqual(trace["runtime_run"]["status"], "blocked")
+        self.assertEqual(trace["event_count"], 2)
+        self.assertEqual(trace["step_count"], 1)
+        self.assertEqual(trace["steps"][0]["status"], "blocked")
+        self.assertEqual(trace["steps"][0]["reason"]["reason_code"], "blocked")
+        self.assertEqual(trace["steps"][0]["reason"]["message"], "blocked")
+        self.assertEqual(trace["steps"][0]["audit"]["reason_code"], "blocked")
+        self.assertEqual(trace["steps"][0]["audit"]["blocked_reason"], "approval required")
+        self.assertEqual(trace["audit"]["blocked_event_count"], 2)
+        self.assertEqual(trace["audit"]["reason_codes"], ["approval_required"])
+        self.assertEqual(trace["navigation"]["audit_reason_codes"], ["approval_required"])
