@@ -13,7 +13,7 @@ Harden execution so the platform is safer and more production-ready without losi
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
 - workflow schedule dispatch serialization is now covered in the baseline via `runtime_execution_to_dict`
-- the active docs cleanup baseline is captured in this roadmap/state sync branch; PR #107 and PR #109 remain part of the older cleanup stream, and PR #108 remains the sandbox fallback test branch
+- the active docs cleanup baseline is the roadmap/state sync branch; PR #111 covers workflow schedule dispatch serialization, PR #112 carries the active roadmap/state alignment, PR #107 and PR #109 remain part of the older cleanup stream, and PR #108 remains the sandbox fallback test branch
 
 ## Near-term roadmap
 
