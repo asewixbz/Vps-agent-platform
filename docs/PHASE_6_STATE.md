@@ -38,4 +38,4 @@
 
 ## Recommended next step
 
-Consolidate the overlapping docs/test branches, then rerun the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the overlapping docs/test branches and keep the README and project handoff aligned, then rerun the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
