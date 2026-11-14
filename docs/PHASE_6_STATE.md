@@ -37,6 +37,7 @@
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
 - branch cleanup is the current coordination focus before another smoke-suite pass
+- PR #111 now carries the workflow schedule dispatch serialization fix in `backend/app/workflow_schedules.py`
 
 ## Recommended next step
 
