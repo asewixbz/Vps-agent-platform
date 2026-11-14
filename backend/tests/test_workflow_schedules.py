@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -67,6 +68,7 @@ class WorkflowScheduleTests(TestCase):
             self.assertEqual(dispatched_item["schedule"]["target_workflow_name"], "report_workflow")
             self.assertEqual(dispatched_item["schedule"]["target_goal"], "Daily report")
             self.assertEqual(dispatched_item["workflow_inputs"]["report_title"], "Daily report")
+            json.dumps(dispatched_item)
 
     def test_dispatch_due_workflow_schedules_resolves_custom_templates(self) -> None:
         with TemporaryDirectory() as tmpdir:
