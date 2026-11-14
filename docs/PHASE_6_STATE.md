@@ -34,8 +34,8 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 docs/test branch cleanup PRs are still in progress as reviewable draft PRs
+- the remaining Phase 6 docs/test cleanup PRs are still in progress as reviewable draft PRs
 
 ## Recommended next step
 
-Consolidate the overlapping docs/test branches, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the remaining overlapping docs/test branches, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
