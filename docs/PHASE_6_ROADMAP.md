@@ -20,6 +20,7 @@ Harden execution so the platform is safer and more production-ready without losi
 3. Continue improving runtime audit and trace visibility for blocked and approved runs.
 4. Keep the release-gate smoke suite green while making small hardening changes.
 5. Keep documentation and runbooks aligned with the code.
+6. Consolidate overlapping Phase 6 docs/test branches before the next smoke-suite pass.
 
 ## Working rule
 
