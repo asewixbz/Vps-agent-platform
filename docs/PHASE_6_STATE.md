@@ -34,6 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
+- the latest docs/state consolidation branch should be treated as the canonical cleanup thread for review; older duplicates can be superseded once that review starts
 - several overlapping Phase 6 docs and cleanup branches are open; they should be consolidated before the next smoke-suite pass
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
 
