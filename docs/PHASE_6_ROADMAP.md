@@ -12,6 +12,7 @@ Harden execution so the platform is safer and more production-ready without losi
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
+- workflow schedule dispatch now serializes runtime execution payloads correctly via `runtime_execution_to_dict`
 
 ## Near-term roadmap
 
