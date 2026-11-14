@@ -397,7 +397,7 @@ Status:
 
 ## Immediate next work
 
-1. Consolidate overlapping Phase 6 docs/test branches before the next smoke-suite pass.
+1. Consolidate overlapping Phase 6 docs/test branches before the next smoke-suite pass (tracked in issue #49).
 2. Run the Phase 6E release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
 3. Keep Phase 6D persistence validation moving once the smoke gates are stable.
 
