@@ -36,7 +36,7 @@
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
 - the overlapping docs/test branches should be consolidated before the next smoke-suite pass
-- the active docs cleanup baseline is centered on PR #107, PR #118, PR #123, and PR #109
+- the active docs cleanup baseline is centered on PR #124, PR #126, PR #127, PR #128, PR #129, PR #130, PR #131, and PR #132
 
 ## Recommended next step
 
