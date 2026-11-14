@@ -83,6 +83,35 @@ def _step_reason(step: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+def _step_sandbox_details(step: dict[str, Any]) -> dict[str, Any]:
+    result = step.get("result") if isinstance(step.get("result"), dict) else {}
+    artifacts = result.get("artifacts") if isinstance(result.get("artifacts"), dict) else {}
+    if not isinstance(artifacts, dict):
+        return {}
+
+    details: dict[str, Any] = {}
+    for key in (
+        "sandbox_backend",
+        "sandbox_mode",
+        "sandbox_selection_reason",
+        "sandbox_fallback_used",
+        "sandbox_cwd",
+        "sandbox_file_policy",
+        "sandbox_network_policy",
+    ):
+        if key not in artifacts:
+            continue
+        value = artifacts.get(key)
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                continue
+        if value is None:
+            continue
+        details[key] = value
+    return details
+
+
 def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, depth: int = 2, step_index: int | None = None) -> dict[str, Any] | None:
     runtime_run = get_runtime_run(settings, runtime_run_id=runtime_run_id)
     if runtime_run is None:
@@ -107,10 +136,26 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
     steps: list[dict[str, Any]] = []
     artifact_map: dict[str, dict[str, Any]] = {}
     task_ids: list[str] = []
+    sandbox_backends: list[str] = []
+    sandbox_modes: list[str] = []
+    sandbox_fallback_used: list[bool] = []
+    sandbox_selection_reasons: list[str] = []
+
+    def _append_unique(collection: list[Any], value: Any) -> None:
+        if value is None:
+            return
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                return
+        if value not in collection:
+            collection.append(value)
+
     for raw_step in steps_payload:
         if not isinstance(raw_step, dict):
             continue
         artifacts = _step_artifacts(raw_step)
+        sandbox_details = _step_sandbox_details(raw_step)
         for artifact in artifacts:
             artifact_ref = str(artifact.get("artifact_ref") or "").strip()
             if artifact_ref and artifact_ref not in artifact_map:
@@ -149,6 +194,7 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
                 "artifact_refs": [artifact["artifact_ref"] for artifact in artifacts],
             },
             context=step_trace,
+            extra_details=sandbox_details or None,
         )
         step_entry = {
             **raw_step,
@@ -157,9 +203,16 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
             "task": task,
             "artifacts": artifacts,
             "artifact_count": len(artifacts),
+            "sandbox": sandbox_details or None,
             "audit": step_audit,
         }
         steps.append(step_entry)
+        _append_unique(sandbox_backends, sandbox_details.get("sandbox_backend"))
+        _append_unique(sandbox_modes, sandbox_details.get("sandbox_mode"))
+        sandbox_fallback_value = sandbox_details.get("sandbox_fallback_used")
+        if isinstance(sandbox_fallback_value, bool):
+            _append_unique(sandbox_fallback_used, sandbox_fallback_value)
+        _append_unique(sandbox_selection_reasons, sandbox_details.get("sandbox_selection_reason"))
 
     provenance_root = provenance.get("provenance", {}) if isinstance(provenance, dict) else {}
     memory_record_id = None
@@ -196,6 +249,10 @@ def build_runtime_run_trace(settings, *, runtime_run_id: str, limit: int = 100, 
         "artifact_refs": [artifact["artifact_ref"] for artifact in artifacts],
         "memory_record_id": memory_record_id,
         "audit_reason_codes": audit.get("reason_codes", []),
+        "sandbox_backends": sandbox_backends,
+        "sandbox_modes": sandbox_modes,
+        "sandbox_fallback_used": sandbox_fallback_used,
+        "sandbox_selection_reasons": sandbox_selection_reasons,
     }
 
     return {
