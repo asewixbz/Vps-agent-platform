@@ -35,6 +35,7 @@
 ## Open PRs noted in this snapshot
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- PR #140 is the active docs cleanup branch for the current roadmap/state sync
 - branch cleanup is now a live coordination item so the next smoke-suite pass can land on a smaller branch set
 
 ## Recommended next step
