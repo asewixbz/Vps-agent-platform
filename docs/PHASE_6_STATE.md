@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-15
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: consolidating overlapping docs/test branches, then runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
 ## What is already true
 
@@ -21,10 +21,12 @@
 - security controls expose `/security/controls` with trust levels, approval triggers, and operational budgets
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
+- the active docs-cleanup baseline centers on PRs #134-#140, with newer draft PRs serving as follow-on coordination work
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
 
 ## Current blockers
 
+- the active docs/test branch cluster still needs consolidation before the next smoke-suite pass
 - tasks still need stronger filesystem confinement guarantees beyond the current best-effort sandbox fallback
 - artifact retention is still local-volume based, although canonical manifests and cleanup jobs are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
@@ -33,8 +35,8 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- the current docs-cleanup baseline centers on PRs #134-#140, and the newer draft PRs are coordination follow-ons
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the active docs cleanup PRs, then rerun the release-gate smoke suite from the merged baseline. If that stays green, continue with the sandbox fallback hardening path.
