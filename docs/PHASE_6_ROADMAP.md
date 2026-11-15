@@ -12,7 +12,7 @@ Harden execution so the platform is safer and more production-ready without losi
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
-- the current docs-cleanup baseline centers on PR #171, with older overlapping Phase 6 docs/test drafts kept open until they are merged or superseded
+- the current docs-cleanup baseline centers on PR #172, with older overlapping Phase 6 docs/test drafts kept open until they are merged or superseded
 
 ## Near-term roadmap
 
