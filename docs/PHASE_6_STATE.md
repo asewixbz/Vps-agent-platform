@@ -2,7 +2,7 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-16
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
 - Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
@@ -33,7 +33,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- PR #194 is the current consolidated docs/state baseline for issue #49; older overlapping Phase 6 docs/test drafts can stay open until that baseline is merged or superseded
 
 ## Recommended next step
 
