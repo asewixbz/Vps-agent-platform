@@ -40,4 +40,4 @@
 
 ## Recommended next step
 
-Merge or supersede the consolidated docs/state baseline, then rerun the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Merge or supersede the consolidated docs/state baseline for issue #49, then rerun the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
