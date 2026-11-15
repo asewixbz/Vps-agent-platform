@@ -4,6 +4,11 @@
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
 
+## Current focus
+
+- The active Phase 6 pass is consolidating overlapping docs/test branches before the next smoke-suite run.
+- Use this runbook together with `docs/PHASE_6_STATE.md` and `docs/PHASE_6_ROADMAP.md` when triaging the next regression.
+
 ## 1) Fast health check
 
 Start with the control plane and queue:
