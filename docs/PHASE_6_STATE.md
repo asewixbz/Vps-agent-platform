@@ -4,7 +4,7 @@
 
 - Last reviewed: 2026-11-15
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish, sandbox fallback coverage, and branch-cleanup coordination before the next smoke-suite pass
+- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish, sandbox fallback coverage for unavailable and build-failure bubblewrap paths, and branch-cleanup coordination before the next smoke-suite pass
 
 ## What is already true
 
@@ -14,7 +14,7 @@
 - runtime trace now joins runtime events, provenance, memory snapshots, tasks, steps, artifacts, and audit summaries into one inspection surface
 - shell policy parsing rejects malformed commands safely and blocks basic shell control operators before the runner
 - task execution now goes through a sandbox helper with cwd isolation, restricted env, explicit resource limits, and a bubblewrap-backed prototype when available
-- explicit bubblewrap-mode fallback now has regression coverage when bwrap is unavailable
+- explicit bubblewrap-mode fallback now has regression coverage when bwrap is unavailable or bubblewrap construction fails
 - writer-side artifact generation now emits canonical artifact manifests for python, shell, browser, and workflow outputs
 - the runtime/CLI/docs surfaces now include artifact cleanup helpers and trace navigation for incident review
 - the persistence boundary is documented in code and exposes both `/persistence/layers` and `/persistence/schema`
@@ -40,4 +40,4 @@
 
 ## Recommended next step
 
-Exercise the sandbox fallback path, consolidate the overlapping docs branches, then run the release-gate smoke suite again and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Exercise the sandbox fallback path, including bubblewrap build-failure recovery, consolidate the overlapping docs branches, then run the release-gate smoke suite again and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
