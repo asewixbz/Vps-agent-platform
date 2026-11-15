@@ -344,6 +344,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - stronger observability and audit logs
 
 ### Current Phase 6 blockers
+- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
 - execution still happens through local subprocesses in the shared backend container
 - there is no seccomp/AppArmor profile or equivalent per-task sandbox boundary
 - shell execution is still guarded only by a basic allowlist and heuristic policy checks
