@@ -36,7 +36,7 @@
 ## Open PRs noted in this snapshot
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
-- the current coordination pass also includes branch-cleanup and state-sync draft PRs
+- the current coordination pass also includes branch-cleanup and state-sync draft PRs, plus the sandbox fallback test branch
 
 ## Recommended next step
 
