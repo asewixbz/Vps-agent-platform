@@ -22,7 +22,7 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - issue #49 now tracks consolidating the overlapping Phase 6 docs/test branches before the next smoke-suite pass
-- PR #181 is the current consolidated docs/state baseline for that cleanup pass
+- PR #183 is the current consolidated docs/state baseline for that cleanup pass
 
 ## Current blockers
 
@@ -35,9 +35,9 @@
 
 ## Open PRs noted in this snapshot
 
-- PR #181 is the current consolidated docs/state baseline for issue #49
+- PR #183 is the current consolidated docs/state baseline for issue #49
 - older overlapping Phase 6 docs/test drafts can stay open until that baseline is merged or superseded
 
 ## Recommended next step
 
-Merge the consolidated docs/state baseline (PR #181), then rerun the release-gate smoke suite from that baseline.
+Merge the consolidated docs/state baseline (PR #183), then rerun the release-gate smoke suite from that baseline.
