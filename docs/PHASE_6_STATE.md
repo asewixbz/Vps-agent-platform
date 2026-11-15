@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- PR #151 refreshes the Phase 6 roadmap/state docs for branch cleanup coordination
+- PR #151 and PR #152 refresh the Phase 6 roadmap/state docs for branch cleanup coordination
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
 
 ## Recommended next step
