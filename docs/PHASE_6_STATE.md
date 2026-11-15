@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the current draft PR cluster is focused on Phase 6 docs/state/roadmap synchronization and branch cleanup coordination
+- the current draft PR cluster is focused on Phase 6 docs/state/roadmap synchronization and branch cleanup coordination; README now mirrors the blocker note too
 
 ## Recommended next step
 
