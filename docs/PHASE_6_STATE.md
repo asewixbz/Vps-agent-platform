@@ -21,7 +21,7 @@
 - security controls expose `/security/controls` with trust levels, approval triggers, and operational budgets
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
-- the latest docs-cleanup baseline is centered on PR #171, which keeps the Phase 6 roadmap/state aligned with the branch-cleanup priority
+- the latest docs-cleanup baseline is centered on PR #172, which keeps the Phase 6 roadmap/state aligned with the branch-cleanup priority
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
 
 ## Current blockers
@@ -35,7 +35,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the latest docs/state sync draft PR (#171) is the current docs-cleanup baseline
+- the latest docs/state sync draft PR (#172) is the current docs-cleanup baseline
 - older overlapping Phase 6 docs/test drafts can remain open until the consolidated baseline is merged or superseded
 
 ## Recommended next step
