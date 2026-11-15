@@ -13,6 +13,7 @@ Harden execution so the platform is safer and more production-ready without losi
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
 - issue 49 tracks consolidation of overlapping docs/test branches before the next smoke-suite pass
+- the sandbox fallback branch remains part of that same coordination pass
 
 ## Near-term roadmap
 
