@@ -40,4 +40,4 @@
 
 ## Recommended next step
 
-Merge the consolidated docs/state baseline (PR #183), then rerun the release-gate smoke suite from that baseline.
+Merge the consolidated docs/state baseline (PR #183), then sync the handoff doc and rerun the release-gate smoke suite from that baseline.
