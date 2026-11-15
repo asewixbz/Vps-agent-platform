@@ -30,6 +30,7 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - overlapping docs/test branches still need consolidation before the next smoke-suite pass
+- README.md and docs/PROJECT_HANDOFF.md still reflect the older June snapshot, so they need one follow-up alignment pass after the consolidated docs baseline lands
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
 
 ## Open PRs noted in this snapshot
@@ -39,4 +40,4 @@
 
 ## Recommended next step
 
-Consolidate overlapping docs/test branches, then run the Phase 6E release-gate smoke suite and fix any regressions.
+Consolidate overlapping docs/test branches, then run the Phase 6E release-gate smoke suite and fix any regressions; follow up by syncing README.md and docs/PROJECT_HANDOFF.md.
