@@ -22,7 +22,7 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
-- overlapping Phase 6 docs/state sync branches are still open and need consolidation before the next smoke-suite pass
+- the oldest overlapping Phase 6 docs/state sync drafts have been retired, while the latest sync branch remains the active consolidation branch
 
 ## Current blockers
 
@@ -31,13 +31,13 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
-- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
+- remaining overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
 
 ## Open PRs noted in this snapshot
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
-- several overlapping Phase 6 docs/state sync PRs are still open and should be consolidated before the next smoke-suite pass
+- the latest overlapping Phase 6 docs/state sync PR remains open as the active consolidation branch
 
 ## Recommended next step
 
-Consolidate the overlapping Phase 6 docs/state sync branches, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the remaining overlapping Phase 6 docs/state sync branches, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
