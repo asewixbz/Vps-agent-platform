@@ -20,7 +20,7 @@ Harden execution so the platform is safer and more production-ready without losi
 3. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
 4. Continue improving runtime audit and trace visibility for blocked and approved runs.
 5. Keep the release-gate smoke suite green while making small hardening changes.
-6. Keep documentation and runbooks aligned with the code.
+6. Keep documentation and runbooks aligned with the code while the branch cleanup checkpoint stays active.
 
 ## Working rule
 
