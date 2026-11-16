@@ -349,6 +349,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - shell execution is still guarded only by a basic allowlist and heuristic policy checks
 - artifact retention is still local-volume based, although canonical manifests and cleanup helpers are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger audit pipeline
+- overlapping Phase 6 docs/state/roadmap branches still need to be consolidated before the next smoke-suite pass
 
 ## Notes on safety
 
