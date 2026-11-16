@@ -68,6 +68,7 @@ The project should be treated as an execution platform first, and a UI product s
 - Phase 6 runtime hardening is underway
 - Phase 6D persistence hardening is defined
 - Phase 6E security polish and operational controls are in progress
+- issue #49 is the current branch-cleanup checkpoint for overlapping Phase 6 docs/test branches
 
 ### What exists but is still early
 
@@ -397,7 +398,7 @@ Status:
 
 ## Immediate next work
 
-1. Run the Phase 6E release-gate smoke suite and fix any regressions.
+1. Consolidate the overlapping docs/test branches tracked in issue #49, then run the Phase 6E release-gate smoke suite and fix any regressions.
 2. Keep Phase 6D persistence validation moving once the smoke gates are stable.
 3. Continue Phase 6 hardening only after the boundaries and release gates stay green.
 
