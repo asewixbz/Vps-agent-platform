@@ -343,12 +343,14 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - human approval gates for risky actions
 - stronger observability and audit logs
 
-### Current Phase 6 blockers
+## Current Phase 6 blockers
+
 - execution still happens through local subprocesses in the shared backend container
 - there is no seccomp/AppArmor profile or equivalent per-task sandbox boundary
 - shell execution is still guarded only by a basic allowlist and heuristic policy checks
 - artifact retention is still local-volume based, although canonical manifests and cleanup helpers are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger audit pipeline
+- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
 
 ## Notes on safety
 
