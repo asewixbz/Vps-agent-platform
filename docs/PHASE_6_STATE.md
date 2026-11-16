@@ -35,9 +35,10 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
-- the branch cleanup consolidation set is still open and should be narrowed before the next smoke-suite pass
+- PR #250 carries the consolidated Phase 6 roadmap/state sync for branch cleanup consolidation
+- PR #230 keeps the handoff aligned with that same cleanup work
+- the wider Phase 6 runtime hardening, persistence, security, observability, and docs branches are still in progress as reviewable draft PRs
 
 ## Recommended next step
 
-Consolidate the overlapping docs/test branches, then run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Review and merge the aligned docs/state and handoff PRs, then run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
