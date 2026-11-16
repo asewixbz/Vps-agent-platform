@@ -12,13 +12,14 @@ Harden execution so the platform is safer and more production-ready without losi
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
+- branch cleanup coordination is now part of the Phase 6 docs workflow so the smoke-suite pass stays focused and reviewable
 
 ## Near-term roadmap
 
 1. Exercise and harden the sandbox fallback path.
 2. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
 3. Continue improving runtime audit and trace visibility for blocked and approved runs.
-4. Keep the release-gate smoke suite green while making small hardening changes.
+4. Keep the release-gate smoke suite green while converging the overlapping Phase 6 docs and branch cleanup work.
 5. Keep documentation and runbooks aligned with the code.
 
 ## Working rule
