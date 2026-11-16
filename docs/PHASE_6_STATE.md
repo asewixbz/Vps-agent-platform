@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs, and the branch cleanup checkpoint is still active
+- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs, and the branch cleanup checkpoint is still active in PR #241
 
 ## Recommended next step
 
