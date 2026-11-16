@@ -22,7 +22,7 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
-- overlapping Phase 6 docs and test branches are still being consolidated under issue #49
+- overlapping Phase 6 docs and test branches are still being consolidated under issue #49 before the next smoke-suite pass
 
 ## Current blockers
 
