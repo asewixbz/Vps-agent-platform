@@ -36,6 +36,7 @@
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
 - issue #49 tracks consolidation of overlapping Phase 6 docs and cleanup branches before the next smoke-suite pass
+- PR #158 carries the project handoff alignment for the same branch-cleanup baseline, so this branch can stay focused on the state and roadmap sync
 
 ## Recommended next step
 
