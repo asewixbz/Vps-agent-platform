@@ -23,6 +23,7 @@
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
 - branch cleanup for overlapping Phase 6 docs/state checkpoint branches is the current coordination focus before the next smoke-suite pass
+- the freshest cleanup baseline centers on PR #244, with PR #232 covering README alignment and PR #229 covering the explicit bubblewrap sandbox fallback smoke path
 
 ## Current blockers
 
@@ -35,8 +36,9 @@
 
 ## Open PRs noted in this snapshot
 
-- multiple overlapping Phase 6 docs/state checkpoint PRs are open; prefer consolidating them before adding new checkpoint PRs
+- prefer PR #244 as the freshest branch-cleanup baseline; PR #232 keeps README alignment in sync and PR #229 keeps the explicit bubblewrap fallback smoke path in view
+- older overlapping Phase 6 docs/test drafts can stay open until the consolidated baseline is merged or superseded
 
 ## Recommended next step
 
-Consolidate the overlapping docs/state checkpoint branches, then run the release-gate smoke suite and tighten any boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the overlapping docs/state checkpoint branches around PR #244, keep PR #232 and PR #229 aligned, then run the release-gate smoke suite and tighten any boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
