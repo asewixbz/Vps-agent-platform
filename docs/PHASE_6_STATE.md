@@ -34,8 +34,9 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- the current branch-cleanup sync PR is open alongside the other Phase 6 draft PRs
+- issue 49 tracks the overlap and the cleanup checkpoint
 
 ## Recommended next step
 
-Consolidate overlapping docs branches, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate overlapping Phase 6 docs/test branches, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
