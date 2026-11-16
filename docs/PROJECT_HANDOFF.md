@@ -399,7 +399,7 @@ Status:
 
 1. Run the Phase 6E release-gate smoke suite and fix any regressions.
 2. Keep the Phase 6D persistence validation moving once the smoke gates are stable.
-3. Keep the latest sandbox fallback smoke draft in PR #229 aligned with the branch-cleanup baseline before widening hardening work.
+3. Keep the latest sandbox fallback smoke draft in PR #229 and the branch-cleanup docs/state roadmap PRs aligned before widening hardening work.
 
 ## Working rules for future contributors
 
