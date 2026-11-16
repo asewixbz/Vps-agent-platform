@@ -13,10 +13,11 @@ Harden execution so the platform is safer and more production-ready without losi
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
 - branch cleanup for overlapping Phase 6 docs/state checkpoint branches is the current coordination focus before the next smoke-suite pass
+- the freshest cleanup baseline centers on PR #244, with PR #232 covering README alignment and PR #229 covering the explicit bubblewrap sandbox fallback smoke path
 
 ## Near-term roadmap
 
-1. Consolidate overlapping Phase 6 docs/state checkpoint branches and keep the branch set reviewable before the next smoke-suite pass.
+1. Consolidate overlapping Phase 6 docs/state checkpoint branches around PR #244, then keep PR #232 and PR #229 aligned until the baseline is merged or superseded.
 2. Exercise and harden the sandbox fallback path.
 3. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
 4. Continue improving runtime audit and trace visibility for blocked and approved runs.
