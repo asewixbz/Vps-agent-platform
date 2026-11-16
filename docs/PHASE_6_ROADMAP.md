@@ -12,7 +12,7 @@ Harden execution so the platform is safer and more production-ready without losi
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
-- branch cleanup coordination is the active checkpoint before the next smoke-suite pass
+- branch cleanup coordination is the active checkpoint before the next smoke-suite pass, and the latest state/roadmap sync drafts are PR #235 and PR #236
 
 ## Near-term roadmap
 
