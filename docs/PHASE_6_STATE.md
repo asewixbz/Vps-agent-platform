@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-16
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish, and consolidating the overlapping branch-cleanup docs work before the next smoke pass
 
 ## What is already true
 
@@ -30,11 +30,13 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
+- the overlapping branch-cleanup docs/PR set needs to be consolidated before adding another hardening merge
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- the Phase 6 runtime hardening, persistence, security, observability, docs, and branch-cleanup work is spread across several overlapping draft PRs
+- issue #49 tracks consolidating the overlapping Phase 6 docs/test branches before the next smoke-suite pass
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the overlapping branch-cleanup draft PRs, then rerun the release-gate smoke suite and tighten any regressions that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot checks.
