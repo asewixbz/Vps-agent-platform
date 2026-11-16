@@ -4,6 +4,10 @@
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
 
+## Branch cleanup baseline
+
+Issue #49 tracks the current docs/test branch-consolidation baseline. Treat the current Phase 6 docs set as the source of truth while the overlapping branches are being consolidated before the next smoke-suite pass.
+
 ## 1) Fast health check
 
 Start with the control plane and queue:
