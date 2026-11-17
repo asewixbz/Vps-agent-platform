@@ -30,13 +30,14 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
+- README/handoff alignment still needs to catch up to the latest Phase 6 state and roadmap checkpoint
 
 ## Open PRs noted in this snapshot
 
-- PR #261 is the newest branch-cleanup checkpoint for the Phase 6 state and roadmap sync.
-- PR #257 and PR #256 are the adjacent earlier docs/state sync drafts.
+- PR #262 is the latest branch-cleanup checkpoint for the Phase 6 state and roadmap sync.
+- PR #261 and PR #257 are the adjacent earlier docs/state sync drafts.
 - PR #230 still carries the README alignment, and PR #229 still covers the sandbox fallback smoke path.
 
 ## Recommended next step
 
-Consolidate the overlapping docs/state/roadmap drafts, then rerun the release-gate smoke suite from the latest checkpoint and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the overlapping docs/state/roadmap drafts, align the README/handoff docs to the latest checkpoint, then rerun the release-gate smoke suite from that checkpoint and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
