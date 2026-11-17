@@ -30,11 +30,12 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
-- overlapping docs/test branches still need consolidation around a single cleanup baseline before the next smoke-suite pass
+- overlapping docs/test branches still need consolidation around the current cleanup baseline before the next smoke-suite pass
 
 ## Open PRs noted in this snapshot
 
-- PR #275 is the current docs cleanup checkpoint for the latest roadmap/state sync
+- PR #279 is the current docs cleanup checkpoint for the latest state/roadmap sync and branch cleanup consolidation
+- PR #275 is the preceding docs cleanup checkpoint in the overlapping branch cluster
 - PRs #274, #273, #272, #271, #270, and #269 are the adjacent overlapping docs/state sync drafts in the active cleanup cluster
 - PR #230 still carries the README alignment
 - PR #229 still covers the sandbox-fallback smoke path
