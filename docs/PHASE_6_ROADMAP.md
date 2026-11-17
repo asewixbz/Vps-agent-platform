@@ -18,8 +18,8 @@ Harden execution so the platform is safer and more production-ready without losi
 1. Exercise and harden the sandbox fallback path.
 2. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
 3. Continue improving runtime audit and trace visibility for blocked and approved runs.
-4. Keep the release-gate smoke suite green while making small hardening changes.
-5. Keep documentation and runbooks aligned with the code.
+4. Keep the release-gate smoke suite green while consolidating overlapping Phase 6 docs branches and making small hardening changes.
+5. Keep documentation and runbooks aligned with the code, and prune stale Phase 6 docs branches when safe.
 
 ## Working rule
 
