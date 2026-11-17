@@ -397,7 +397,7 @@ Status:
 
 ## Immediate next work
 
-1. Consolidate the overlapping docs/test branches around PR #294.
+1. Consolidate the overlapping docs/test branches around PR #304.
 2. Rerun the release-gate smoke suite from the consolidated baseline.
 3. Keep Phase 6D persistence validation moving once the smoke gates are stable.
 4. Continue Phase 6 hardening only after the boundaries and release gates stay green.
