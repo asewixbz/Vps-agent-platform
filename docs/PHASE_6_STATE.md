@@ -37,6 +37,7 @@
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
 - branch cleanup consolidation is active alongside the ongoing hardening branches
+- the handoff doc is now aligned with the branch cleanup consolidation focus
 
 ## Recommended next step
 
