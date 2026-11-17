@@ -8,9 +8,9 @@ Use this guide when a run is blocked, a task fails, or you need to inspect the c
 
 The current docs-cleanup baseline is:
 
-- PR #294 for the latest Phase 6 roadmap/state sync
-- PR #230 for the handoff alignment draft
-- PR #229 for the bubblewrap sandbox fallback smoke draft
+- issue #49 for the consolidated Phase 6 branch cleanup tracker
+- PR #306 for the current Phase 6 roadmap/state cleanup focus
+- PR #307 for the README safety-note sync
 
 Treat that consolidated baseline as the source of truth before rerunning the release-gate smoke suite. Avoid adding new overlapping docs/test branches until that pass is complete.
 
