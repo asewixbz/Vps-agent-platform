@@ -80,6 +80,7 @@ The project should be treated as an execution platform first, and a UI product s
 - observability exists through runtime events, provenance, and trace navigation, but it is not yet the stronger audit surface planned for Phase 6
 - durable state still lives in SQLite, even though the persistence boundary and candidate Postgres path are now documented
 - security guardrails are in place, but they still need a full pre-release smoke pass before the next hardening merge
+- overlapping Phase 6 docs/state branches should be consolidated before the next smoke-suite pass
 
 ## Technical direction
 
@@ -358,6 +359,7 @@ Status:
 - not ready yet; the current code still runs tasks through local subprocesses in the shared backend container, without a production sandbox boundary or stronger audit pipeline
 - the Phase 6D persistence hardening path is defined, but the SQLite -> Postgres migration still needs runtime exercise
 - the Phase 6E security polish path is defined, but the smoke suite still needs to run as the release gate
+- overlapping Phase 6 docs/state branches should be consolidated before the next smoke-suite pass
 
 ## Current code map
 
@@ -397,7 +399,7 @@ Status:
 
 ## Immediate next work
 
-1. Run the Phase 6E release-gate smoke suite and fix any regressions.
+1. Consolidate overlapping docs/state branches, then run the Phase 6E release-gate smoke suite and fix any regressions that surface in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
 2. Keep Phase 6D persistence validation moving once the smoke gates are stable.
 3. Continue Phase 6 hardening only after the boundaries and release gates stay green.
 
