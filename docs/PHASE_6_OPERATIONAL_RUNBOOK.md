@@ -4,6 +4,11 @@
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
 
+## 0) Branch cleanup before the next smoke rerun
+
+If issue #49 is still open, consolidate the overlapping Phase 6 docs/test branches before rerunning the smoke suite.
+Prefer one active docs cleanup branch at a time so the next pass stays reviewable.
+
 ## 1) Fast health check
 
 Start with the control plane and queue:
