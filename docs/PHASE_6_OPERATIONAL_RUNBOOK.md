@@ -4,6 +4,16 @@
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
 
+## Cleanup baseline before the next smoke pass
+
+The current docs-cleanup baseline is:
+
+- PR #294 for the latest Phase 6 roadmap/state sync
+- PR #230 for the handoff alignment draft
+- PR #229 for the bubblewrap sandbox fallback smoke draft
+
+Treat that consolidated baseline as the source of truth before rerunning the release-gate smoke suite. Avoid adding new overlapping docs/test branches until that pass is complete.
+
 ## 1) Fast health check
 
 Start with the control plane and queue:
