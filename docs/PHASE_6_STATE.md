@@ -34,8 +34,8 @@
 
 ## Open PRs noted in this snapshot
 
-- the recent Phase 6 docs/state sync PRs are open while issue #49 tracks branch cleanup consolidation
+- PR #255 is the current docs/state sync; issue #49 tracks consolidating the overlapping docs/state cleanup branches before the next smoke-suite pass
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the overlapping docs/state cleanup branches, then run the release-gate smoke suite and fix any regressions.
