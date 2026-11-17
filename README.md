@@ -31,7 +31,7 @@ The system is intentionally conservative. It does **not** yet auto-generate arbi
 - conservative execution planner API and CLI
 - conservative multi-step runtime loop API and CLI
 - persistent runtime run history, checkpoint/resume markers, and event logs
-- runtime trace API that stitches runtime events, provenance, memory snapshots, tasks, and artifacts into one inspection view
+- runtime trace API that stitches runtime events, provenance, memory snapshots, tasks, artifacts, and audit summaries into one inspection view
 - durable memory records with artifact indexing
 - project and contact dossier helpers
 - durable memory links between runtime snapshots, dossiers, and artifact refs
@@ -348,7 +348,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - there is no seccomp/AppArmor profile or equivalent per-task sandbox boundary
 - shell execution is still guarded only by a basic allowlist and heuristic policy checks
 - artifact retention is still local-volume based, although canonical manifests and cleanup helpers are now in place
-- observability is still centered on SQLite runtime events and provenance views rather than a stronger audit pipeline
+- observability is still centered on SQLite runtime events, provenance views, and the audit-aware trace surface rather than a stronger external audit pipeline
 
 ## Notes on safety
 
