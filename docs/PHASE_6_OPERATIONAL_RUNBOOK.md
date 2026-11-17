@@ -4,6 +4,14 @@
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
 
+## 0) Before the smoke suite
+
+If you are about to run the Phase 6 smoke pass, first confirm the branch set is consolidated:
+
+- review the open Phase 6 docs and test branches
+- prefer the latest docs/state sync branch instead of spawning near-duplicate follow-up branches
+- use issue #49 as the coordination point before the next smoke-suite pass
+
 ## 1) Fast health check
 
 Start with the control plane and queue:
