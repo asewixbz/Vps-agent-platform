@@ -4,6 +4,16 @@
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
 
+## Cleanup baseline before the next smoke pass
+
+The current docs-cleanup baseline is:
+
+- issue #49 for the consolidated Phase 6 branch cleanup tracker
+- PR #306 for the current Phase 6 roadmap/state cleanup focus
+- PR #307 for the README safety-note sync
+
+Treat that consolidated baseline as the source of truth before rerunning the release-gate smoke suite. Avoid adding new overlapping docs/test branches until that pass is complete.
+
 ## 1) Fast health check
 
 Start with the control plane and queue:
