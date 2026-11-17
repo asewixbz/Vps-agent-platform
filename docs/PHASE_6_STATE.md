@@ -33,8 +33,11 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- the active docs-cleanup baseline centers on PR #257
+- PR #230 carries the README alignment
+- PR #229 covers the explicit bubblewrap sandbox fallback smoke path
+- the earlier docs/state sync drafts (#255, #256, and adjacent branches) remain open and should be consolidated around the PR #257 baseline before the next smoke-suite pass
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the active docs cleanup branches around PR #257, then rerun the release-gate smoke suite from the consolidated baseline.
