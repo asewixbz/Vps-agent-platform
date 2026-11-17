@@ -230,7 +230,7 @@ The recommended path keeps the project useful early while still allowing hardeni
 
 ## Phase plan
 
-### Phase 1 — CLI-first operational layer
+### Phase 1 - CLI-first operational layer
 
 Goal: make the system usable without a web interface.
 
@@ -249,7 +249,7 @@ Acceptance criteria:
 - a developer can approve a task without using a browser
 - the CLI works against the existing FastAPI backend
 
-### Phase 2 — Model adapter and agent planner
+### Phase 2 - Model adapter and agent planner
 
 Goal: connect an external model through a provider-agnostic layer.
 
@@ -267,7 +267,7 @@ Acceptance criteria:
 - the plan can choose between direct execution and workflow execution
 - the model provider can be changed without rewriting the application core
 
-### Phase 3 — Agent runtime and multi-step execution
+### Phase 3 - Agent runtime and multi-step execution
 
 Goal: let the system continue working across multiple steps.
 
@@ -285,7 +285,7 @@ Acceptance criteria:
 - the system can summarize progress
 - the system can stop when human input is needed
 
-### Phase 4 — Durable memory
+### Phase 4 - Durable memory
 
 Goal: make long-running work actually persistent.
 
@@ -314,7 +314,7 @@ Status:
 - the sectioned provenance contract is locked in with tests
 - the next active phase is Phase 6 runtime hardening
 
-### Phase 5 — Workflow templates
+### Phase 5 - Workflow templates
 
 Goal: make repeated jobs predictable and cheap to run.
 
@@ -336,7 +336,7 @@ Status:
 
 - complete, including built-in templates, custom template persistence, and recurring schedule dispatch
 
-### Phase 6 — Runtime hardening
+### Phase 6 - Runtime hardening
 
 Goal: make execution safer and more production-ready.
 
@@ -397,9 +397,9 @@ Status:
 
 ## Immediate next work
 
-1. Run the Phase 6E release-gate smoke suite and fix any regressions.
-2. Keep the Phase 6D persistence validation moving once the smoke gates are stable.
-3. Keep the latest sandbox fallback smoke draft in PR #229 and the branch-cleanup docs/state roadmap PRs aligned before widening hardening work.
+1. Consolidate the overlapping Phase 6 docs/test branches, then run the Phase 6E release-gate smoke suite and fix any regressions.
+2. Keep Phase 6D persistence validation moving once the smoke gates are stable.
+3. Continue Phase 6 hardening only after the branch cleanup, boundaries, and release gates stay green.
 
 ## Working rules for future contributors
 
