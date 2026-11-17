@@ -295,7 +295,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 
 ## Recommended rollout plan
 
-### Phase 1 7 complete
+### Phase 1 - complete
 - control plane
 - local Python/shell execution
 - tool registry
@@ -305,7 +305,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - model API endpoints
 - first provider adapter
 
-### Phase 2 7 complete
+### Phase 2 - complete
 - Redis queue
 - worker process
 - browser runner
@@ -313,7 +313,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - execution planning bridge
 - runtime loop scaffold
 
-### Phase 3 7 complete
+### Phase 3 - complete
 - Postgres
 - stronger policy engine
 - trust scoring
@@ -321,14 +321,14 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - persistent runtime history
 - runtime event logs
 
-### Phase 4 7 complete
+### Phase 4 - complete
 - durable memory records
 - project/contact dossiers
 - memory links
 - artifact indexing
 - long-lived workflow context
 
-### Phase 5 7 complete
+### Phase 5 - complete
 - workflow templates
 - scanning workflows
 - ranking workflows
@@ -338,7 +338,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - custom workflow template persistence
 - recurring schedule dispatch
 
-### Phase 6 7 next, but not ready yet
+### Phase 6 - next, but not ready yet
 - automatic tool synthesis
 - sandbox-first execution
 - human approval gates for risky actions
