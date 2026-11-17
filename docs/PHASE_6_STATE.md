@@ -35,7 +35,7 @@
 
 ## Open PRs noted in this snapshot
 
-- multiple draft PRs cover Phase 6 branch cleanup, docs/state sync, and the hardening follow-up work
+- PR #257 is the current branch-cleanup checkpoint, with PR #230 and PR #229 as adjacent docs cleanup baselines
 
 ## Recommended next step
 
