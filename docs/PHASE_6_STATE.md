@@ -35,8 +35,14 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- PR #311 is the latest Phase 6 state/roadmap cleanup draft
+- PR #310 is the current state snapshot cleanup draft
+- PR #309 tracks the branch cleanup note
+- PR #307 tracks the README safety-note sync
+- PR #303 tracks the runbook cleanup baseline
+- PR #302 tracks the handoff alignment draft
+- the broader Phase 6 runtime hardening, persistence, security, observability, and docs work remains in draft PRs
 
 ## Recommended next step
 
-Consolidate overlapping cleanup-focused docs/test branches, then rerun the release-gate smoke suite and tighten any remaining boundary gaps the smoke pass surfaces.
+Consolidate the active cleanup baseline PRs, then rerun the release-gate smoke suite and tighten any remaining boundary gaps the smoke pass surfaces.
