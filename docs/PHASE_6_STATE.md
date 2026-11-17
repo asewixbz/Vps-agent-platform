@@ -29,12 +29,12 @@
 - artifact retention is still local-volume based, although canonical manifests and cleanup jobs are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
-- overlapping Phase 6 docs/test branches still need one more consolidation pass before the next smoke-suite run
+- overlapping Phase 6 docs/test branches still need one more consolidation pass before the next smoke-suite run (issue #49)
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
 
 ## Open PRs noted in this snapshot
 
-- the active docs cleanup baseline is centered on the latest roadmap/state sync draft, with nearby coordination PRs for the handoff alignment and sandbox-fallback smoke path
+- the active docs cleanup baseline is centered on the latest roadmap/state sync draft, with nearby coordination PRs for the handoff alignment and sandbox-fallback smoke path; issue #49 tracks the branch cleanup consolidation
 
 ## Recommended next step
 
