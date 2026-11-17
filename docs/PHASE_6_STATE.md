@@ -36,6 +36,7 @@
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
 - branch cleanup work is now being used to reduce overlap between the docs/state/roadmap refreshes and the smoke-suite follow-up work
+- the README public summary now mirrors the same branch cleanup focus
 
 ## Recommended next step
 
