@@ -123,6 +123,8 @@ If a schedule does not trigger:
 - confirm the target workflow template still exists
 - inspect the last runtime run id and last run status on the schedule record
 
+Before the next smoke-suite pass, check whether there are overlapping Phase 6 docs/test branches or draft PRs. If there are, consolidate them first so the gate results reflect one active focus.
+
 ## 6) Memory and provenance triage
 
 For long-lived work, check the durable memory and provenance trail:
