@@ -65,9 +65,10 @@ The project should be treated as an execution platform first, and a UI product s
 - Phase 3 complete
 - Phase 4 complete
 - Phase 5 complete
-- Phase 6 runtime hardening is underway
+- Phase 6 runtime hardening is underway in small, reviewable steps
 - Phase 6D persistence hardening is defined
 - Phase 6E security polish and operational controls are in progress
+- branch cleanup and docs synchronization are the current housekeeping focus before the next smoke-suite pass
 
 ### What exists but is still early
 
@@ -80,6 +81,7 @@ The project should be treated as an execution platform first, and a UI product s
 - observability exists through runtime events, provenance, and trace navigation, but it is not yet the stronger audit surface planned for Phase 6
 - durable state still lives in SQLite, even though the persistence boundary and candidate Postgres path are now documented
 - security guardrails are in place, but they still need a full pre-release smoke pass before the next hardening merge
+- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
 
 ## Technical direction
 
@@ -397,9 +399,9 @@ Status:
 
 ## Immediate next work
 
-1. Run the Phase 6E release-gate smoke suite and fix any regressions.
-2. Keep Phase 6D persistence validation moving once the smoke gates are stable.
-3. Continue Phase 6 hardening only after the boundaries and release gates stay green.
+1. Consolidate the overlapping Phase 6 docs/test branches and keep the handoff, roadmap, and state docs aligned.
+2. Run the Phase 6E release-gate smoke suite and fix any regressions.
+3. Keep Phase 6D persistence validation moving once the smoke gates are stable.
 
 ## Working rules for future contributors
 
