@@ -4,7 +4,7 @@
 
 - Last reviewed: 2026-11-17
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: branch cleanup consolidation, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: branch cleanup consolidation around issue #49 / PR #252, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
 ## What is already true
 
@@ -22,7 +22,7 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
-- overlapping Phase 6 docs/state/roadmap draft PRs are still open, so branch cleanup remains part of the current work before the next smoke-suite pass
+- issue #49 / PR #252 is the current branch-cleanup checkpoint, and the overlapping docs/state/roadmap drafts stay open until that baseline is consolidated before the next smoke-suite pass
 
 ## Current blockers
 
@@ -35,8 +35,8 @@
 
 ## Open PRs noted in this snapshot
 
-- the current review set includes overlapping Phase 6 docs/state roadmap draft PRs, and issue #49 tracks consolidation before the next smoke-suite pass
+- the current review set is centered on issue #49 and PR #252, with adjacent Phase 6 docs/state roadmap draft PRs still open until the cleanup baseline is merged or superseded
 
 ## Recommended next step
 
-Consolidate the overlapping docs/state branches, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the overlapping docs/state branches around PR #252, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
