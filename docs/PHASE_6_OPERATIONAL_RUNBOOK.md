@@ -4,6 +4,10 @@
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
 
+## 0) Cleanup coordination
+
+If you are continuing the Phase 6 branch cleanup pass, first confirm issue #49 is still the active tracker, review the open draft cleanup PRs, and keep the overlap limited to the current cleanup branch set. Avoid starting a new cleanup branch unless the current one is blocked or superseded.
+
 ## 1) Fast health check
 
 Start with the control plane and queue:
