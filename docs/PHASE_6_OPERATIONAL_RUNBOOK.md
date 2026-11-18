@@ -86,6 +86,8 @@ The trace payload now carries:
 - `audit`
 - `navigation`
 
+The `navigation` section includes `audit_reason_codes`, so you can read the consolidated trace-level reason codes at a glance.
+
 ## 4) How to interpret audit data
 
 When a run or event blocks, check these fields first:
@@ -97,6 +99,7 @@ When a run or event blocks, check these fields first:
 - `task_id`
 - `artifact_refs`
 - `trace.correlation_id`
+- `navigation.audit_reason_codes`
 
 The runtime audit summary in the trace is the quickest way to see:
 
@@ -209,7 +212,16 @@ If startup or inspection fails around durable state:
 - `GET /workflow-schedules/{schedule_id}`
 - `POST /workflow-schedules/dispatch-due`
 
-## 9) When to escalate
+## 9) Branch cleanup coordination
+
+Use this when the Phase 6 docs/test branches start overlapping:
+
+- review the open draft PRs before starting a new branch
+- prefer consolidating overlapping docs or test edits into the latest reviewable branch
+- close or merge stale drafts after the consolidated branch is ready
+- keep the branch set small enough that the next smoke-suite pass stays easy to review
+
+## 10) When to escalate
 
 Escalate if any of the following are true:
 
