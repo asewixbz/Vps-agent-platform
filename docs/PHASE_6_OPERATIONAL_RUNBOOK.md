@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
+Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first. Before the next smoke-suite pass, consolidate overlapping Phase 6 docs/test branches around the latest state/roadmap baseline.
 
 ## 1) Fast health check
 
