@@ -86,6 +86,8 @@ The trace payload now carries:
 - `audit`
 - `navigation`
 
+The `navigation` section includes `audit_reason_codes`, so you can read the consolidated trace-level reason codes at a glance.
+
 ## 4) How to interpret audit data
 
 When a run or event blocks, check these fields first:
@@ -97,6 +99,7 @@ When a run or event blocks, check these fields first:
 - `task_id`
 - `artifact_refs`
 - `trace.correlation_id`
+- `navigation.audit_reason_codes`
 
 The runtime audit summary in the trace is the quickest way to see:
 
