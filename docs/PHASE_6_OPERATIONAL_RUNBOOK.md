@@ -4,6 +4,8 @@
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
 
+Before the next smoke-suite pass, use the consolidated branch-cleanup baseline from PR #374 and keep issue #49 as the tracking thread for any overlapping docs/test drafts.
+
 ## 1) Fast health check
 
 Start with the control plane and queue:
