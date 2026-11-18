@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- PR #351 is the current docs baseline; older overlapping docs/test drafts such as PRs #349 and #350 are closed as stale duplicates.
 
 ## Recommended next step
 
