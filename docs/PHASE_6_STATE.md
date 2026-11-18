@@ -35,6 +35,8 @@
 ## Open PRs noted in this snapshot
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- PR #355 is the active consolidation branch for the current docs/test cleanup pass
+- issue #49 tracks the overlapping Phase 6 docs/test branches that still need to be consolidated
 - branch cleanup should happen before the next smoke-suite pass so the active Phase 6 work stays reviewable and easy to verify
 
 ## Recommended next step
