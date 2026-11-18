@@ -35,6 +35,7 @@
 ## Open PRs noted in this snapshot
 
 - the current Phase 6 docs/test branches are in progress as reviewable draft PRs, and issue #49 tracks the branch cleanup pass as the immediate housekeeping step; PR #345 is the current docs-only baseline
+- the operational runbook now includes a branch cleanup coordination checklist for overlapping docs/test branches
 
 ## Recommended next step
 
