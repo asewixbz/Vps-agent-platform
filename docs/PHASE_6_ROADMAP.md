@@ -19,7 +19,7 @@ Harden execution so the platform is safer and more production-ready without losi
 2. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
 3. Continue improving runtime audit and trace visibility for blocked and approved runs.
 4. Keep the release-gate smoke suite green while making small hardening changes.
-5. Keep documentation and runbooks aligned with the code.
+5. Keep documentation and runbooks aligned with the code and the current branch-cleanup baseline.
 
 ## Working rule
 
@@ -31,3 +31,4 @@ Keep Phase 6 changes small, reviewable, and easy to verify. Prefer narrow harden
 - `docs/PHASE_6_STATE.md`
 - `docs/PHASE_6D_PERSISTENCE_HARDENING.md`
 - `docs/PHASE_6E_SECURITY_POLISH.md`
+- issue #49 tracks consolidation of overlapping docs/test drafts around PR #374
