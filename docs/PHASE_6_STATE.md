@@ -3,8 +3,8 @@
 ## Snapshot
 
 - Last reviewed: 2026-11-18
-- Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: branch cleanup, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current phase: Phase 6 runtime hardening continues in small, reviewable steps with branch cleanup before the next smoke-suite pass
+- Current focus: branch consolidation, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
 ## What is already true
 
@@ -20,7 +20,7 @@
 - the schema/versioning strategy and Postgres migration path for durable state are documented in code and in `docs/PHASE_6D_PERSISTENCE_HARDENING.md`
 - security controls expose `/security/controls` with trust levels, approval triggers, and operational budgets
 - runtime API requests are capped by a hard max-step budget before the loop starts
-- release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
+- release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, audit-aware trace assertions, and trace-navigation audit reason-code summaries
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
 - branch cleanup is being used to reduce overlap across the Phase 6 docs and test branches before the next smoke-suite pass
 
@@ -35,7 +35,9 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs, with branch cleanup active to reduce overlap
+- the remaining Phase 6 branch-cleanup draft PRs are open alongside the persistence, security, observability, and docs work; PR #335 has been closed as the oldest stale draft
+- issue #49 tracks consolidation of the overlapping Phase 6 docs/test branches before the next smoke-suite pass
+- the operational runbook now includes a branch cleanup coordination checklist for overlapping docs/test branches
 
 ## Recommended next step
 
