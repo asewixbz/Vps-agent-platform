@@ -34,8 +34,8 @@
 
 ## Open PRs noted in this snapshot
 
-- the current Phase 6 docs/test branches are in progress as reviewable draft PRs, and the branch cleanup pass is now the immediate housekeeping step
+- the current Phase 6 docs/test branches are in progress as reviewable draft PRs, and issue #49 tracks the branch cleanup pass as the immediate housekeeping step
 
 ## Recommended next step
 
-Consolidate the overlapping Phase 6 docs/test branches, then run the release-gate smoke suite and tighten any boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the overlapping Phase 6 docs/test branches tracked in issue #49, then run the release-gate smoke suite and tighten any boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
