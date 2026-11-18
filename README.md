@@ -343,6 +343,8 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - human approval gates for risky actions
 - stronger observability and audit logs
 
+The immediate coordination focus is to consolidate overlapping Phase 6 docs/test branches before the next smoke-suite pass.
+
 ### Current Phase 6 blockers
 - execution still happens through local subprocesses in the shared backend container
 - there is no seccomp/AppArmor profile or equivalent per-task sandbox boundary
