@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the latest Phase 6 branch-cleanup draft PRs are open alongside the persistence, security, observability, and docs work
+- the remaining Phase 6 branch-cleanup draft PRs are open alongside the persistence, security, observability, and docs work; PR #335 has been closed as the oldest stale draft
 - issue #49 tracks consolidation of the overlapping Phase 6 docs/test branches before the next smoke-suite pass
 - the operational runbook now includes a branch cleanup coordination checklist for overlapping docs/test branches
 
