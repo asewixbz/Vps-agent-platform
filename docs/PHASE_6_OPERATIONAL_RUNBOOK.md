@@ -212,7 +212,16 @@ If startup or inspection fails around durable state:
 - `GET /workflow-schedules/{schedule_id}`
 - `POST /workflow-schedules/dispatch-due`
 
-## 9) When to escalate
+## 9) Branch cleanup coordination
+
+Use this when the Phase 6 docs/test branches start overlapping:
+
+- review the open draft PRs before starting a new branch
+- prefer consolidating overlapping docs or test edits into the latest reviewable branch
+- close or merge stale drafts after the consolidated branch is ready
+- keep the branch set small enough that the next smoke-suite pass stays easy to review
+
+## 10) When to escalate
 
 Escalate if any of the following are true:
 
