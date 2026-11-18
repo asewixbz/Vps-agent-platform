@@ -6,6 +6,7 @@ Harden execution so the platform is safer and more production-ready without losi
 
 ## Current state
 
+- branch cleanup docs alignment is underway and should stay narrow and reviewable
 - shell policy parsing rejects malformed shell commands and blocks obvious control operators
 - the runner uses a sandbox helper with cwd isolation, restricted env, and explicit resource limits
 - browser execution is behind a feature flag and still requires approval for external URLs
@@ -15,11 +16,11 @@ Harden execution so the platform is safer and more production-ready without losi
 
 ## Near-term roadmap
 
-1. Exercise and harden the sandbox fallback path.
-2. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
-3. Continue improving runtime audit and trace visibility for blocked and approved runs.
-4. Keep the release-gate smoke suite green while making small hardening changes.
-5. Keep documentation and runbooks aligned with the code.
+1. Consolidate the branch cleanup docs pass and keep the docs/runbook alignment narrow.
+2. Exercise and harden the sandbox fallback path.
+3. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
+4. Continue improving runtime audit and trace visibility for blocked and approved runs.
+5. Keep the release-gate smoke suite green while making small hardening changes.
 
 ## Working rule
 
