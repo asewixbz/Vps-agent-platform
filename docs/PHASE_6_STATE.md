@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-19
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: branch cleanup coordination, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: consolidating overlapping Phase 6 docs/test branches, while keeping runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish aligned with release gates
 
 ## What is already true
 
@@ -22,7 +22,7 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
-- the overlapping Phase 6 docs/test branches are being consolidated before the next smoke-suite pass
+- issue #49 tracks consolidation of overlapping Phase 6 docs/test branches before the next smoke-suite pass
 
 ## Current blockers
 
