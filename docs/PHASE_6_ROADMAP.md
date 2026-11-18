@@ -20,7 +20,7 @@ Harden execution so the platform is safer and more production-ready without losi
 2. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
 3. Continue improving runtime audit and trace visibility for blocked and approved runs.
 4. Keep the release-gate smoke suite green while making small hardening changes.
-5. Consolidate overlapping Phase 6 docs/test branches before the next smoke-suite pass.
+5. Consolidate overlapping Phase 6 docs/test branches before the next smoke-suite pass, starting from the PR #345 baseline.
 6. Keep documentation and runbooks aligned with the code.
 
 ## Working rule
