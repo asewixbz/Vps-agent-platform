@@ -227,3 +227,12 @@ When escalating, include:
 - the trace payload
 - the output of `/security/controls`
 - the output of `/persistence/schema`
+
+## 10) Branch cleanup and PR consolidation
+
+When multiple Phase 6 docs or smoke-test branches overlap, prefer consolidating them before opening another review branch.
+
+- Review the current open PR list and the active blocker issue first.
+- Keep one small change per branch when possible.
+- If several branches cover the same docs or state refresh, consolidate them into one reviewable change.
+- Use issue #49 as the current reminder to consolidate overlapping Phase 6 docs/test branches before the next smoke-suite pass.
