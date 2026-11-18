@@ -134,6 +134,7 @@ class RuntimeTraceTests(TestCase):
         self.assertEqual(trace["navigation"]["runtime_run_id"], "run-1")
         self.assertEqual(trace["navigation"]["task_ids"], ["task-1"])
         self.assertEqual(trace["navigation"]["artifact_refs"], ["/tmp/report.json"])
+        self.assertEqual(trace["navigation"]["audit_reason_codes"], ["runtime_start", "runtime_complete"])
         self.assertEqual(trace["event_count"], 2)
         self.assertEqual(trace["step_count"], 1)
         self.assertEqual(trace["events"][0]["event_name"], "started")
