@@ -91,7 +91,6 @@ vps-agent-platform/
       runtime_api.py
       runtime_events.py
       runtime_provenance.py
-      runtime_trace.py
       settings.py
       store.py
       worker.py
@@ -294,7 +293,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 
 ## Recommended rollout plan
 
-### Phase 1 — complete
+### Phase 1  complete
 - control plane
 - local Python/shell execution
 - tool registry
@@ -304,7 +303,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - model API endpoints
 - first provider adapter
 
-### Phase 2 — complete
+### Phase 2  complete
 - Redis queue
 - worker process
 - browser runner
@@ -312,7 +311,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - execution planning bridge
 - runtime loop scaffold
 
-### Phase 3 — complete
+### Phase 3  complete
 - Postgres
 - stronger policy engine
 - trust scoring
@@ -320,14 +319,14 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - persistent runtime history
 - runtime event logs
 
-### Phase 4 — complete
+### Phase 4  complete
 - durable memory records
 - project/contact dossiers
 - memory links
 - artifact indexing
 - long-lived workflow context
 
-### Phase 5 — complete
+### Phase 5  complete
 - workflow templates
 - scanning workflows
 - ranking workflows
@@ -337,7 +336,7 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - custom workflow template persistence
 - recurring schedule dispatch
 
-### Phase 6 — next, but not ready yet
+### Phase 6  next, but not ready yet
 - automatic tool synthesis
 - sandbox-first execution
 - human approval gates for risky actions
@@ -349,6 +348,8 @@ curl -X POST http://localhost:8000/tasks/<task-id>/approve \
 - shell execution is still guarded only by a basic allowlist and heuristic policy checks
 - artifact retention is still local-volume based, although canonical manifests and cleanup helpers are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger audit pipeline
+
+The next recommended move is to keep the release-gate smoke suite green while consolidating overlapping docs/test branches before the next hardening pass.
 
 ## Notes on safety
 
