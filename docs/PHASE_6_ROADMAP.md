@@ -12,11 +12,11 @@ Harden execution so the platform is safer and more production-ready without losi
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
-- the branch-cleanup docs baseline is being consolidated before the next smoke-suite pass
+- the branch-cleanup docs baseline is being consolidated before the next smoke-suite pass, and issue #49 is the coordination thread
 
 ## Near-term roadmap
 
-1. Consolidate overlapping docs/test branches around the current branch-cleanup baseline.
+1. Consolidate overlapping docs/test branches around the current branch-cleanup baseline, using issue #49 as the coordination thread.
 2. Run and harden the release-gate smoke suite from that consolidated baseline.
 3. Exercise and harden the sandbox fallback path.
 4. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
