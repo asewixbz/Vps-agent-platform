@@ -4,6 +4,8 @@
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
 
+Current coordination focus: keep the overlapping Phase 6 docs/test branches consolidated before the next smoke-suite pass; issue #49 tracks the overlap.
+
 ## 1) Fast health check
 
 Start with the control plane and queue:
