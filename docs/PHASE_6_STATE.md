@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the active Phase 6 docs/test branches are still being consolidated into reviewable draft PRs
+- the current roadmap/state baseline is the consolidation target while the remaining Phase 6 docs/test drafts are being folded into it
 
 ## Recommended next step
 
