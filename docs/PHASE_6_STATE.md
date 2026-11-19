@@ -34,7 +34,10 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- PR #411 is the current roadmap/state sync on the branch-cleanup baseline
+- PR #410 is the immediately preceding docs sync on the same cleanup thread
+- PR #402 is the README sync for the same cleanup thread
+- PR #404 and earlier overlapping refreshes are superseded by the newer baseline drafts
 
 ## Recommended next step
 
