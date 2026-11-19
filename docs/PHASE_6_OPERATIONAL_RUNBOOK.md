@@ -4,6 +4,10 @@
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
 
+## Branch cleanup baseline
+
+When working through the current Phase 6 pass, keep the docs/test branch set reduced to the branch-cleanup baseline noted in `docs/PHASE_6_STATE.md` and `docs/PHASE_6_ROADMAP.md` before rerunning smoke checks.
+
 ## 1) Fast health check
 
 Start with the control plane and queue:
