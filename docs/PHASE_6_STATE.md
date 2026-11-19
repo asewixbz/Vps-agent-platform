@@ -29,7 +29,7 @@
 - artifact retention is still local-volume based, although canonical manifests and cleanup jobs are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
-- overlapping docs/state/test branches still need consolidation before the next smoke-suite pass
+- overlapping docs/state/test branches still need consolidation before the next smoke-suite pass; issue #49 tracks the cleanup
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
 
 ## Open PRs noted in this snapshot
@@ -39,4 +39,4 @@
 
 ## Recommended next step
 
-Consolidate the overlapping docs/state branches, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the overlapping docs/state branches (issue #49), then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
