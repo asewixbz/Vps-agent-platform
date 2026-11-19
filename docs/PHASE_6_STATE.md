@@ -22,7 +22,7 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
-- PR #404 is the current branch-cleanup baseline for the Phase 6 docs/state refreshes
+- PR #405 is the current branch-cleanup baseline for the Phase 6 docs/state refreshes, with PR #404 as an earlier overlapping snapshot
 
 ## Current blockers
 
@@ -36,8 +36,8 @@
 ## Open PRs noted in this snapshot
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
-- PR #404 is the branch-cleanup baseline; earlier overlapping docs/runbook drafts are being consolidated
+- PR #405 is the current branch-cleanup baseline; earlier overlapping docs/runbook drafts are being consolidated
 
 ## Recommended next step
 
-Consolidate the overlapping docs/test branches around PR #404, then rerun the release-gate smoke suite from the cleaned-up branch set.
+Consolidate the remaining overlapping docs/test branches around PR #405, then rerun the release-gate smoke suite from the cleaned-up branch set.
