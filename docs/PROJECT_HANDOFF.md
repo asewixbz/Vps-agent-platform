@@ -123,7 +123,7 @@ The web interface can come later as another client, not as the core dependency.
 
 ## Intended workload types
 
-The platform should support at least three categories of work:
+The system should support at least three categories of work:
 
 ### 1. Autonomous engineering tasks
 
@@ -400,6 +400,7 @@ Status:
 1. Run the Phase 6E release-gate smoke suite and fix any regressions.
 2. Keep Phase 6D persistence validation moving once the smoke gates are stable.
 3. Continue Phase 6 hardening only after the boundaries and release gates stay green.
+4. Keep the branch-cleanup baseline consolidated before the next smoke-suite pass, and use issue #49 as the coordination thread.
 
 ## Working rules for future contributors
 
