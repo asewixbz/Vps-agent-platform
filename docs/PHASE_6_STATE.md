@@ -30,7 +30,7 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
-- overlapping docs/test branches still need consolidation before the next smoke-suite pass
+- overlapping docs/test branches still need consolidation before the next smoke-suite pass, and README sync still needs to catch up
 
 ## Open PRs noted in this snapshot
 
@@ -38,4 +38,4 @@
 
 ## Recommended next step
 
-Consolidate overlapping docs/test branches, then run the release-gate smoke suite and fix any regressions that appear in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate overlapping docs/test branches, bring README into sync, then run the release-gate smoke suite and fix any regressions that appear in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
