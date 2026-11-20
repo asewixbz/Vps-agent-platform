@@ -35,8 +35,8 @@
 ## Open PRs noted in this snapshot
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
-- the overlapping Phase 6 branch-cleanup docs/test PRs should be consolidated before the next smoke-suite pass
+- PR #450 is the newest branch-cleanup snapshot; older overlapping docs/test drafts remain open until consolidation is complete
 
 ## Recommended next step
 
-Consolidate the overlapping branch-cleanup docs/test PRs, then rerun the release-gate smoke suite.
+Consolidate the overlapping branch-cleanup docs/test PRs around PR #450, then rerun the release-gate smoke suite.
