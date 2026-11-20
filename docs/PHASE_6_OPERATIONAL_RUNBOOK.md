@@ -209,7 +209,15 @@ If startup or inspection fails around durable state:
 - `GET /workflow-schedules/{schedule_id}`
 - `POST /workflow-schedules/dispatch-due`
 
-## 9) When to escalate
+## 9) Phase 6 branch cleanup triage
+
+If you're preparing the next hardening pass:
+
+- check issue #49 for the overlapping Phase 6 docs/test branch consolidation thread
+- prefer landing or merging the cleanup docs PRs before starting the next smoke-suite pass
+- keep any follow-up doc-only change scoped to a single file family (handoff, roadmap, state, or runbook)
+
+## 10) When to escalate
 
 Escalate if any of the following are true:
 
