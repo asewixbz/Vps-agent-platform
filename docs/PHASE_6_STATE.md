@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-20
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: consolidate overlapping Phase 6 docs/test branches around PR #444, then rerun the release-gate smoke suite from the consolidated branch set
 
 ## What is already true
 
@@ -33,8 +33,10 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- PR #444 is the current consolidated roadmap/state baseline for the branch cleanup pass
+- PR #443 and PR #442 are the immediately preceding docs syncs in the same cleanup set
+- PR #423 and earlier overlapping refreshes are superseded by the newer baseline drafts
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Merge PR #444, close or supersede the overlapping docs/test drafts, and rerun the release-gate smoke suite from the consolidated branch set.
