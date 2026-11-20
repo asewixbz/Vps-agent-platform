@@ -227,3 +227,12 @@ When escalating, include:
 - the trace payload
 - the output of `/security/controls`
 - the output of `/persistence/schema`
+
+## 10) Branch cleanup before the next smoke-suite pass
+
+When several draft Phase 6 docs or test PRs overlap:
+
+- treat PR #462 as the current consolidated baseline for the branch-cleanup pass
+- avoid opening a fresh duplicate if the change is already covered by that baseline
+- close or supersede older overlapping drafts before the next smoke-suite run
+- rerun the release-gate smoke suite only after the draft set is reduced to one baseline plus any clearly distinct follow-ups
