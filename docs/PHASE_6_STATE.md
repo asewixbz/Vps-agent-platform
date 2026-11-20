@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the branch-cleanup docs sync PRs are active alongside the broader Phase 6 hardening work
+- PR 472 is the canonical branch-cleanup docs sync for this snapshot; earlier overlapping docs branches remain open and should be consolidated before the next smoke-suite pass
 
 ## Recommended next step
 
