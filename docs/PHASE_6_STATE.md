@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-20
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish, and consolidating overlapping branch cleanup PRs before the next smoke pass
 
 ## What is already true
 
@@ -20,7 +20,7 @@
 - the schema/versioning strategy and Postgres migration path for durable state are documented in code and in `docs/PHASE_6D_PERSISTENCE_HARDENING.md`
 - security controls expose `/security/controls` with trust levels, approval triggers, and operational budgets
 - runtime API requests are capped by a hard max-step budget before the loop starts
-- release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
+- release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, audit-aware trace assertions, and branch-cleanup readiness notes
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
 
 ## Current blockers
@@ -30,11 +30,13 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
+- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- the current review queue is dominated by overlapping Phase 6 docs/test cleanup drafts, including #486, #485, #484, #483, #482, #481, #480, #460, #459, and #458
+- issue #49 tracks consolidating those overlapping branches before the next smoke-suite pass
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the overlapping branch cleanup PRs, then rerun the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
