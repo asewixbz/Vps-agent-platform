@@ -34,8 +34,8 @@
 
 ## Open PRs noted in this snapshot
 
-- the latest draft PRs focus on branch cleanup and docs sync, with PR #462 as the current consolidated baseline, alongside the existing runtime hardening, persistence, security, observability, and docs work
+- the latest draft PRs focus on branch cleanup and docs sync, with PR #462 as the current consolidated baseline; PR #461, #460, and #459 are the immediately preceding docs-sync drafts in the same cleanup set, alongside the existing runtime hardening, persistence, security, observability, and docs work
 
 ## Recommended next step
 
-Consolidate the overlapping branch-cleanup draft PRs, then rerun the release-gate smoke suite and tighten any boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the overlapping branch-cleanup draft PRs around the PR #462 baseline, then rerun the release-gate smoke suite and tighten any boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
