@@ -40,4 +40,4 @@
 
 ## Recommended next step
 
-Consolidate the overlapping docs/test branches, then run the Phase 6E release-gate smoke suite and fix any regressions.
+Consolidate the overlapping docs/test branches, then run the Phase 6E release-gate smoke suite with sandbox fallback coverage and fix any regressions.
