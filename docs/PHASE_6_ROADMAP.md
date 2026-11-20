@@ -13,6 +13,7 @@ Harden execution so the platform is safer and more production-ready without losi
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
 - branch cleanup is the immediate documentation-level housekeeping task before the next smoke-suite pass
+- PR #488 is the consolidated docs/state baseline for the cleanup pass
 
 ## Near-term roadmap
 
