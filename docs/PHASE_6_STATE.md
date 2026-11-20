@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the latest draft PRs focus on branch cleanup and docs sync, alongside the existing runtime hardening, persistence, security, observability, and docs work
+- the latest draft PRs focus on branch cleanup and docs sync, with PR #462 as the current consolidated baseline, alongside the existing runtime hardening, persistence, security, observability, and docs work
 
 ## Recommended next step
 
