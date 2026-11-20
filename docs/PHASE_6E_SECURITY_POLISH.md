@@ -49,6 +49,7 @@ Phase 6 already has the audit and persistence foundations. This layer tightens e
 - artifact manifest
 - provenance fetch
 - audit-aware trace checks
+- sandbox fallback when bubblewrap build fails
 
 ### Current smoke set
 
