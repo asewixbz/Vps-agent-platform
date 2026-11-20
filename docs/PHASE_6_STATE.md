@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-20
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: consolidate overlapping Phase 6 docs/test branches, keep the smoke suite green, and continue runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
 ## What is already true
 
@@ -22,6 +22,7 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
+- issue #49 tracks consolidation of the overlapping Phase 6 docs/test branches and identifies PR #467 as the current docs baseline
 
 ## Current blockers
 
@@ -30,11 +31,14 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
+- older overlapping docs/test drafts still need pruning after the consolidated docs baseline lands
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- PR #467 is the newest consolidated docs-sync draft for the branch cleanup pass
+- PR #466, #465, and #464 are the immediately preceding docs syncs in the same cleanup set
+- PR #463 and earlier overlapping refreshes are superseded by the newer baseline drafts
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Merge the consolidated docs baseline from PR #467, rerun the release-gate smoke suite from that consolidated branch set, and then prune or archive the older overlapping docs/test drafts once the baseline lands.
