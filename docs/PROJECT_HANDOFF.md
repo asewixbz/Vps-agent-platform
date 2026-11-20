@@ -56,7 +56,7 @@ The project should be treated as an execution platform first, and a UI product s
 - Python runner support for optional `artifacts.json` manifests so workflow templates can publish extra artifact paths
 - Python runner materialization of schedule artifacts so schedule-style workflows can surface `schedule_manifest.json` automatically
 - Phase 5 workflow templates, including built-in scan/rank/report/compare/schedule templates, persisted custom templates, recurring schedule dispatch, and one-shot schedule completion through the worker loop
-- release-gate smoke tests for policy regression, schedule dispatch, runtime resume, artifact manifests, and provenance fetch
+- release-gate smoke tests for policy regression, schedule dispatch, runtime resume, artifact manifests, provenance, and audit-aware trace checks
 
 ### Phase status
 
@@ -397,9 +397,10 @@ Status:
 
 ## Immediate next work
 
-1. Run the Phase 6E release-gate smoke suite and fix any regressions.
-2. Keep Phase 6D persistence validation moving once the smoke gates are stable.
-3. Continue Phase 6 hardening only after the boundaries and release gates stay green.
+1. Consolidate overlapping Phase 6 docs/branch-cleanup PRs and close redundant branches.
+2. Run the Phase 6E release-gate smoke suite and fix any regressions.
+3. Keep Phase 6D persistence validation moving once the smoke gates are stable.
+4. Continue Phase 6 hardening only after the boundaries and release gates stay green.
 
 ## Working rules for future contributors
 
