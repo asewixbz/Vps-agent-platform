@@ -30,13 +30,13 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
-- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
+- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass; issue #49 tracks the umbrella cleanup
 
 ## Open PRs noted in this snapshot
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
-- multiple branch-cleanup drafts are still open and should be consolidated before the next smoke-suite pass
+- multiple branch-cleanup drafts are still open; PR 513 is the current cleanup baseline and issue #49 tracks the umbrella consolidation before the next smoke-suite pass
 
 ## Recommended next step
 
-Run the release-gate smoke suite after consolidating overlapping Phase 6 docs/test branches, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate overlapping Phase 6 docs/test branches via the branch-cleanup baseline, then rerun the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
