@@ -59,6 +59,7 @@ Phase 6 already has the audit and persistence foundations. This layer tightens e
   - exercises runtime resume, canonical artifact manifests, runtime trace/provenance fetch, and audit summary assertions
 - `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
   - documents the fast path for diagnosing blocked tasks, runtime runs, security controls, and persistence snapshots
+  - reminds contributors to consolidate overlapping docs/test cleanup branches before the next smoke-suite pass
 
 ## Status
 
