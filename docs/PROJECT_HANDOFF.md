@@ -38,7 +38,7 @@ The project should be treated as an execution platform first, and a UI product s
 - persistent runtime run history in SQLite
 - explicit runtime event logs in SQLite
 - runtime event replay filters for step-scoped and grouped inspection
-- runtime trace API that joins runtime events, provenance, memory snapshots, tasks, steps, and artifacts into one recoverable story
+- runtime trace API that joins runtime events, provenance, tasks, steps, and artifacts into one recoverable story
 - persistence-layer boundary map exposed at `/persistence/layers`
 - schema/versioning strategy and Postgres migration path for durable state
 - security controls exposed at `/security/controls`
@@ -397,9 +397,9 @@ Status:
 
 ## Immediate next work
 
-1. Run the Phase 6E release-gate smoke suite and fix any regressions.
-2. Keep Phase 6D persistence validation moving once the smoke gates are stable.
-3. Continue Phase 6 hardening only after the boundaries and release gates stay green.
+1. Consolidate the overlapping branch-cleanup draft PRs and keep the Phase 6 docs in sync.
+2. Run the Phase 6E release-gate smoke suite and fix any regressions.
+3. Keep Phase 6D persistence validation moving once the smoke gates are stable.
 
 ## Working rules for future contributors
 
