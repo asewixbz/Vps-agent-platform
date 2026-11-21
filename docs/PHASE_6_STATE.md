@@ -22,6 +22,7 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
+- overlapping Phase 6 docs/test cleanup branches are being consolidated before the next smoke-suite pass
 
 ## Current blockers
 
@@ -30,12 +31,13 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
-- overlapping docs/test draft branches still need consolidation around the current baseline before the next smoke-suite pass
+- overlapping docs/test cleanup branches still need consolidation before the next smoke-suite pass
 
 ## Open PRs noted in this snapshot
 
 - the current draft set is centered on the branch-cleanup baseline and the matching roadmap/state refreshes
+- issue 49 tracks consolidation of the overlapping Phase 6 docs/test cleanup branches before the next smoke-suite pass
 
 ## Recommended next step
 
-Consolidate the overlapping docs/test drafts into the baseline, then rerun the release-gate smoke suite from that branch set.
+Consolidate the overlapping Phase 6 docs/test cleanup branches, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
