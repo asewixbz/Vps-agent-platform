@@ -36,7 +36,8 @@
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
 - multiple branch-cleanup drafts are still open; PR 513 is the current cleanup baseline and issue #49 tracks the umbrella consolidation before the next smoke-suite pass
+- PR 514 is the newest sandbox fallback test draft and should follow the branch-cleanup baseline once the overlap is consolidated
 
 ## Recommended next step
 
-Consolidate overlapping Phase 6 docs/test branches via the branch-cleanup baseline, then rerun the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate overlapping Phase 6 docs/test branches via the branch-cleanup baseline, then rerun the release-gate smoke suite and validate the sandbox fallback coverage together with any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
