@@ -397,10 +397,9 @@ Status:
 
 ## Immediate next work
 
-1. Consolidate overlapping Phase 6 docs/test branches before the next smoke-suite pass.
+1. Consolidate the current docs/state/handoff baseline and prune superseded docs/test drafts.
 2. Run the Phase 6E release-gate smoke suite and fix any regressions.
 3. Keep Phase 6D persistence validation moving once the smoke gates are stable.
-4. Continue Phase 6 hardening only after the boundaries and release gates stay green.
 
 ## Working rules for future contributors
 
