@@ -68,6 +68,7 @@ The project should be treated as an execution platform first, and a UI product s
 - Phase 6 runtime hardening is underway
 - Phase 6D persistence hardening is defined
 - Phase 6E security polish and operational controls are in progress
+- the current near-term focus is consolidating the overlapping docs/test branch set before the next smoke-suite pass
 
 ### What exists but is still early
 
@@ -397,9 +398,9 @@ Status:
 
 ## Immediate next work
 
-1. Run the Phase 6E release-gate smoke suite and fix any regressions.
-2. Keep Phase 6D persistence validation moving once the smoke gates are stable.
-3. Continue Phase 6 hardening only after the boundaries and release gates stay green.
+1. Consolidate the overlapping Phase 6 docs/test branch set and land the PR #488 baseline.
+2. Rerun the Phase 6 release-gate smoke suite from that consolidated baseline and fix any regressions.
+3. Keep Phase 6D persistence validation moving once the smoke gates are stable.
 
 ## Working rules for future contributors
 
