@@ -21,7 +21,7 @@
 - security controls expose `/security/controls` with trust levels, approval triggers, and operational budgets
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
-- the current docs/test baseline is consolidated around issue #49, PR #532, the follow-up docs refreshes in PRs #531 and #529, and the adjacent sandbox fallback hardening in PR #530
+- the current docs/test baseline is consolidated around issue #49, PR #532, the follow-up docs refreshes in PRs #531 and #529, the adjacent sandbox fallback hardening in PR #530, and the README blocker sync in PR #537
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
 
 ## Current blockers
@@ -35,7 +35,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the consolidated Phase 6 docs/test baseline is centered on PR #532, with PRs #531 and #529 as follow-up docs refreshes and PR #530 as the adjacent sandbox fallback hardening step
+- the consolidated Phase 6 docs/test baseline is centered on PR #532, with PRs #531 and #529 as follow-up docs refreshes, PR #530 as the adjacent sandbox fallback hardening step, and PR #537 as the README blocker sync
 
 ## Recommended next step
 
