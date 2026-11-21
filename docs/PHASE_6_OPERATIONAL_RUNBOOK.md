@@ -227,3 +227,11 @@ When escalating, include:
 - the trace payload
 - the output of `/security/controls`
 - the output of `/persistence/schema`
+
+## 10) Pre-smoke-suite checklist
+
+Before the next release-gate smoke pass, confirm:
+
+- overlapping Phase 6 docs/test branches have been consolidated
+- the active Phase 6 docs, roadmap, state, and handoff files still match the current cleanup focus
+- any remaining manual blockers are captured in issue #49 or the relevant PR thread
