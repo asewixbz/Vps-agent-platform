@@ -11,6 +11,7 @@ Harden execution so the platform is safer and more production-ready without losi
 - browser execution is behind a feature flag and still requires approval for external URLs
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
+- branch cleanup remains an active housekeeping focus, with overlapping docs/test branches tracked in issue #49
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
 
 ## Near-term roadmap
@@ -20,6 +21,7 @@ Harden execution so the platform is safer and more production-ready without losi
 3. Continue improving runtime audit and trace visibility for blocked and approved runs.
 4. Keep the release-gate smoke suite green while making small hardening changes.
 5. Keep documentation and runbooks aligned with the code.
+6. Consolidate overlapping docs/test branches before the next smoke-suite pass.
 
 ## Working rule
 
