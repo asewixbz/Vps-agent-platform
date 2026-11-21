@@ -22,6 +22,7 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
+- the Phase 6E security polish doc now echoes the branch-hygiene reminder for the next smoke-suite pass
 
 ## Current blockers
 
@@ -30,10 +31,12 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
+- overlapping docs/test cleanup branches still need consolidation before the next smoke-suite pass
 
 ## Open PRs noted in this snapshot
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- draft PRs #544-#546 are the overlapping docs/test cleanup branches currently in flight
 
 ## Recommended next step
 
