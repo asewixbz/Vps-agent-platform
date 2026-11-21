@@ -4,7 +4,7 @@
 
 - Last reviewed: 2026-11-21
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: consolidate the current docs/test branch baseline, exercise the sandbox fallback path, and keep persistence hardening and security polish moving under release gates
+- Current focus: consolidate overlapping Phase 6 docs/test branches before the next smoke-suite pass, exercise the sandbox fallback path, and keep persistence hardening and security polish moving under release gates
 
 ## What is already true
 
@@ -37,4 +37,4 @@
 
 ## Recommended next step
 
-Consolidate the current Phase 6 docs/test branch set, then run the release-gate smoke suite and fix any regressions.
+Consolidate the current Phase 6 docs/test branch set, then run the next release-gate smoke-suite pass and fix any regressions.
