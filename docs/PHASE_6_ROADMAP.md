@@ -15,11 +15,13 @@ Harden execution so the platform is safer and more production-ready without losi
 
 ## Near-term roadmap
 
-1. Exercise and harden the sandbox fallback path.
-2. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
-3. Continue improving runtime audit and trace visibility for blocked and approved runs.
-4. Keep the release-gate smoke suite green while making small hardening changes.
-5. Keep documentation and runbooks aligned with the code.
+1. Consolidate the overlapping Phase 6 docs/test branches, keeping PR #488 as the baseline and the newer docs refreshes aligned with it.
+2. Re-run the release-gate smoke suite from the consolidated branch set and verify the branch-cleanup focus still passes.
+3. Exercise and harden the sandbox fallback path.
+4. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
+5. Continue improving runtime audit and trace visibility for blocked and approved runs.
+6. Keep the release-gate smoke suite green while making small hardening changes.
+7. Keep documentation and runbooks aligned with the code.
 
 ## Working rule
 
