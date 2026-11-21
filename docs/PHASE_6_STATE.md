@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-21
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish, and consolidating overlapping docs/test branches before the next smoke-suite pass
 
 ## What is already true
 
@@ -29,12 +29,18 @@
 - artifact retention is still local-volume based, although canonical manifests and cleanup jobs are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
+- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- the Phase 6 branch-cleanup draft PRs are still open while issue #49 tracks the consolidated baseline
+- PR #526 is the newest docs/state refresh for the branch-cleanup focus
+- PR #525 aligns the handoff with that cleanup focus
+- PR #524 and PR #523 are related docs/state drafts for the same cleanup baseline
+- PR #514 and PR #517 remain separate sandbox fallback test drafts
+- older overlapping docs/test drafts are superseded by the newer baseline set
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate or archive the overlapping Phase 6 docs/test branches, then rerun the release-gate smoke suite from the consolidated baseline.
