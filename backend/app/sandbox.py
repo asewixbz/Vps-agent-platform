@@ -204,6 +204,7 @@ def build_subprocess_sandbox(
                     exc,
                 )
                 selection_reason = f"bubblewrap fallback to rlimit after build failure: {exc}"
+                fallback_used = True
         else:
             logger.warning(
                 "sandbox mode %s requested bubblewrap but bwrap is unavailable; falling back to rlimit",
