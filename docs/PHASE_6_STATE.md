@@ -35,9 +35,10 @@
 
 ## Open PRs noted in this snapshot
 
-- draft PRs are concentrated around Phase 6 docs refreshes and sandbox fallback coverage
-- the current branch cleanup pass is intended to reduce overlap before the next smoke-suite pass
+- PR #516 is the current docs/state refresh baseline under review
+- PR #514 remains the separate sandbox fallback test draft
+- older overlapping docs refresh branches are candidates for retirement once the latest baseline is validated
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, persistence snapshot, or sandbox fallback tests.
+Run the release-gate smoke suite, then validate the current docs/state baseline and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, persistence snapshot, or sandbox fallback tests.
