@@ -68,6 +68,7 @@ The project should be treated as an execution platform first, and a UI product s
 - Phase 6 runtime hardening is underway
 - Phase 6D persistence hardening is defined
 - Phase 6E security polish and operational controls are in progress
+- Phase 6 branch cleanup and docs/test consolidation are in progress
 
 ### What exists but is still early
 
@@ -77,6 +78,7 @@ The project should be treated as an execution platform first, and a UI product s
 - there is no production-grade sandboxing
 - execution still relies on local subprocesses inside the shared backend container
 - artifact retention is still local-volume based, but canonical manifests and cleanup jobs are now in place
+- overlapping docs/test branches still need to be consolidated before the next smoke-suite pass
 - observability exists through runtime events, provenance, and trace navigation, but it is not yet the stronger audit surface planned for Phase 6
 - durable state still lives in SQLite, even though the persistence boundary and candidate Postgres path are now documented
 - security guardrails are in place, but they still need a full pre-release smoke pass before the next hardening merge
@@ -397,9 +399,9 @@ Status:
 
 ## Immediate next work
 
-1. Run the Phase 6E release-gate smoke suite and fix any regressions.
-2. Keep Phase 6D persistence validation moving once the smoke gates are stable.
-3. Continue Phase 6 hardening only after the boundaries and release gates stay green.
+1. Consolidate the overlapping docs/test branches and keep the latest cleanup-focused PR wave aligned.
+2. Run the Phase 6E release-gate smoke suite and fix any regressions.
+3. Keep Phase 6D persistence validation moving once the smoke gates are stable.
 
 ## Working rules for future contributors
 
@@ -413,4 +415,4 @@ Status:
 
 ## Current project status summary
 
-The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, and the codebase now includes runtime trace navigation, canonical artifact manifests and cleanup helpers, an explicit persistence boundary map and migration path, plus operational security controls and release-gate smoke tests. The remaining work is to keep the smoke suite green and then move durable state toward a backend that can handle more scale and less contention.
+The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, and the codebase now includes runtime trace navigation, canonical artifact manifests and cleanup helpers, an explicit persistence boundary map and migration path, plus operational security controls and release-gate smoke tests. The remaining work is to keep the smoke suite green, consolidate the overlapping docs/test branch wave, and then move durable state toward a backend that can handle more scale and less contention.
