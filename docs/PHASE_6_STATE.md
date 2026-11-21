@@ -36,6 +36,7 @@
 
 - PR #532 is the current consolidated Phase 6 baseline, and older overlapping docs/test drafts remain superseded until it merges
 - PR #530 covers sandbox fallback hardening and is the next adjacent runtime hardening step
+- PR #535 refreshes the Phase 6 roadmap and handoff with the latest branch-cleanup wording
 
 ## Recommended next step
 
