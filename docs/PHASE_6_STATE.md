@@ -4,7 +4,7 @@
 
 - Last reviewed: 2026-11-21
 - Current phase: Phase 6 runtime hardening continues in small, reviewable steps
-- Current focus: consolidate overlapping docs/test branches, keep release-gate smoke coverage green, and keep persistence/security/observability notes aligned with the code
+- Current focus: branch cleanup and docs/state/handoff consolidation, then keep release-gate smoke coverage green and keep persistence/security/observability notes aligned with the code
 
 ## What is already true
 
@@ -29,13 +29,13 @@
 - artifact retention is still local-volume based, although canonical manifests and cleanup jobs are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
+- older overlapping docs/test branches still need to be pruned or archived after the consolidated baseline lands
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
-- overlapping docs/test branches still need to be consolidated before the next smoke-suite pass
 
 ## Open PRs noted in this snapshot
 
-- the current draft PR wave is still open, with the latest cleanup-focused branch targeting Phase 6 docs/state refresh
+- the current cleanup baseline is being tracked through the newer docs/state/handoff drafts, while older overlapping docs/test drafts are superseded
 
 ## Recommended next step
 
-Consolidate the overlapping docs/test branches, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Merge the consolidated docs/state/handoff baseline, then rerun the release-gate smoke suite and archive the superseded docs/test drafts.
