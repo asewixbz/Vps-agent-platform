@@ -34,8 +34,9 @@
 
 ## Open PRs noted in this snapshot
 
-- PR #526 refreshes the Phase 6 state snapshot for the branch-cleanup focus
-- PR #527 aligns the handoff and roadmap with the same cleanup focus
+- PR #528 refreshes the Phase 6 roadmap for the branch-cleanup focus
+- PR #529 refreshes this state snapshot for the branch-cleanup focus
+- issue #49 tracks the overlapping Phase 6 docs/test branch consolidation before the next smoke-suite pass
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches remain in reviewable draft form
 
 ## Recommended next step
