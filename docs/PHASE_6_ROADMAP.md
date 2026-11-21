@@ -15,7 +15,7 @@ Harden execution so the platform is safer and more production-ready without losi
 
 ## Near-term roadmap
 
-1. Consolidate the overlapping docs/test drafts into the current baseline and prune stale duplicates.
+1. Consolidate the overlapping docs/test drafts into the current baseline and prune stale duplicates; issue 49 tracks the cleanup pass.
 2. Exercise and harden the sandbox fallback path.
 3. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
 4. Continue improving runtime audit and trace visibility for blocked and approved runs.
