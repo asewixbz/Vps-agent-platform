@@ -22,7 +22,7 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
-- the docs/test branch set is being consolidated around the latest baseline draft before the next smoke-suite pass
+- the docs/test branch set is being consolidated around PR #504, the latest baseline draft, before the next smoke-suite pass
 
 ## Current blockers
 
@@ -35,8 +35,8 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- the latest baseline draft is PR #504, and the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
 
 ## Recommended next step
 
-Merge the consolidated baseline, rerun the release-gate smoke suite, and then prune older overlapping docs/test drafts once the baseline lands.
+Merge PR #504, rerun the release-gate smoke suite, and then prune older overlapping docs/test drafts once the baseline lands.
