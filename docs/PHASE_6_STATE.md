@@ -4,7 +4,7 @@
 
 - Last reviewed: 2026-11-21
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: branch cleanup, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: branch cleanup, sandbox fallback hardening, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
 ## What is already true
 
@@ -35,6 +35,7 @@
 ## Open PRs noted in this snapshot
 
 - PR #532 is the current consolidated Phase 6 baseline, and older overlapping docs/test drafts remain superseded until it merges
+- PR #530 covers sandbox fallback hardening and is the next adjacent runtime hardening step
 
 ## Recommended next step
 
