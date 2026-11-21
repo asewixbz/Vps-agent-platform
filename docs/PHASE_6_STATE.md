@@ -4,7 +4,7 @@
 
 - Last reviewed: 2026-11-21
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: branch cleanup, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: branch cleanup, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish with release gates, and the sandbox fallback regression gap
 
 ## What is already true
 
@@ -32,6 +32,7 @@
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
 - overlapping Phase 6 docs/test branches still need to be consolidated before the next smoke-suite pass
+- the explicit bubblewrap build-failure fallback still needs a dedicated regression test
 
 ## Open PRs noted in this snapshot
 
@@ -41,4 +42,4 @@
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then validate the current docs/state baseline and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, persistence snapshot, or sandbox fallback tests.
+Run the release-gate smoke suite, then add the bubblewrap build-failure sandbox regression test and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, persistence snapshot, or sandbox fallback tests.
