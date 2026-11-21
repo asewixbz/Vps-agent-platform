@@ -3,6 +3,7 @@
 ## Purpose
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
+If multiple draft PRs touch the same Phase 6 surface, consolidate them before the next smoke-suite pass so the operational view stays easy to review.
 
 ## 1) Fast health check
 
