@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
-- Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Last reviewed: 2026-11-21
+- Current phase: Phase 6 runtime hardening is underway in small, reviewable steps, with branch cleanup baseline consolidation in progress
+- Current focus: branch cleanup baseline consolidation, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
 ## What is already true
 
@@ -21,6 +21,7 @@
 - security controls expose `/security/controls` with trust levels, approval triggers, and operational budgets
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
+- the current docs/test baseline is consolidated around issue #49, PR #532, the follow-up docs refreshes in PRs #531 and #529, and the adjacent sandbox fallback hardening in PR #530
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
 
 ## Current blockers
@@ -29,12 +30,13 @@
 - artifact retention is still local-volume based, although canonical manifests and cleanup jobs are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
+- overlapping Phase 6 docs/test branches still need pruning or archiving once the consolidated baseline lands
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- the consolidated Phase 6 docs/test baseline is centered on PR #532, with PRs #531 and #529 as follow-up docs refreshes and PR #530 as the adjacent sandbox fallback hardening step
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Land the consolidated branch-cleanup baseline, rerun the release-gate smoke suite, and then prune older overlapping drafts once the smoke pass is complete.
