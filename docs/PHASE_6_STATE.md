@@ -35,6 +35,7 @@
 ## Open PRs noted in this snapshot
 
 - the latest draft docs/state refresh and sandbox fallback test branches are still open for review
+- PR #515 is the docs/state baseline, and PR #514 is the separate sandbox fallback test draft
 - branch cleanup remains the immediate coordination focus before the next hardening pass
 
 ## Recommended next step
