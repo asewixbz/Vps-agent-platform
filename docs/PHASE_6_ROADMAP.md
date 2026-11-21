@@ -16,7 +16,7 @@ Harden execution so the platform is safer and more production-ready without losi
 
 ## Near-term roadmap
 
-1. Exercise and harden the sandbox fallback path.
+1. Consolidate the branch-cleanup baseline and rerun the release-gate smoke suite.
 2. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
 3. Continue improving runtime audit and trace visibility for blocked and approved runs.
 4. Keep the release-gate smoke suite green while making small hardening changes.
