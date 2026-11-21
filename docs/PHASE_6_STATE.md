@@ -35,9 +35,9 @@
 
 ## Open PRs noted in this snapshot
 
-- the current draft set is centered on the branch-cleanup baseline and the matching roadmap/state refreshes
+- PR #511 is the current branch-cleanup baseline for Phase 6 docs
 - issue 49 tracks consolidation of the overlapping Phase 6 docs/test cleanup branches before the next smoke-suite pass
 
 ## Recommended next step
 
-Consolidate the overlapping Phase 6 docs/test cleanup branches, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the overlapping Phase 6 docs/test cleanup branches around PR #511, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
