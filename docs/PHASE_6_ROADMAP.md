@@ -13,10 +13,11 @@ Harden execution so the platform is safer and more production-ready without losi
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
 - overlapping Phase 6 docs/test branches are being consolidated before the next smoke-suite pass
+- draft PR #521 (`docs-phase6-branch-cleanup-20261121q`) is the current cleanup anchor for folding the older overlapping docs/test drafts into one reviewable path
 
 ## Near-term roadmap
 
-1. Consolidate overlapping Phase 6 docs/test branches before the next smoke-suite pass.
+1. Consolidate overlapping Phase 6 docs/test branches into PR #521 before the next smoke-suite pass.
 2. Exercise and harden the sandbox fallback path.
 3. Keep the persistence migration scaffolding in place and validate the SQLite -> Postgres path when needed.
 4. Continue improving runtime audit and trace visibility for blocked and approved runs.
