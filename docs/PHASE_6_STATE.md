@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-21
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish with release gates, and sandbox fallback coverage
 
 ## What is already true
 
@@ -15,12 +15,12 @@
 - shell policy parsing rejects malformed commands safely and blocks basic shell control operators before the runner
 - task execution now goes through a sandbox helper with cwd isolation, restricted env, explicit resource limits, and a bubblewrap-backed prototype when available
 - writer-side artifact generation now emits canonical artifact manifests for python, shell, browser, and workflow outputs
-- the runtime/CLI/docs surfaces now include artifact cleanup helpers and trace navigation for incident review
+- the runtime/CLI/docs surfaces now include artifact cleanup helpers, trace navigation for incident review, and sandbox fallback coverage notes
 - the persistence boundary is documented in code and exposes both `/persistence/layers` and `/persistence/schema`
 - the schema/versioning strategy and Postgres migration path for durable state are documented in code and in `docs/PHASE_6D_PERSISTENCE_HARDENING.md`
 - security controls expose `/security/controls` with trust levels, approval triggers, and operational budgets
 - runtime API requests are capped by a hard max-step budget before the loop starts
-- release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
+- release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, audit-aware trace assertions, and sandbox fallback build-failure coverage
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
 
 ## Current blockers
@@ -37,4 +37,4 @@
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, persistence snapshot, or sandbox fallback smoke tests.
