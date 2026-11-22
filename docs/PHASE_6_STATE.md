@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-22
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish, and branch hygiene before the next smoke-suite pass
 
 ## What is already true
 
@@ -22,9 +22,11 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
+- the latest cleanup focus is to consolidate overlapping Phase 6 docs/test branches before another smoke-suite run
 
 ## Current blockers
 
+- the current Phase 6 branch set still has overlapping docs/test branches that should be consolidated before the next smoke-suite pass
 - tasks still need stronger filesystem confinement guarantees beyond the current best-effort sandbox fallback
 - artifact retention is still local-volume based, although canonical manifests and cleanup jobs are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
@@ -33,8 +35,8 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- several draft PRs currently focus on branch hygiene and doc/state refreshes alongside the hardening work
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the overlapping Phase 6 docs/test branches, then rerun the release-gate smoke suite.
