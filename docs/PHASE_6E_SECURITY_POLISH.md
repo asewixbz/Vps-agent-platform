@@ -57,6 +57,8 @@ Phase 6 already has the audit and persistence foundations. This layer tightens e
   - checks timeout and max-step guardrails
   - exercises schedule dispatch end to end
   - exercises runtime resume, canonical artifact manifests, runtime trace/provenance fetch, and audit summary assertions
+- `backend/tests/test_sandbox.py`
+  - verifies auto mode prefers bubblewrap when available, falls back to rlimit when `bwrap` is missing, and keeps explicit `rlimit` mode on the local fallback path
 - `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
   - documents the fast path for diagnosing blocked tasks, runtime runs, security controls, and persistence snapshots
 
