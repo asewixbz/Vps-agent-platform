@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- PR #595 is the latest draft doc refresh for the branch-hygiene focus
+- PR #596 is the latest draft doc refresh for the branch-hygiene focus
 - the earlier Phase 6 docs/test draft branches remain open and should be consolidated or retired
 
 ## Recommended next step
