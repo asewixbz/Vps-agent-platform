@@ -227,3 +227,11 @@ When escalating, include:
 - the trace payload
 - the output of `/security/controls`
 - the output of `/persistence/schema`
+
+## 10) Branch hygiene
+
+If you are working the Phase 6 cleanup set:
+
+- check whether the current docs/test branches overlap before starting a new one
+- consolidate or close the existing cleanup PRs first
+- keep the next smoke-suite pass focused on one branch cluster at a time
