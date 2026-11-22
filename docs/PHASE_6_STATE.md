@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-22
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: branch hygiene, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
 ## What is already true
 
@@ -21,10 +21,12 @@
 - security controls expose `/security/controls` with trust levels, approval triggers, and operational budgets
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
-- the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
+- the latest consolidated Phase 6 state/roadmap refresh is staged in PR #581
+- the branch-hygiene note is staged in PR #582
 
 ## Current blockers
 
+- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
 - tasks still need stronger filesystem confinement guarantees beyond the current best-effort sandbox fallback
 - artifact retention is still local-volume based, although canonical manifests and cleanup jobs are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
@@ -33,8 +35,11 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- PR #581 is the newest consolidated Phase 6 state/roadmap baseline
+- PR #582 is the newest branch-hygiene note PR
+- PR #577 is the current substantive smoke-suite coverage change
+- older overlapping docs-only drafts should be pruned or closed once the consolidated baseline lands
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Merge the consolidated baseline, then close or archive the older overlapping docs-only branches. After the branch set is trimmed, rerun the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
