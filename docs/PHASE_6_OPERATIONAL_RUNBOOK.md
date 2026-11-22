@@ -227,3 +227,11 @@ When escalating, include:
 - the trace payload
 - the output of `/security/controls`
 - the output of `/persistence/schema`
+
+## 10) Branch hygiene before the next smoke-suite pass
+
+If several overlapping docs/test cleanup PRs are open:
+
+- consolidate them into one reviewable branch before opening or updating the next release-gate pass
+- prefer one active branch per cleanup theme
+- record the consolidation blocker in `docs/PHASE_6_STATE.md` so the next run starts from the same snapshot
