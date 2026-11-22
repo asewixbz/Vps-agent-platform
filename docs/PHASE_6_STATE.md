@@ -36,6 +36,7 @@
 ## Open PRs noted in this snapshot
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- the latest branch-hygiene docs pass is the one to keep for now; older overlapping docs/test variants can be retired after review
 - several branch-hygiene variants overlap, so the next cleanup should narrow to one active branch per theme
 
 ## Recommended next step
