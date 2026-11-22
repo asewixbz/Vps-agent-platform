@@ -22,6 +22,7 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the current docs/test branch cleanup effort is tracked separately so the next smoke-suite pass stays focused
+- avoid opening new Phase 6 docs/test branches until the current cleanup set is merged or closed
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
 
 ## Current blockers
@@ -35,7 +36,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 docs/test cleanup branches are in progress as reviewable draft PRs
+- the Phase 6 docs/test cleanup branches are in progress as reviewable draft PRs, and no new Phase 6 docs/test branches should be opened until they are consolidated
 
 ## Recommended next step
 
