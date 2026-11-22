@@ -35,6 +35,7 @@
 ## Open PRs noted in this snapshot
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- PR 603 carries the consolidated branch-hygiene docs refresh; earlier overlapping docs/test branches are the remaining cleanup candidates
 - branch hygiene cleanup is underway so the next smoke-suite pass can run against a smaller, clearer PR set
 
 ## Recommended next step
