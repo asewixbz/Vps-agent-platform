@@ -52,6 +52,39 @@ class RunnerManifestContractTests(TestCase):
             self.assertTrue(any(artifact["artifact_ref"] == str(workdir / "schedule.json") for artifact in artifacts_manifest["artifacts"]))
             self.assertTrue(any(artifact["artifact_ref"] == str(workdir / "schedule.md") for artifact in artifacts_manifest["artifacts"]))
 
+    def test_python_runner_discovers_nested_artifacts_and_skips_tmp(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(work_dir=str(Path(tmpdir) / "work"), default_timeout_seconds=5)
+
+            result = run_python_script(
+                settings,
+                task_id="task-nested",
+                script=(
+                    "from pathlib import Path\n"
+                    'nested = Path("nested")\n'
+                    'nested.mkdir(parents=True, exist_ok=True)\n'
+                    'Path("tmp").mkdir(parents=True, exist_ok=True)\n'
+                    'nested.joinpath("report.json").write_text("{}", encoding="utf-8")\n'
+                    'nested.joinpath("deeper").mkdir(parents=True, exist_ok=True)\n'
+                    'nested.joinpath("deeper", "report.md").write_text("# nested\\n", encoding="utf-8")\n'
+                    'Path("tmp").joinpath("ignored.txt").write_text("ignore me\\n", encoding="utf-8")\n'
+                    'print("done")\n'
+                ),
+                timeout_seconds=5,
+            )
+
+            workdir = Path(result.artifacts["workdir"])
+            artifacts_manifest = json.loads((workdir / "artifacts.json").read_text(encoding="utf-8"))
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.artifacts["artifact_manifest_path"], str(workdir / "artifacts.json"))
+            self.assertIn(str(workdir / "nested" / "report.json"), artifacts_manifest["artifact_paths"])
+            self.assertIn(str(workdir / "nested" / "deeper" / "report.md"), artifacts_manifest["artifact_paths"])
+            self.assertNotIn(str(workdir / "tmp" / "ignored.txt"), artifacts_manifest["artifact_paths"])
+            self.assertTrue(any(artifact["artifact_ref"] == str(workdir / "nested" / "report.json") for artifact in artifacts_manifest["artifacts"]))
+            self.assertTrue(any(artifact["artifact_ref"] == str(workdir / "nested" / "deeper" / "report.md") for artifact in artifacts_manifest["artifacts"]))
+            self.assertFalse(any(artifact["artifact_ref"] == str(workdir / "tmp" / "ignored.txt") for artifact in artifacts_manifest["artifacts"]))
+
     def test_python_runner_writes_canonical_workflow_manifest(self) -> None:
         with TemporaryDirectory() as tmpdir:
             settings = Settings(work_dir=str(Path(tmpdir) / "work"), default_timeout_seconds=5)
