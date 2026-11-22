@@ -4,7 +4,7 @@
 
 - Last reviewed: 2026-11-22
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish, and branch/doc hygiene around the active draft PR set
+- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish, and branch/doc hygiene around the remaining active draft PR set
 
 ## What is already true
 
@@ -21,7 +21,7 @@
 - security controls expose `/security/controls` with trust levels, approval triggers, and operational budgets
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
-- the current draft PR set is mostly docs maintenance, state refreshes, and sandbox fallback coverage work
+- the current draft PR set now centers on docs maintenance, runbook/README alignment, and sandbox fallback coverage work
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
 
 ## Current blockers
@@ -31,12 +31,12 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
-- a few branch-cleanup and doc-alignment draft PRs are still open and should be merged or retired before the next hardening push
+- the remaining branch-cleanup and doc-alignment draft PRs are still open and should be merged or retired before the next hardening push
 
 ## Open PRs noted in this snapshot
 
-- the current open draft PR set is mostly docs maintenance, state refreshes, branch hygiene, and sandbox fallback coverage work
+- the current open draft PR set is mostly docs maintenance, runbook/README alignment, and sandbox fallback coverage work
 
 ## Recommended next step
 
-Keep the release-gate smoke suite green, then merge or retire stale branch-cleanup/docs PRs before taking the next hardening change.
+Keep the release-gate smoke suite green, then merge or retire the remaining docs/runbook/README PRs before taking the next hardening change.
