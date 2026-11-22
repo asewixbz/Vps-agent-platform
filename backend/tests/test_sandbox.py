@@ -81,3 +81,35 @@ class SandboxTests(TestCase):
             self.assertEqual(sandbox.argv, ["echo", "hello"])
             warning_mock.assert_called_once()
             which_mock.assert_called_once_with("bwrap")
+
+    def test_explicit_rlimit_mode_keeps_rlimit_backend_without_bubblewrap_lookup(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                work_dir=str(Path(tmpdir) / "work"),
+                task_sandbox_mode="rlimit",
+                task_sandbox_allow_network=True,
+                default_timeout_seconds=5,
+            )
+            workdir = Path(tmpdir) / "work" / "task-3"
+            workdir.mkdir(parents=True, exist_ok=True)
+
+            with patch("app.sandbox.shutil.which") as which_mock:
+                sandbox = build_subprocess_sandbox(
+                    settings,
+                    workdir=workdir,
+                    argv=["echo", "hello"],
+                    timeout_seconds=5,
+                )
+
+            self.assertEqual(sandbox.requested_mode, "rlimit")
+            self.assertEqual(sandbox.backend, "rlimit")
+            self.assertEqual(sandbox.cwd, str(workdir))
+            self.assertIsNotNone(sandbox.preexec_fn)
+            self.assertEqual(sandbox.env["HOME"], str(workdir))
+            self.assertEqual(sandbox.env["TMPDIR"], str(workdir / "tmp"))
+            self.assertEqual(sandbox.file_policy, "cwd-and-rlimit")
+            self.assertEqual(sandbox.network_policy, "not-enforced")
+            self.assertFalse(sandbox.fallback_used)
+            self.assertEqual(sandbox.selection_reason, "rlimit mode selected explicitly")
+            self.assertEqual(sandbox.argv, ["echo", "hello"])
+            which_mock.assert_not_called()
