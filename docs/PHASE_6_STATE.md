@@ -34,9 +34,11 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, docs, and branch-hygiene branches are in progress as reviewable draft PRs
-- PR #556 remains the preferred merge target; avoid opening new overlapping Phase 6 docs/test drafts until it lands
+- PR #581 is the newest consolidated Phase 6 state/roadmap baseline
+- PR #582 is the current branch-hygiene note PR
+- PR #577 is the current substantive smoke-suite coverage change
+- older overlapping docs-only drafts still need to be pruned or closed once the latest baseline is merged
 
 ## Recommended next step
 
-Consolidate overlapping Phase 6 docs/test branches, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Merge the consolidated docs baseline, close or archive the older overlapping docs-only branches, and then rerun the release-gate smoke suite from the trimmed branch set.
