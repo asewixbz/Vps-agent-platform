@@ -7,7 +7,8 @@ Harden execution so the platform is safer and more production-ready without losi
 ## Current state
 
 - shell policy parsing rejects malformed shell commands and blocks obvious control operators
-- the runner uses a sandbox helper with cwd isolation, restricted env, and explicit resource limits
+- the runner uses a sandbox helper with cwd isolation, restricted env, explicit resource limits, and a bubblewrap-backed prototype when available
+- explicit `rlimit` mode remains covered when bubblewrap is absent, so the local fallback path stays predictable
 - browser execution is behind a feature flag and still requires approval for external URLs
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
