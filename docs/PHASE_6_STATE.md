@@ -35,6 +35,7 @@
 ## Open PRs noted in this snapshot
 
 - the Phase 6 runtime hardening, persistence, security, observability, docs, and branch-hygiene branches are in progress as reviewable draft PRs
+- PR #556 remains the preferred merge target; avoid opening new overlapping Phase 6 docs/test drafts until it lands
 
 ## Recommended next step
 
