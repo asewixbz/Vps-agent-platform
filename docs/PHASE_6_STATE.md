@@ -4,7 +4,7 @@
 
 - Last reviewed: 2026-11-22
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish, and branch cleanup before the next smoke-suite pass
+- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish, and branch cleanup around the current docs/test cleanup set before the next smoke-suite pass
 
 ## What is already true
 
@@ -23,6 +23,7 @@
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the current docs/test branch cleanup effort is tracked separately so the next smoke-suite pass stays focused
 - avoid opening new Phase 6 docs/test branches until the current cleanup set is merged or closed
+- the current cleanup set is PRs #556, #553, #547, and #543
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
 
 ## Current blockers
@@ -32,12 +33,12 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
-- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
+- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass; current cleanup set: PRs #556, #553, #547, and #543
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 docs/test cleanup branches are in progress as reviewable draft PRs, and no new Phase 6 docs/test branches should be opened until they are consolidated
+- the Phase 6 docs/test cleanup branches are in progress as reviewable draft PRs, and no new Phase 6 docs/test branches should be opened until PRs #556, #553, #547, and #543 are consolidated
 
 ## Recommended next step
 
-Consolidate the overlapping docs/test branches, then rerun the release-gate smoke suite.
+Consolidate PRs #556, #553, #547, and #543, then rerun the release-gate smoke suite.
