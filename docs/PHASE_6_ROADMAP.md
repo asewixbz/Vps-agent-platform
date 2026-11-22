@@ -13,6 +13,7 @@ Harden execution so the platform is safer and more production-ready without losi
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
 - overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass; the current cleanup set is PRs #556, #553, #547, and #543
+- avoid opening new overlapping Phase 6 docs/test branches until that cleanup set is merged or closed
 
 ## Near-term roadmap
 
