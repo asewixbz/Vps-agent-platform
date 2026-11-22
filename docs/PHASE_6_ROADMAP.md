@@ -12,6 +12,7 @@ Harden execution so the platform is safer and more production-ready without losi
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
+- the current Phase 6 focus is branch hygiene: consolidate overlapping docs/test branches before the next smoke-suite pass
 
 ## Near-term roadmap
 
@@ -20,6 +21,7 @@ Harden execution so the platform is safer and more production-ready without losi
 3. Continue improving runtime audit and trace visibility for blocked and approved runs.
 4. Keep the release-gate smoke suite green while making small hardening changes.
 5. Keep documentation and runbooks aligned with the code.
+6. Reduce branch overlap by closing or merging redundant Phase 6 docs/test branches.
 
 ## Working rule
 
