@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-23
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish, and branch hygiene before the next smoke-suite pass
 
 ## What is already true
 
@@ -21,7 +21,7 @@
 - security controls expose `/security/controls` with trust levels, approval triggers, and operational budgets
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
-- the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
+- PR #600 is the consolidated docs baseline for the current Phase 6 branch-hygiene pass
 
 ## Current blockers
 
@@ -30,11 +30,14 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
+- overlapping Phase 6 docs/test branches still need to be trimmed before the next smoke-suite pass
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- PR #600 is the newest consolidated Phase 6 state/roadmap refresh and is the current docs baseline
+- PRs #589 through #600 are the active branch-hygiene cluster that should be consolidated before the next smoke-suite pass
+- PRs #586, #587, and #588 are older overlapping docs refreshes that should be pruned or closed once the latest baseline lands
 
 ## Recommended next step
 
-Run the release-gate smoke suite, then tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Trim the overlapping docs/test branches around PR #600, then rerun the release-gate smoke suite from the reduced branch set.
