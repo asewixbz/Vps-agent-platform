@@ -397,7 +397,7 @@ Status:
 
 ## Immediate next work
 
-1. Consolidate overlapping Phase 6 draft branches before the next smoke-suite pass.
+1. Consolidate the overlapping Phase 6 draft branches before the next smoke-suite pass.
 2. Run the Phase 6E release-gate smoke suite and fix any regressions.
 3. Keep Phase 6D persistence validation moving once the smoke gates are stable.
 
