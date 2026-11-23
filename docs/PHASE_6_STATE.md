@@ -3,8 +3,8 @@
 ## Snapshot
 
 - Last reviewed: 2026-11-23
-- Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current phase: Phase 6 runtime hardening is underway in small, reviewable steps, with branch consolidation still the immediate blocker before the next smoke-suite pass
+- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish, and branch hygiene cleanup
 
 ## What is already true
 
@@ -25,7 +25,7 @@
 
 ## Current blockers
 
-- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
+- overlapping branch-hygiene and docs-sync drafts still need consolidation before the next smoke-suite pass
 - tasks still need stronger filesystem confinement guarantees beyond the current best-effort sandbox fallback
 - artifact retention is still local-volume based, although canonical manifests and cleanup jobs are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
@@ -34,8 +34,8 @@
 
 ## Open PRs noted in this snapshot
 
-- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- the latest open draft PRs continue the branch-hygiene and docs-sync notes, while the code-hardening work stays in the Phase 6 runtime/persistence/security tracks
 
 ## Recommended next step
 
-Consolidate the overlapping Phase 6 docs/test branches, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate or close the overlapping branch-hygiene draft PRs, then run the release-gate smoke suite again and tighten any boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot tests.
