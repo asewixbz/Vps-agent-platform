@@ -38,4 +38,4 @@
 
 ## Recommended next step
 
-Consolidate the remaining Phase 6 cleanup branches or merge the latest branch-hygiene docs PR, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the remaining Phase 6 cleanup branches tracked in issue #49, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
