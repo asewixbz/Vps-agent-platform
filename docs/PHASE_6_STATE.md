@@ -36,6 +36,7 @@
 
 - the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
 - branch hygiene cleanup is the immediate docs-level focus for the next pass
+- `docs/PROJECT_HANDOFF.md` now mirrors the same branch-hygiene cleanup focus
 
 ## Recommended next step
 
