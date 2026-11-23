@@ -34,7 +34,7 @@
 
 ## Open PRs noted in this snapshot
 
-- the current draft PR set is focused on Phase 6 branch consolidation, state sync, and docs cleanup
+- the current draft PR set is focused on Phase 6 branch consolidation, state sync, docs cleanup, and handoff alignment
 
 ## Recommended next step
 
