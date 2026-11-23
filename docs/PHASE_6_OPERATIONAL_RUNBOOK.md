@@ -4,6 +4,8 @@
 
 Use this guide when a run is blocked, a task fails, or you need to inspect the current runtime and audit state without reading the implementation first.
 
+Note: if the current blocker is Phase 6 branch consolidation, resolve issue #49 and merge or retire the overlapping docs/test branches before the next smoke-suite pass.
+
 ## 1) Fast health check
 
 Start with the control plane and queue:
