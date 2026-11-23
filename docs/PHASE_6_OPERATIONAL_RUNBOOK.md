@@ -218,6 +218,7 @@ Escalate if any of the following are true:
 - the trace shows missing or inconsistent audit metadata
 - the persistence schema snapshot is missing after startup
 - the queue is unhealthy or the worker is not draining tasks
+- overlapping Phase 6 docs/test branches are still open and need consolidation before the next smoke-suite pass
 
 When escalating, include:
 
@@ -227,3 +228,4 @@ When escalating, include:
 - the trace payload
 - the output of `/security/controls`
 - the output of `/persistence/schema`
+- the relevant branch names or PR numbers if branch consolidation is the blocker
