@@ -2,10 +2,10 @@
 
 ## Snapshot
 
-- Last reviewed: 2026-06-24
+- Last reviewed: 2026-11-23
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
 - Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
-- Current blocker: overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
+- Current blocker: the Phase 6 branch-hygiene cluster still needs consolidation; PR #627 is the current baseline, PR #626 is a newer overlap to fold or close, and the older PRs #589 through #625 plus #586 through #588 still need pruning before the next smoke-suite pass
 
 ## What is already true
 
@@ -26,7 +26,7 @@
 
 ## Current blockers
 
-- overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
+- the Phase 6 branch-hygiene cluster still needs consolidation before the next smoke-suite pass, starting with PR #627 as the baseline and cleanup of PR #626 plus the older PRs #589 through #625 and #586 through #588
 - tasks still need stronger filesystem confinement guarantees beyond the current best-effort sandbox fallback
 - artifact retention is still local-volume based, although canonical manifests and cleanup jobs are now in place
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
@@ -39,4 +39,4 @@
 
 ## Recommended next step
 
-Consolidate the overlapping Phase 6 docs/test branches, then run the release-gate smoke suite and tighten any boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate the branch overlap cluster (PR #627 as the baseline; fold or close PR #626 and prune the older PRs #589 through #625 and #586 through #588), then run the release-gate smoke suite and tighten any boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
