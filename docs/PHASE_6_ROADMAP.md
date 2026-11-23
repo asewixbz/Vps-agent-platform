@@ -12,6 +12,7 @@ Harden execution so the platform is safer and more production-ready without losi
 - persistence now has an explicit boundary map and schema-metadata bootstrap path
 - observability now carries runtime audit summaries in the trace surface
 - release-gate smoke coverage includes policy, schedules, runtime resume, artifact manifests, provenance, and audit-aware trace checks
+- PR #627 is the current consolidated docs baseline for the Phase 6 roadmap/state refresh
 - overlapping Phase 6 docs/test branches still need consolidation before the next smoke-suite pass
 
 ## Near-term roadmap
