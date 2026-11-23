@@ -4,7 +4,7 @@
 
 - Last reviewed: 2026-11-23
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: branch consolidation, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
+- Current focus: branch consolidation, runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates; the operational runbook now carries the same branch-consolidation blocker note
 
 ## What is already true
 
