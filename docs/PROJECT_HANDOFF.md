@@ -414,3 +414,9 @@ Status:
 ## Current project status summary
 
 The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, and the codebase now includes runtime trace navigation, canonical artifact manifests and cleanup helpers, an explicit persistence boundary map and migration path, plus operational security controls and release-gate smoke tests. The remaining work is to keep the smoke suite green and then move durable state toward a backend that can handle more scale and less contention.
+
+## Phase 6 branch cleanup note
+
+- The current active blocker is the overlapping Phase 6 docs/test branch cluster.
+- The consolidated baseline lives on the Phase 6 state/roadmap sync branch and should remain the single source of truth until the next smoke-suite pass.
+- Next small step: trim or fold redundant follow-ups into that baseline before opening any new Phase 6 docs/test branch.
