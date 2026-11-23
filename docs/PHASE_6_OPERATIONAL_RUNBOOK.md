@@ -179,6 +179,11 @@ If startup or inspection fails around durable state:
 - verify the `schema_metadata` row exists after startup
 - confirm the SQLite file is writable
 
+### Branch consolidation blocker
+
+If the next smoke-suite pass has not started yet, first verify that the overlapping Phase 6 docs/test branches have been consolidated.
+Track that blocker in issue #49 and keep the state and roadmap docs aligned before rerunning the release-gate smoke suite.
+
 ## 8) Quick reference
 
 ### Control-plane endpoints
