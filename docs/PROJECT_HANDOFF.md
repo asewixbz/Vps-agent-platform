@@ -397,8 +397,8 @@ Status:
 
 ## Immediate next work
 
-1. Run the Phase 6E release-gate smoke suite and fix any regressions.
-2. Keep Phase 6D persistence validation moving once the smoke gates are stable.
+1. Consolidate the overlapping Phase 6 docs/test branches and draft PRs before the next smoke-suite pass.
+2. Keep Phase 6D persistence validation moving once the branch set is cleaned up.
 3. Continue Phase 6 hardening only after the boundaries and release gates stay green.
 
 ## Working rules for future contributors
@@ -413,4 +413,4 @@ Status:
 
 ## Current project status summary
 
-The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, and the codebase now includes runtime trace navigation, canonical artifact manifests and cleanup helpers, an explicit persistence boundary map and migration path, plus operational security controls and release-gate smoke tests. The remaining work is to keep the smoke suite green and then move durable state toward a backend that can handle more scale and less contention.
+The repository is now a usable execution backbone. Phase 4 and Phase 5 are complete; durable memory, dossier helpers, workflow templates, custom template persistence, and recurring schedule dispatch are all wired through the planner/runtime/API/CLI surface. The next work is Phase 6 hardening, and the codebase now includes runtime trace navigation, canonical artifact manifests and cleanup helpers, an explicit persistence boundary map and migration path, plus operational security controls and release-gate smoke tests. Before the next hardening merge, the overlapping docs/test branches should be consolidated so the smoke suite runs against a cleaner branch set. The remaining work is to keep the smoke suite green and then move durable state toward a backend that can handle more scale and less contention.
