@@ -4,7 +4,7 @@
 
 - Last reviewed: 2026-11-23
 - Current phase: Phase 6 runtime hardening is underway in small, reviewable steps
-- Current focus: runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, security polish with release gates, and branch hygiene for overlapping docs work
+- Current focus: branch hygiene first, then runtime boundary hardening, canonical artifact manifests, traceable execution history, persistence hardening, and security polish with release gates
 
 ## What is already true
 
@@ -22,6 +22,7 @@
 - runtime API requests are capped by a hard max-step budget before the loop starts
 - release-gate smoke coverage now includes policy regression, schedule dispatch, runtime resume, artifact manifests, provenance fetch, and audit-aware trace assertions
 - the Phase 6 operational runbook exists in `docs/PHASE_6_OPERATIONAL_RUNBOOK.md`
+- overlapping Phase 6 docs/cleanup branches are still open, so branch consolidation remains the next housekeeping step before the next smoke-suite pass
 
 ## Current blockers
 
@@ -30,12 +31,13 @@
 - observability is still centered on SQLite runtime events and provenance views rather than a stronger external audit pipeline
 - durable state still lives in SQLite, so the Postgres backend swap path still needs runtime exercise
 - security controls still need a final pass through the release-gate suite in CI or pre-release checks
-- overlapping Phase 6 docs branches still need a manual consolidation pass before the next smoke-suite round
+- branch hygiene still needs consolidation; the overlapping Phase 6 docs/cleanup branches should be trimmed before the next smoke-suite pass
 
 ## Open PRs noted in this snapshot
 
-- several overlapping draft PRs remain open for Phase 6 docs and branch-hygiene cleanup
+- the Phase 6 runtime hardening, persistence, security, observability, and docs branches are in progress as reviewable draft PRs
+- the current branch-hygiene work is focused on consolidating overlapping docs/cleanup branches before the next smoke-suite pass
 
 ## Recommended next step
 
-Consolidate the overlapping docs branches, then rerun the release-gate smoke suite and tighten any boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
+Consolidate overlapping branch-hygiene PRs, then run the release-gate smoke suite and tighten any remaining boundary gaps that show up in runtime trace, policy, schedule-dispatch, or persistence snapshot smoke tests.
